@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY — Content & Social Media</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#080c18;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+    .app{display:flex;height:100vh;flex-direction:column}
+
+    /* Top */
+    .topbar{height:44px;display:flex;align-items:center;padding:0 20px;background:#0f1525;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;gap:8px}
+    .tb-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+    .tb-logo-i{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#c9a84c,#ffe08a);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;color:#000}
+    .tb-name{font-size:0.62rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.35)}
+    .tb-sep{width:1px;height:20px;background:rgba(255,255,255,0.06)}
+    .tb-fill{flex:1}
+    .tb-btn{padding:7px 16px;border-radius:7px;font-size:0.64rem;font-weight:600;border:none;cursor:pointer;transition:all 0.15s}
+    .tb-ghost{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.45)}
+    .tb-ghost:hover{background:rgba(201,168,76,0.1);color:#c9a84c}
+
+    /* Main: 3 columns */
+    .main{flex:1;display:grid;grid-template-columns:1fr 360px;min-height:0}
+
+    /* ═══ LEFT: Tabs + Content ═══ */
+    .left{display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.05);min-height:0}
+
+    /* Tabs */
+    .tabs{display:flex;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+    .tab{padding:12px 20px;font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+    .tab:hover{color:rgba(255,255,255,0.6)}
+    .tab.on{color:#c9a84c;border-bottom-color:#c9a84c}
+
+    /* Tab content */
+    .tab-body{flex:1;overflow-y:auto;padding:20px}
+    .tab-body::-webkit-scrollbar{width:4px}
+    .tab-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+    .pane{display:none}.pane.on{display:block}
+
+    /* ═══ PIPELINE ═══ */
+    .pipe-step{margin-bottom:8px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);overflow:hidden;transition:border-color 0.2s}
+    .pipe-step.working{border-color:rgba(52,152,219,0.3);background:rgba(52,152,219,0.02)}
+    .pipe-step.done{border-color:rgba(46,204,113,0.2);background:rgba(46,204,113,0.015)}
+    .ps-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}
+    .ps-num{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:rgba(255,255,255,0.25);flex-shrink:0}
+    .pipe-step.working .ps-num{background:rgba(52,152,219,0.15);color:#3498db;animation:pulse 1.5s infinite}
+    .pipe-step.done .ps-num{background:rgba(46,204,113,0.15);color:#2ecc71}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+    .ps-av{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.08);flex-shrink:0}
+    .pipe-step.working .ps-av{border-color:#3498db}
+    .pipe-step.done .ps-av{border-color:#2ecc71}
+    .ps-info{flex:1}
+    .ps-title{font-size:0.75rem;font-weight:700;color:#fff}
+    .ps-agent{font-size:0.55rem;color:rgba(255,255,255,0.3)}
+    .ps-status{font-size:0.62rem;font-weight:600;color:rgba(255,255,255,0.25);flex-shrink:0}
+    .pipe-step.working .ps-status{color:#3498db}
+    .pipe-step.done .ps-status{color:#2ecc71}
+    .ps-body{padding:4px 16px 16px 70px;display:none}
+    .pipe-step.working .ps-body,.pipe-step.done .ps-body{display:block}
+    .ps-output{padding:12px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);font-size:0.66rem;color:rgba(255,255,255,0.55);line-height:1.65;white-space:pre-wrap;max-height:300px;overflow-y:auto}
+    .ps-output::-webkit-scrollbar{width:3px}
+    .ps-output::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06)}
+    .ps-sources{margin-top:8px;padding:10px;border-radius:6px;background:rgba(52,152,219,0.04);border:1px solid rgba(52,152,219,0.08)}
+    .ps-sources .st{font-size:0.55rem;font-weight:700;color:rgba(52,152,219,0.5);margin-bottom:4px}
+    .ps-sources a{font-size:0.58rem;color:#3498db;text-decoration:none;display:block;margin-bottom:3px}
+    .ps-sources a:hover{text-decoration:underline}
+
+    /* Final review */
+    .review-box{padding:16px;border-radius:10px;background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.15)}
+    .review-script{padding:14px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:0.72rem;color:rgba(255,255,255,0.7);line-height:1.7;white-space:pre-wrap;max-height:300px;overflow-y:auto;margin-bottom:12px}
+    .review-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .ra-btn{padding:8px 18px;border-radius:7px;font-size:0.64rem;font-weight:700;border:none;cursor:pointer;transition:all 0.15s}
+    .ra-confirm{background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff}
+    .ra-prod{background:rgba(155,89,182,0.15);color:#9b59b6;border:1px solid rgba(155,89,182,0.2)}
+    .ra-edit{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08)}
+    .ra-redo{background:rgba(52,152,219,0.1);color:#3498db;border:1px solid rgba(52,152,219,0.15)}
+
+    /* ═══ TASKS ═══ */
+    .task-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);margin-bottom:4px}
+    .task-av{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.08);flex-shrink:0}
+    .task-info{flex:1}
+    .task-title{font-size:0.7rem;font-weight:600;color:#fff}
+    .task-sub{font-size:0.55rem;color:rgba(255,255,255,0.3)}
+    .task-badge{padding:3px 10px;border-radius:10px;font-size:0.52rem;font-weight:700;flex-shrink:0}
+    .tb-pending{background:rgba(241,196,15,0.1);color:#f1c40f;border:1px solid rgba(241,196,15,0.12)}
+    .tb-progress{background:rgba(52,152,219,0.1);color:#3498db;border:1px solid rgba(52,152,219,0.12)}
+    .tb-done{background:rgba(46,204,113,0.1);color:#2ecc71;border:1px solid rgba(46,204,113,0.12)}
+
+    /* ═══ RESULTS ═══ */
+    .result-card{padding:16px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);margin-bottom:8px}
+    .result-card h3{font-size:0.75rem;font-weight:700;color:#c9a84c;margin-bottom:8px}
+    .result-content{font-size:0.66rem;color:rgba(255,255,255,0.55);line-height:1.65;white-space:pre-wrap;max-height:250px;overflow-y:auto}
+
+    /* ═══ RIGHT: CHAT WITH SARAH ═══ */
+    .chat-panel{display:flex;flex-direction:column;background:#0c1020;min-height:0}
+    .chat-head{padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0}
+    .chat-av{width:36px;height:36px;border-radius:50%;background-size:cover;background-position:center top;border:2px solid #c9a84c;flex-shrink:0}
+    .chat-name{font-size:0.78rem;font-weight:700}
+    .chat-role{font-size:0.52rem;color:#c9a84c}
+    .chat-online{width:8px;height:8px;border-radius:50%;background:#2ecc71;flex-shrink:0}
+    .chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+    .chat-msgs::-webkit-scrollbar{width:3px}
+    .chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06)}
+    .msg{max-width:88%;padding:10px 14px;border-radius:14px;font-size:0.72rem;line-height:1.5}
+    .msg-ai{align-self:flex-start;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.12);color:rgba(255,255,255,0.8)}
+    .msg-user{align-self:flex-end;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.8)}
+    .msg-typing{align-self:flex-start;font-size:0.62rem;color:rgba(201,168,76,0.4);font-style:italic;display:none}
+    .chat-input{padding:10px 14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:6px;flex-shrink:0}
+    .chat-input input{flex:1;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:#fff;font-size:0.75rem;outline:none}
+    .chat-input input:focus{border-color:rgba(201,168,76,0.4)}
+    .chat-input input::placeholder{color:rgba(255,255,255,0.15)}
+    .chat-send{width:40px;height:40px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,#c9a84c,#ffe08a);color:#000;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:900}
+
+    .empty{text-align:center;padding:30px;color:rgba(255,255,255,0.1);font-size:0.7rem}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <a class="tb-logo" href="/spaces"><div class="tb-logo-i">DP</div></a>
+    <span class="tb-name">Content & Social Media</span>
+    <div class="tb-sep"></div>
+    <button class="tb-btn tb-ghost" href="/spaces">← Spaces</button>
+    <div class="tb-fill"></div>
+    <button class="tb-btn tb-ghost" onclick="location.href='/platform'">Dashboard</button>
+  </div>
+
+  <div class="main">
+    <!-- LEFT: Pipeline + Tasks + Results -->
+    <div class="left">
+      <div class="tabs">
+        <div class="tab on" onclick="sw('pipeline')">🔄 Pipeline</div>
+        <div class="tab" onclick="sw('tasks')">📋 Tasks</div>
+        <div class="tab" onclick="sw('results')">📝 Results</div>
+        <div class="tab" onclick="sw('calendar')">📅 Calendar</div>
+      </div>
+      <div class="tab-body">
+        <!-- PIPELINE -->
+        <div class="pane on" id="p-pipeline">
+          <div id="pipeEmpty" class="empty">
+            No active pipeline.<br>Tell Sarah what you want to create →
+          </div>
+          <div id="pipeSteps" style="display:none">
+            <div class="pipe-step" id="step1">
+              <div class="ps-head" onclick="toggleStep(1)">
+                <div class="ps-num">1</div>
+                <img class="ps-av" src="/static/img/avatar_kai.png"/>
+                <div class="ps-info"><div class="ps-title">Research & Sources</div><div class="ps-agent">Kai Tanaka — Research Lead</div></div>
+                <div class="ps-status" id="st1">⏳ Waiting</div>
+              </div>
+              <div class="ps-body" id="out1"></div>
+            </div>
+            <div class="pipe-step" id="step2">
+              <div class="ps-head" onclick="toggleStep(2)">
+                <div class="ps-num">2</div>
+                <img class="ps-av" src="/static/img/avatar_marcus.png"/>
+                <div class="ps-info"><div class="ps-title">Content Strategy</div><div class="ps-agent">Marcus Rivera — Strategist</div></div>
+                <div class="ps-status" id="st2">⏳ Waiting</div>
+              </div>
+              <div class="ps-body" id="out2"></div>
+            </div>
+            <div class="pipe-step" id="step3">
+              <div class="ps-head" onclick="toggleStep(3)">
+                <div class="ps-num">3</div>
+                <img class="ps-av" src="/static/img/avatar_marcus.png"/>
+                <div class="ps-info"><div class="ps-title">Copywriting — Final Script</div><div class="ps-agent">Marcus Rivera — Copywriter</div></div>
+                <div class="ps-status" id="st3">⏳ Waiting</div>
+              </div>
+              <div class="ps-body" id="out3"></div>
+            </div>
+            <div class="pipe-step" id="step4" style="display:none">
+              <div class="ps-head">
+                <div class="ps-num">✓</div>
+                <img class="ps-av" src="/static/img/avatar_sarah.png"/>
+                <div class="ps-info"><div class="ps-title">Review & Confirm</div><div class="ps-agent">Sarah Chen — Director</div></div>
+                <div class="ps-status">✅ Ready</div>
+              </div>
+              <div class="ps-body" id="out4">
+                <div class="review-box">
+                  <div style="font-size:0.75rem;font-weight:700;color:#c9a84c;margin-bottom:8px">Final Script</div>
+                  <div class="review-script" id="finalScript"></div>
+                  <div class="review-actions">
+                    <button class="ra-btn ra-confirm" onclick="confirmScript()">✅ Confirm & Save</button>
+                    <button class="ra-btn ra-prod" onclick="sendToProduction()">🎬 Send to Production</button>
+                    <button class="ra-btn" onclick="generateVoiceover()" style="background:rgba(155,89,182,0.15);color:#9b59b6;border:1px solid rgba(155,89,182,0.2)">🎙️ Generate Voiceover</button>
+                    <button class="ra-btn ra-redo" onclick="rerunScript()">🔄 Rewrite</button>
+                    <button class="ra-btn ra-edit" onclick="copyScript()">📋 Copy Script</button>
+                    <button class="ra-btn" onclick="saveToSheet()" style="background:rgba(46,204,113,0.12);color:#2ecc71;border:1px solid rgba(46,204,113,0.15)">📊 Save to Sheet</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TASKS -->
+        <div class="pane" id="p-tasks">
+          <div id="tasksList"><div class="empty">No tasks yet. Start a workflow with Sarah.</div></div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="pane" id="p-results">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h2 style="font-size:1rem;font-weight:800">📝 Content Created</h2>
+            <button class="tb-btn tb-ghost" onclick="loadResults()">🔄 Refresh</button>
+          </div>
+          <div id="resultsList"><div class="empty">Loading...</div></div>
+        </div>
+
+        <!-- CALENDAR -->
+        <div class="pane" id="p-calendar">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h2 style="font-size:1rem;font-weight:800">📅 Content Calendar</h2>
+            <div style="display:flex;gap:4px">
+              <button class="tb-btn tb-ghost" onclick="calPrev()">←</button>
+              <button class="tb-btn tb-ghost" onclick="calToday()">Today</button>
+              <button class="tb-btn tb-ghost" onclick="calNext()">→</button>
+            </div>
+          </div>
+          <div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:8px" id="calTitle"></div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="calGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Chat with Sarah -->
+    <div class="chat-panel">
+      <div class="chat-head">
+        <div class="chat-av" style="background-image:url(/static/img/avatar_sarah.png)"></div>
+        <div>
+          <div class="chat-name">Sarah Chen</div>
+          <div class="chat-role">Agency Director — CEO</div>
+        </div>
+        <div class="chat-online"></div>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="msg msg-ai">Hi! I'm Sarah, your agency director. Tell me what content you want to create — I'll coordinate the team: Kai for research, Marcus for strategy and copywriting. You'll see the full pipeline progress on the left. What are we working on today?</div>
+      </div>
+      <div class="msg-typing" id="typing">Sarah is thinking...</div>
+      <div class="chat-input">
+        <input type="text" id="chatIn" placeholder="Tell Sarah what you want to create..." onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button class="chat-send" onclick="sendChat()">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ STATE (persisted to localStorage) ═══
+const STORE_KEY='dp_content_state';
+let ws=null;
+let wf={step:0, idea:'', research:'', strategy:'', script:'', agent:null};
+let activeTab='pipeline';
+let chatHistory=[];
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// Save state to localStorage
+function saveState(){
+  const state={wf:{step:wf.step,idea:wf.idea,research:wf.research,strategy:wf.strategy,script:wf.script},activeTab,chatHistory:chatHistory.slice(-30)};
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}
+}
+
+// Restore state from localStorage
+function restoreState(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(!raw)return;
+    const state=JSON.parse(raw);
+    if(state.wf){
+      wf.step=state.wf.step||0;
+      wf.idea=state.wf.idea||'';
+      wf.research=state.wf.research||'';
+      wf.strategy=state.wf.strategy||'';
+      wf.script=state.wf.script||'';
+      wf.agent=null; // don't restore pending agent — it's a transient state
+    }
+    if(state.activeTab) activeTab=state.activeTab;
+    if(state.chatHistory) chatHistory=state.chatHistory;
+  }catch(e){}
+}
+
+function clearWorkflow(){
+  wf={step:0,idea:'',research:'',strategy:'',script:'',agent:null};
+  chatHistory=[];
+  saveState();
+  location.reload();
+}
+
+// ═══ TABS ═══
+function sw(n){
+  activeTab=n;
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+n)?.classList.add('on');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const i={pipeline:0,tasks:1,results:2,calendar:3}[n];
+  if(i!==undefined)document.querySelectorAll('.tab')[i]?.classList.add('on');
+  if(n==='tasks')loadTasks();
+  if(n==='results')loadResults();
+  if(n==='calendar')renderCalendar();
+  saveState();
+}
+
+function toggleStep(n){
+  const el=document.getElementById('step'+n);
+  const body=el?.querySelector('.ps-body');
+  if(body)body.style.display=body.style.display==='none'?'block':'none';
+}
+
+// ═══ CHAT ═══
+function addMsg(text,who,noSave){
+  const d=document.createElement('div');
+  d.className=`msg msg-${who}`;
+  d.textContent=text;
+  document.getElementById('chatMsgs').appendChild(d);
+  document.getElementById('chatMsgs').scrollTop=99999;
+  if(!noSave){chatHistory.push({text,who});saveState()}
+}
+
+function sendChat(){
+  const input=document.getElementById('chatIn');
+  const text=input.value.trim();if(!text)return;
+  input.value='';
+  addMsg(text,'user');
+
+  // Check if this is a content creation request
+  const isContent=text.toLowerCase().match(/creat|post|reel|video|content|write|caption|script|story|campaign|idea|topic|about/);
+
+  if(isContent && wf.step===0){
+    // Start pipeline
+    wf.idea=text;
+    startPipeline(text);
+    // Also tell Sarah
+    sarahCmd(`The user wants: "${text}". You are coordinating the team. Research is starting with Kai, then Marcus will do strategy and copywriting. Confirm to the user that you're on it. Be brief — 2 sentences max.`);
+  } else {
+    // General chat with Sarah
+    sarahCmd(text);
+  }
+}
+
+// ═══ PIPELINE ═══
+function startPipeline(idea){
+  wf={step:1,idea,research:'',strategy:'',script:'',agent:'kai'};
+  document.getElementById('pipeEmpty').style.display='none';
+  document.getElementById('pipeSteps').style.display='block';
+  document.getElementById('step4').style.display='none';
+
+  // Reset steps
+  for(let i=1;i<=3;i++){
+    document.getElementById('step'+i).className='pipe-step';
+    document.getElementById('st'+i).textContent='⏳ Waiting';
+    document.getElementById('out'+i).innerHTML='';
+  }
+
+  // Step 1: Research
+  setStepActive(1,'🔍 Researching...');
+  document.getElementById('out1').innerHTML='<div class="ps-output" style="color:rgba(52,152,219,0.4)">Kai is researching your topic...</div>';
+
+  wsSend('kai',`Research this content idea: "${idea}". Find trends, statistics, competitor examples, audience insights. Use browse_web tool. Return your findings with source URLs. Max 300 words.`);
+  sw('pipeline');
+}
+
+function setStepActive(n,status){
+  document.getElementById('step'+n).className='pipe-step working';
+  document.getElementById('st'+n).textContent=status;
+}
+function setStepDone(n){
+  document.getElementById('step'+n).className='pipe-step done';
+  document.getElementById('st'+n).textContent='✅ Done';
+}
+
+function handlePipeReply(content){
+  if(wf.step===1){
+    wf.research=content;saveState();
+    let html=`<div class="ps-output">${esc(content)}</div>`;
+    const urls=content.match(/https?:\/\/[^\s"')]+/g);
+    if(urls?.length){
+      html+=`<div class="ps-sources"><div class="st">📎 Sources</div>${[...new Set(urls)].slice(0,8).map(u=>`<a href="${u}" target="_blank">${u.length>60?u.substring(0,60)+'...':u}</a>`).join('')}</div>`;
+    }
+    document.getElementById('out1').innerHTML=html;
+    setStepDone(1);
+    addMsg('Research complete. Marcus is now building the content strategy...','ai');
+
+    // Step 2
+    wf.step=2;wf.agent='marcus';
+    setStepActive(2,'📝 Strategizing...');
+    document.getElementById('out2').innerHTML='<div class="ps-output" style="color:rgba(52,152,219,0.4)">Marcus is building the strategy...</div>';
+    wsSend('marcus',`Build a content strategy based on this research. Write the strategy DIRECTLY — do NOT use any tools. Just write your analysis.
+
+IDEA: ${wf.idea}
+
+RESEARCH:
+${wf.research.substring(0,500)}
+
+Write: hook angle, target audience, tone, content structure, hashtag strategy. Max 200 words. Do NOT use create_content tool.`);
+  }
+  else if(wf.step===2){
+    wf.strategy=content;saveState();
+    document.getElementById('out2').innerHTML=`<div class="ps-output">${esc(content)}</div>`;
+    setStepDone(2);
+    addMsg('Strategy done. Marcus is now writing the final script...','ai');
+
+    // Step 3
+    wf.step=3;wf.agent='marcus';
+    setStepActive(3,'✍️ Writing...');
+    document.getElementById('out3').innerHTML='<div class="ps-output" style="color:rgba(52,152,219,0.4)">Marcus is writing the final script...</div>';
+    wsSend('marcus',`Write the FINAL ready-to-post caption/script. Write the ACTUAL CAPTION TEXT directly in your response. Do NOT use create_content tool. Do NOT say "Content ID created". Just write the caption.
+
+STRATEGY:
+${wf.strategy.substring(0,400)}
+
+Write the FULL caption with:
+- Strong hook first line
+- Engaging body with value
+- Clear CTA
+- 20+ relevant hashtags
+- Emojis
+
+IMPORTANT: Your entire response must BE the caption. Nothing else.`);
+  }
+  else if(wf.step===3){
+    wf.script=content;saveState();
+    document.getElementById('out3').innerHTML=`<div class="ps-output">${esc(content)}</div>`;
+    setStepDone(3);
+
+    // Show review
+    wf.step=4;wf.agent=null;
+    document.getElementById('step4').style.display='block';
+    document.getElementById('step4').className='pipe-step done';
+    document.getElementById('finalScript').textContent=content;
+    addMsg('✅ Pipeline complete! Your final script is ready. Review it on the left and confirm.','ai');
+  }
+}
+
+function confirmScript(){
+  // Save directly to content DB
+  fetch('/api/content',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({platform:'instagram',content_type:'post',caption:wf.script,status:'scheduled',notes:'From workflow pipeline'})
+  }).then(r=>r.json()).then(d=>{
+    addMsg(`✅ Script confirmed and saved! Content ID: ${d.id}. Status: Scheduled.`,'ai');
+    addMsg('You can find it in the Results tab. Ready to send to production if needed.','ai');
+    loadResults();
+  }).catch(()=>addMsg('❌ Failed to save','ai'));
+}
+
+function sendToProduction(){
+  addMsg('🎬 Opening Creative Studio for production...','ai');
+  // Save script to localStorage so Creative Studio can pick it up
+  localStorage.setItem('production_brief', JSON.stringify({
+    idea: wf.idea,
+    script: wf.script,
+    research: wf.research,
+    strategy: wf.strategy,
+  }));
+  // Redirect to Creative Studio
+  setTimeout(()=>window.location.href='/space/creative', 500);
+}
+
+function rerunScript(){
+  wf.step=3;wf.agent='marcus';
+  setStepActive(3,'✍️ Rewriting...');
+  wsSend('marcus',`Rewrite this script with a completely different angle. Make it more viral and engaging. Do NOT use create_content tool. Write the ACTUAL CAPTION directly.
+
+Original: ${wf.script.substring(0,300)}
+
+Write a completely NEW version. Your entire response must BE the new caption text. Nothing else. No meta-commentary.`);
+}
+
+function copyScript(){
+  navigator.clipboard.writeText(wf.script).then(()=>addMsg('📋 Script copied to clipboard!','ai'));
+}
+
+function generateVoiceover(){
+  if(!wf.script){addMsg('❌ No script to voiceover','ai');return}
+  addMsg('🎙️ Generating voiceover from script...','ai');
+  wsSend('zara',`Generate voiceover for this script: "${wf.script.substring(0,500)}". Use generate_voiceover tool with voice "nova". Return the audio file path.`);
+}
+
+function saveToSheet(){
+  if(!wf.script){addMsg('❌ No script to save','ai');return}
+  addMsg('📊 Saving to Google Sheet...','ai');
+  wsSend('sarah',`Save this content to the Google Sheet content calendar. Platform: instagram. Caption: ${wf.script.substring(0,300)}. Status: scheduled. Use open_client_calendar or create_content tool.`);
+}
+
+// ═══ TASKS ═══
+async function loadTasks(){
+  const el=document.getElementById('tasksList');
+  el.innerHTML='<div style="color:rgba(52,152,219,0.3);text-align:center;padding:12px;font-size:0.6rem">Loading tasks...</div>';
+  try{
+    const r=await fetch('/api/tasks');
+    const tasks=await r.json();
+    if(!tasks.length){el.innerHTML='<div class="empty">No tasks yet. Start a workflow with Sarah.</div>';return}
+    const avs={sarah:'/static/img/avatar_sarah.png',marcus:'/static/img/avatar_marcus.png',kai:'/static/img/avatar_kai.png',zara:'/static/img/avatar_zara.png',elena:'/static/img/avatar_elena.png',alex:'/static/img/avatar_alex.png'};
+    el.innerHTML=`<div style="font-size:0.6rem;color:rgba(255,255,255,0.2);margin-bottom:8px">${tasks.length} tasks</div>`+
+      tasks.slice(0,30).map(t=>{
+        const badge=t.status==='completed'?'tb-done':t.status==='in_progress'?'tb-progress':'tb-pending';
+        const ag=(t.assigned_agent||'sarah').toLowerCase();
+        return `<div class="task-row">
+          <img class="task-av" src="${avs[ag]||avs.sarah}" onerror="this.style.display='none'"/>
+          <div class="task-info"><div class="task-title">${esc(t.title||'Task')}</div><div class="task-sub">${esc((t.description||'').substring(0,80))}</div></div>
+          <div class="task-badge ${badge}">${t.status||'pending'}</div>
+        </div>`}).join('');
+  }catch(e){el.innerHTML='<div class="empty">Failed to load tasks</div>'}
+}
+
+// ═══ RESULTS ═══
+async function loadResults(){
+  const el=document.getElementById('resultsList');
+  el.innerHTML='<div style="color:rgba(52,152,219,0.3);text-align:center;padding:12px;font-size:0.6rem">Loading...</div>';
+  try{
+    const r=await fetch('/api/content');
+    const content=await r.json();
+    if(!content.length){el.innerHTML='<div class="empty">No content yet. Start a workflow!</div>';return}
+    el.innerHTML=`<div style="font-size:0.6rem;color:rgba(255,255,255,0.2);margin-bottom:8px">${content.length} pieces of content</div>`+
+      content.slice(0,20).map(c=>{
+        const sc={draft:'#f1c40f',scheduled:'#3498db',published:'#2ecc71',designed:'#9b59b6'}[c.status]||'#f1c40f';
+        return `<div class="result-card">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span style="padding:2px 8px;border-radius:8px;font-size:0.5rem;font-weight:700;background:${sc}22;color:${sc};border:1px solid ${sc}33">${c.status||'draft'}</span>
+            <span style="font-size:0.55rem;color:rgba(255,255,255,0.2)">${c.platform||''}${c.content_type?' • '+c.content_type:''}</span>
+            <span style="margin-left:auto;font-size:0.45rem;color:rgba(255,255,255,0.12)">${(c.created_at||'').split('T')[0]}</span>
+          </div>
+          <div class="result-content">${esc((c.caption||'').substring(0,300))}</div>
+          <div style="display:flex;gap:4px;margin-top:8px"><button class="tb-btn tb-ghost" style="font-size:0.5rem;padding:3px 8px" onclick="navigator.clipboard.writeText(\`${esc((c.caption||'').replace(/`/g,"'"))}\`)">📋 Copy</button></div>
+        </div>`}).join('');
+  }catch(e){el.innerHTML='<div class="empty">Failed to load</div>'}
+}
+
+// ═══ CALENDAR ═══
+let calDate=new Date();
+function renderCalendar(){
+  const year=calDate.getFullYear(),month=calDate.getMonth();
+  document.getElementById('calTitle').textContent=calDate.toLocaleDateString('en',{month:'long',year:'numeric'});
+  const grid=document.getElementById('calGrid');
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date();
+  fetch('/api/content').then(r=>r.json()).then(content=>{
+    let h='';
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>h+=`<div style="text-align:center;font-size:0.5rem;font-weight:700;color:rgba(255,255,255,0.25);padding:4px">${d}</div>`);
+    for(let i=0;i<firstDay;i++)h+='<div style="min-height:80px;border-radius:6px;background:rgba(255,255,255,0.01)"></div>';
+    for(let d=1;d<=daysInMonth;d++){
+      const dt=new Date(year,month,d),isT=dt.toDateString()===today.toDateString(),ds=dt.toISOString().split('T')[0];
+      const posts=content.filter(c=>(c.scheduled_at||c.created_at||'').split('T')[0]===ds);
+      h+=`<div style="min-height:80px;padding:4px;border-radius:6px;background:rgba(255,255,255,${isT?'0.04':'0.015'});border:1px solid ${isT?'rgba(201,168,76,0.3)':'rgba(255,255,255,0.03)'}">
+        <div style="font-size:0.55rem;font-weight:700;color:${isT?'#c9a84c':'rgba(255,255,255,0.3)'};margin-bottom:2px">${d}</div>
+        ${posts.slice(0,2).map(p=>`<div style="padding:2px 4px;border-radius:3px;font-size:0.42rem;margin-bottom:1px;background:rgba(52,152,219,0.1);color:#3498db;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(p.caption||'').substring(0,18)}</div>`).join('')}
+        ${posts.length>2?`<div style="font-size:0.36rem;color:rgba(255,255,255,0.12)">+${posts.length-2}</div>`:''}
+      </div>`;
+    }
+    grid.innerHTML=h;
+  }).catch(()=>{});
+}
+function calPrev(){calDate.setMonth(calDate.getMonth()-1);renderCalendar()}
+function calNext(){calDate.setMonth(calDate.getMonth()+1);renderCalendar()}
+function calToday(){calDate=new Date();renderCalendar()}
+
+// ═══ WEBSOCKET ═══
+function connectWS(){
+  const p=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(`${p}://${location.host}/ws`);
+  ws.onmessage=e=>{
+    const d=JSON.parse(e.data);
+    if(d.type==='agent_typing'){
+      document.getElementById('typing').style.display='block';
+    }
+    else if(d.type==='agent_reply'){
+      document.getElementById('typing').style.display='none';
+      const c=d.content||d.text||d.message||'';
+      const agent=d.agent||'';
+
+      // Route to pipeline if active
+      if(wf.step>0 && wf.step<4 && wf.agent && (agent===wf.agent||!agent)){
+        handlePipeReply(c);
+        return;
+      }
+
+      // Clean up raw JSON/code from chat display
+      let cleanMsg=c;
+      cleanMsg=cleanMsg.replace(/```TEXT_LAYERS[\s\S]*?```/g,'[Design layers generated]');
+      cleanMsg=cleanMsg.replace(/```json[\s\S]*?```/g,'[Data]');
+      cleanMsg=cleanMsg.replace(/\{[^{}]{100,}\}/g,'[...]');
+      if(cleanMsg.length>500)cleanMsg=cleanMsg.substring(0,500)+'...';
+      addMsg(cleanMsg,'ai');
+    }
+    else if(d.type==='error'){
+      document.getElementById('typing').style.display='none';
+      addMsg('❌ '+(d.content||d.text||'Error'),'ai');
+    }
+  };
+  ws.onclose=()=>setTimeout(connectWS,2000);
+}
+connectWS();
+
+function wsSend(agent,content){
+  if(!ws||ws.readyState!==1)return;
+  ws.send(JSON.stringify({type:'agent_chat',agent,content}));
+}
+function sarahCmd(t){wsSend('sarah',t)}
+
+// ═══ INIT — restore persisted state ═══
+restoreState();
+
+// Restore chat history
+if(chatHistory.length){
+  chatHistory.forEach(m=>addMsg(m.text,m.who,true));
+}
+
+// Restore pipeline UI from saved state
+if(wf.step>0){
+  document.getElementById('pipeEmpty').style.display='none';
+  document.getElementById('pipeSteps').style.display='block';
+
+  // Restore completed steps
+  if(wf.research){
+    document.getElementById('step1').className='pipe-step done';
+    document.getElementById('st1').textContent='✅ Done';
+    let h=`<div class="ps-output">${esc(wf.research)}</div>`;
+    const urls=wf.research.match(/https?:\/\/[^\s"')]+/g);
+    if(urls?.length) h+=`<div class="ps-sources"><div class="st">📎 Sources</div>${[...new Set(urls)].slice(0,8).map(u=>`<a href="${u}" target="_blank">${u.length>60?u.substring(0,60)+'...':u}</a>`).join('')}</div>`;
+    document.getElementById('out1').innerHTML=h;
+  }
+  if(wf.strategy){
+    document.getElementById('step2').className='pipe-step done';
+    document.getElementById('st2').textContent='✅ Done';
+    document.getElementById('out2').innerHTML=`<div class="ps-output">${esc(wf.strategy)}</div>`;
+  }
+  if(wf.script){
+    document.getElementById('step3').className='pipe-step done';
+    document.getElementById('st3').textContent='✅ Done';
+    document.getElementById('out3').innerHTML=`<div class="ps-output">${esc(wf.script)}</div>`;
+    // Show review
+    document.getElementById('step4').style.display='block';
+    document.getElementById('step4').className='pipe-step done';
+    document.getElementById('finalScript').textContent=wf.script;
+  }
+
+  // If a step was in progress (agent was working when we refreshed), mark it as waiting to re-run
+  if(wf.step<4 && !wf.script){
+    const currentStep=wf.research?wf.strategy?3:2:1;
+    wf.step=currentStep;
+    document.getElementById('step'+currentStep).className='pipe-step';
+    document.getElementById('st'+currentStep).textContent='⏸ Paused — tell Sarah to continue';
+  }
+}
+
+// Restore active tab
+sw(activeTab);
+
+// Add "New Workflow" button to topbar
+document.querySelector('.tb-fill').insertAdjacentHTML('beforebegin',
+  '<button class="tb-btn tb-ghost" onclick="clearWorkflow()" style="color:rgba(231,76,60,0.5)">🗑 Clear & New</button>');
+
+loadTasks();loadResults();
+</script>
+</body>
+</html>

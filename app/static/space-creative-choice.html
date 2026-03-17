@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY — Creative Studio</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#080c18;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+    #bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 130% 55% at 50% -5%,rgba(155,89,182,0.2) 0%,transparent 60%),
+        radial-gradient(ellipse 45% 55% at 0% 55%,rgba(142,68,173,0.12) 0%,transparent 55%),
+        radial-gradient(ellipse 45% 50% at 100% 70%,rgba(240,120,64,0.08) 0%,transparent 55%),#080c18}
+    .shell{position:relative;z-index:10;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+    header{position:absolute;top:0;left:0;right:0;padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .logo-i{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#9b59b6,#8e44ad);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;color:#fff}
+    .logo-t{font-size:0.6rem;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.3)}
+    .nav{display:flex;gap:6px}
+    .nav a{padding:7px 16px;border-radius:50px;font-size:0.6rem;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);transition:all 0.2s}
+    .nav a:hover{border-color:rgba(155,89,182,0.4);color:#9b59b6}
+
+    .title{text-align:center;margin-bottom:40px}
+    .title h1{font-size:2rem;font-weight:900;margin-bottom:6px}
+    .title p{font-size:0.8rem;color:rgba(255,255,255,0.35)}
+
+    .choices{display:flex;gap:24px}
+    .choice{
+      width:320px;padding:40px 30px;border-radius:20px;text-align:center;
+      background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.06);
+      cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;
+    }
+    .choice:hover{border-color:rgba(155,89,182,0.4);background:rgba(155,89,182,0.04);transform:translateY(-4px)}
+    .choice .glow{position:absolute;top:-60px;right:-40px;width:180px;height:180px;border-radius:50%;filter:blur(60px);opacity:0;transition:opacity 0.4s}
+    .choice:hover .glow{opacity:0.15}
+    .choice .icon{font-size:3.5rem;margin-bottom:16px}
+    .choice h2{font-size:1.2rem;font-weight:800;margin-bottom:6px}
+    .choice p{font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.5;margin-bottom:16px}
+    .choice .tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+    .choice .tag{padding:3px 10px;border-radius:20px;font-size:0.52rem;font-weight:600;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.35)}
+    .choice:hover .tag{border-color:rgba(155,89,182,0.2);color:rgba(255,255,255,0.5)}
+    .choice .arrow{margin-top:16px;font-size:0.65rem;font-weight:700;color:rgba(155,89,182,0.5);text-transform:uppercase;letter-spacing:0.1em}
+    .choice:hover .arrow{color:#9b59b6}
+  </style>
+</head>
+<body>
+<div id="bg"></div>
+<div class="shell">
+  <header>
+    <a class="logo" href="/spaces"><div class="logo-i">🎨</div><div class="logo-t">Creative Studio</div></a>
+    <nav class="nav">
+      <a href="/spaces">← Spaces</a>
+      <a href="/platform">Dashboard</a>
+    </nav>
+  </header>
+
+  <div class="title">
+    <h1>🎨 Creative Studio</h1>
+    <p>What do you want to create today?</p>
+  </div>
+
+  <div class="choices">
+    <div class="choice" onclick="location.href='/space/creative'">
+      <div class="glow" style="background:#9b59b6"></div>
+      <div class="icon">🖼️</div>
+      <h2>Post & Image Design</h2>
+      <p>Create social media posts, thumbnails, stories, and visual content with Fabric.js canvas editor + AI generation.</p>
+      <div class="tags">
+        <span class="tag">Canvas Editor</span>
+        <span class="tag">Templates</span>
+        <span class="tag">Stock Photos</span>
+        <span class="tag">AI Generate</span>
+        <span class="tag">Export PNG/JPG</span>
+      </div>
+      <div class="arrow">Open Designer →</div>
+    </div>
+
+    <div class="choice" onclick="location.href='/space/video'">
+      <div class="glow" style="background:#e67e22"></div>
+      <div class="icon">🎬</div>
+      <h2>Video Production</h2>
+      <p>Produce videos, reels, voiceovers, captions and motion graphics with Kling AI + ElevenLabs + Remotion.</p>
+      <div class="tags">
+        <span class="tag">AI Video</span>
+        <span class="tag">Voiceover</span>
+        <span class="tag">Captions</span>
+        <span class="tag">Remotion</span>
+        <span class="tag">Kling AI</span>
+      </div>
+      <div class="arrow">Open Video Studio →</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

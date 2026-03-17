@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY — Leads & CRM</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#020509;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#fff}
+    #bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 130% 55% at 50% -5%,rgba(28,108,160,0.35) 0%,transparent 60%),
+        radial-gradient(ellipse 45% 55% at 0% 55%,rgba(28,18,80,0.28) 0%,transparent 55%),
+        radial-gradient(ellipse 45% 50% at 100% 70%,rgba(26,188,156,0.12) 0%,transparent 55%),#020509}
+
+    .shell{position:relative;z-index:10;height:100vh;display:flex;flex-direction:column;padding:12px 32px 12px}
+
+    /* Header */
+    header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+    .logo-mark{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#1abc9c,#16a085);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:0.65rem;color:#fff}
+    .logo-name{font-size:0.58rem;letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.35)}
+    .h-nav{display:flex;gap:5px}
+    .hbtn{padding:6px 14px;border-radius:50px;font-size:0.56rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer}
+    .hbtn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35)}
+    .hbtn-ghost:hover{border-color:rgba(26,188,156,0.4);color:#1abc9c}
+    .hbtn-accent{background:linear-gradient(135deg,#1abc9c,#16a085);color:#fff}
+
+    /* Main grid: left content + right chat */
+    .main{flex:1;display:grid;grid-template-columns:1fr 300px;gap:12px;min-height:0}
+
+    /* ── LEFT SIDE ── */
+    .left{display:flex;flex-direction:column;gap:10px;min-height:0}
+
+    /* Pipeline counters */
+    .counters{display:flex;gap:6px;flex-shrink:0}
+    .counter-box{
+      flex:1;padding:10px 8px;text-align:center;
+      background:rgba(9,16,34,0.55);backdrop-filter:blur(18px);
+      border:1px solid rgba(255,255,255,0.06);border-radius:10px;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .counter-box:hover,.counter-box.active{border-color:rgba(26,188,156,0.4);background:rgba(26,188,156,0.08)}
+    .counter-box .val{font-size:1.3rem;font-weight:900;color:#1abc9c;line-height:1}
+    .counter-box .lbl{font-size:0.48rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
+
+    /* Tab bar */
+    .tabs{display:flex;gap:0;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06)}
+    .tab{
+      padding:10px 18px;font-size:0.65rem;font-weight:700;
+      color:rgba(255,255,255,0.35);cursor:pointer;transition:all 0.2s;
+      border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:0.06em;
+    }
+    .tab:hover{color:rgba(255,255,255,0.6)}
+    .tab.active{color:#1abc9c;border-bottom-color:#1abc9c}
+
+    /* Tab content area */
+    .tab-content{flex:1;overflow-y:auto;min-height:0;padding-top:10px}
+    .tab-content::-webkit-scrollbar{width:4px}
+    .tab-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+
+    /* ── LEADS TAB: Vault folders ── */
+    .vault-actions{display:flex;gap:5px;margin-bottom:10px}
+    .va-btn{padding:6px 12px;border-radius:7px;font-size:0.56rem;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.05em}
+    .va-btn-outline{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)}
+    .va-btn-outline:hover{background:rgba(26,188,156,0.08);border-color:rgba(26,188,156,0.3);color:#1abc9c}
+    .va-btn-primary{background:rgba(26,188,156,0.15);border:1px solid rgba(26,188,156,0.3);color:#1abc9c}
+    .va-btn-gold{background:linear-gradient(135deg,#c9a84c,#e8c56a);color:#000;border:none}
+
+    .vault-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .vault-card{
+      padding:14px;cursor:pointer;position:relative;
+      background:rgba(9,16,34,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:10px;
+      transition:all 0.2s;display:flex;flex-direction:column;min-height:100px;
+    }
+    .vault-card:hover{border-color:rgba(26,188,156,0.3);background:rgba(26,188,156,0.05);transform:translateY(-1px)}
+    .vc-del{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(231,76,60,0.6);border:none;cursor:pointer;color:#fff;font-size:0.5rem;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s}
+    .vault-card:hover .vc-del{opacity:1}
+    .vc-icon{font-size:1.8rem;margin-bottom:6px}
+    .vc-name{font-size:0.68rem;font-weight:700;color:#fff;margin-bottom:2px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .vc-desc{font-size:0.5rem;color:rgba(255,255,255,0.25);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .vc-stats{display:flex;gap:7px;margin-top:auto}
+    .vc-stat{font-size:0.48rem;color:rgba(255,255,255,0.35);display:flex;align-items:center;gap:2px}
+    .vc-dot{width:4px;height:4px;border-radius:2px}
+
+    /* ── FOLDER OPEN (inside leads tab) ── */
+    .folder-open{display:none}
+    .folder-open.show{display:block}
+    .fo-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .fo-back{padding:5px 12px;border-radius:6px;border:none;cursor:pointer;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);font-size:0.65rem;font-weight:600;transition:all 0.15s}
+    .fo-back:hover{background:rgba(26,188,156,0.12);color:#1abc9c}
+    .fo-title{font-size:0.9rem;font-weight:800;flex:1}
+    .fo-sub{font-size:0.6rem;color:rgba(255,255,255,0.3);margin-bottom:8px}
+    .fo-stats{display:flex;gap:10px;margin-bottom:10px}
+    .fo-stat{padding:8px 16px;text-align:center;background:rgba(9,16,34,0.5);border:1px solid rgba(255,255,255,0.06);border-radius:8px}
+    .fo-stat .v{font-size:1.2rem;font-weight:900;color:#1abc9c}
+    .fo-stat .l{font-size:0.48rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.06em;margin-top:1px}
+
+    /* Bulk actions bar */
+    .bulk-bar{display:none;align-items:center;gap:8px;padding:8px 12px;margin-bottom:8px;background:rgba(26,188,156,0.1);border:1px solid rgba(26,188,156,0.25);border-radius:8px}
+    .bulk-bar.show{display:flex}
+    .bulk-count{font-size:0.7rem;font-weight:700;color:#1abc9c;margin-right:auto}
+    .bulk-btn{padding:5px 12px;border-radius:6px;font-size:0.55rem;font-weight:600;border:none;cursor:pointer;transition:all 0.15s;text-transform:uppercase}
+    .bulk-btn-copy{background:rgba(52,152,219,0.15);color:#3498db;border:1px solid rgba(52,152,219,0.25)}
+    .bulk-btn-move{background:rgba(155,89,182,0.15);color:#9b59b6;border:1px solid rgba(155,89,182,0.25)}
+    .bulk-btn-del{background:rgba(231,76,60,0.12);color:#e74c3c;border:1px solid rgba(231,76,60,0.2)}
+    .bulk-btn-export{background:rgba(26,188,156,0.12);color:#1abc9c;border:1px solid rgba(26,188,156,0.2)}
+
+    /* Lead cards */
+    .leads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+    .lead-card{
+      padding:14px;position:relative;
+      background:rgba(9,16,34,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:10px;
+      transition:all 0.15s;
+    }
+    .lead-card:hover{border-color:rgba(26,188,156,0.2)}
+    .lead-card.selected{border-color:rgba(26,188,156,0.5);background:rgba(26,188,156,0.06)}
+    .lc-check{position:absolute;top:8px;left:8px;width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#1abc9c;transition:all 0.15s}
+    .lc-check.checked{background:rgba(26,188,156,0.2);border-color:#1abc9c}
+    .lc-del{position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:50%;background:rgba(231,76,60,0.5);border:none;cursor:pointer;color:#fff;font-size:0.45rem;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.15s}
+    .lead-card:hover .lc-del{opacity:1}
+    .lc-name{font-size:0.72rem;font-weight:700;color:#fff;margin-bottom:5px;padding-left:20px}
+    .lc-field{font-size:0.6rem;color:rgba(255,255,255,0.45);margin-bottom:2px;display:flex;align-items:center;gap:4px}
+    .lc-field a{color:#1abc9c;text-decoration:none}
+    .lc-field a:hover{text-decoration:underline}
+    .lc-tags{margin-top:5px;display:flex;flex-wrap:wrap;gap:3px}
+    .lc-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:0.48rem;font-weight:600}
+    .lc-tag-ind{background:rgba(26,188,156,0.1);color:#1abc9c;border:1px solid rgba(26,188,156,0.15)}
+    .lc-tag-loc{background:rgba(231,76,60,0.08);color:rgba(231,76,60,0.7)}
+    .lc-score{font-size:0.52rem;color:rgba(255,255,255,0.22);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .lc-actions{margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.04)}
+    .lc-abtn{width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.5);font-size:0.56rem;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s}
+    .lc-abtn:hover{background:rgba(26,188,156,0.08);border-color:rgba(26,188,156,0.25);color:#1abc9c}
+
+    /* ── RESEARCH/EMAIL/FEEDBACK TABS ── */
+    .item-list{display:flex;flex-direction:column;gap:6px}
+    .item-row{
+      display:flex;align-items:center;gap:12px;padding:12px 14px;
+      background:rgba(9,16,34,0.55);border:1px solid rgba(255,255,255,0.06);border-radius:10px;
+      transition:all 0.15s;
+    }
+    .item-row:hover{border-color:rgba(26,188,156,0.2)}
+    .ir-icon{font-size:1.1rem;flex-shrink:0}
+    .ir-info{flex:1;min-width:0}
+    .ir-title{font-size:0.72rem;font-weight:700;color:#fff}
+    .ir-sub{font-size:0.56rem;color:rgba(255,255,255,0.3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ir-badge{padding:3px 8px;border-radius:20px;font-size:0.5rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;flex-shrink:0}
+    .badge-progress{background:rgba(52,152,219,0.15);color:#3498db;border:1px solid rgba(52,152,219,0.2)}
+    .badge-done{background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.2)}
+    .badge-pending{background:rgba(241,196,15,0.12);color:#f1c40f;border:1px solid rgba(241,196,15,0.15)}
+    .badge-sent{background:rgba(155,89,182,0.12);color:#9b59b6;border:1px solid rgba(155,89,182,0.15)}
+    .ir-time{font-size:0.5rem;color:rgba(255,255,255,0.2);flex-shrink:0}
+
+    .empty-state{text-align:center;padding:30px;color:rgba(255,255,255,0.15);font-size:0.75rem;font-style:italic}
+
+    /* ── CHAT (right) ── */
+    .chat-col{display:flex;flex-direction:column;background:rgba(9,16,34,0.55);backdrop-filter:blur(28px) saturate(160%);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden}
+    .chat-header{padding:10px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .chat-header .av{width:28px;height:28px;border-radius:50%;background-size:cover;background-position:center top;border:2px solid #1abc9c}
+    .chat-header .info h4{font-size:0.68rem;font-weight:700}
+    .chat-header .info span{font-size:0.5rem;color:#1abc9c}
+    .chat-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px}
+    .chat-msgs::-webkit-scrollbar{width:3px}
+    .chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:3px}
+    .msg{max-width:90%;padding:8px 11px;border-radius:10px;font-size:0.66rem;line-height:1.4}
+    .msg-ai{align-self:flex-start;background:rgba(26,188,156,0.08);border:1px solid rgba(26,188,156,0.1);color:rgba(255,255,255,0.8)}
+    .msg-user{align-self:flex-end;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.8)}
+    .typing-indicator{align-self:flex-start;padding:8px 11px;font-size:0.6rem;color:rgba(26,188,156,0.45);font-style:italic;display:none}
+    .chat-input-row{padding:8px 10px;border-top:1px solid rgba(255,255,255,0.05);display:flex;gap:5px}
+    .chat-input-row input{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:7px;padding:8px 10px;color:#fff;font-size:0.68rem;outline:none}
+    .chat-input-row input:focus{border-color:rgba(26,188,156,0.3)}
+    .chat-input-row input::placeholder{color:rgba(255,255,255,0.15)}
+    .send-btn{width:34px;height:34px;border-radius:7px;border:none;cursor:pointer;background:linear-gradient(135deg,#1abc9c,#16a085);color:#fff;font-size:0.85rem;display:flex;align-items:center;justify-content:center}
+
+    /* Copy-to-folder modal */
+    .modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center}
+    .modal-overlay.show{display:flex}
+    .modal-box{background:rgba(12,18,35,0.96);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:22px;min-width:340px;max-height:70vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.7)}
+    .modal-box h3{font-size:0.85rem;font-weight:700;margin-bottom:12px}
+    .modal-box input{width:100%;padding:9px 12px;border-radius:7px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:0.75rem;outline:none;margin-bottom:12px}
+    .modal-box input:focus{border-color:rgba(26,188,156,0.4)}
+    .modal-folder-list{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+    .modal-folder{padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);cursor:pointer;font-size:0.72rem;transition:all 0.15s;display:flex;align-items:center;gap:8px}
+    .modal-folder:hover{background:rgba(26,188,156,0.08);border-color:rgba(26,188,156,0.25)}
+    .modal-btns{display:flex;gap:6px;justify-content:flex-end}
+    .modal-btns button{padding:7px 16px;border-radius:7px;font-size:0.66rem;font-weight:600;cursor:pointer;border:none}
+    .mbtn-cancel{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)}
+    .mbtn-save{background:linear-gradient(135deg,#1abc9c,#16a085);color:#fff}
+
+    /* ── PROSPECTING FORM PANEL ── */
+    .prospect-panel{
+      display:none;
+      background:rgba(9,16,34,0.7);backdrop-filter:blur(24px);
+      border:1px solid rgba(26,188,156,0.2);border-radius:14px;
+      padding:20px 22px;margin-bottom:10px;
+      animation:slideDown 0.25s ease;
+    }
+    .prospect-panel.open{display:block}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .pp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .pp-header h3{font-size:0.85rem;font-weight:800;color:#1abc9c;display:flex;align-items:center;gap:8px}
+    .pp-close{width:26px;height:26px;border-radius:6px;border:none;cursor:pointer;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);font-size:0.8rem;display:flex;align-items:center;justify-content:center}
+    .pp-close:hover{background:rgba(231,76,60,0.15);color:#e74c3c}
+    .pp-row{display:flex;gap:14px;margin-bottom:12px}
+    .pp-group{flex:1;display:flex;flex-direction:column;gap:4px}
+    .pp-label{font-size:0.56rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.06em}
+    .pp-input{
+      padding:9px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.04);color:#fff;font-size:0.72rem;outline:none;
+      transition:border-color 0.2s;width:100%;
+    }
+    .pp-input:focus{border-color:rgba(26,188,156,0.4)}
+    .pp-input::placeholder{color:rgba(255,255,255,0.18)}
+    .pp-select{
+      padding:9px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);
+      background:rgba(9,16,34,0.8);color:#fff;font-size:0.72rem;outline:none;
+      cursor:pointer;appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;
+    }
+    .pp-checkboxes{display:flex;flex-wrap:wrap;gap:6px}
+    .pp-check{
+      display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;
+      background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+      cursor:pointer;transition:all 0.15s;font-size:0.62rem;color:rgba(255,255,255,0.5);
+      user-select:none;
+    }
+    .pp-check:hover{border-color:rgba(26,188,156,0.3);color:rgba(255,255,255,0.7)}
+    .pp-check.checked{background:rgba(26,188,156,0.12);border-color:rgba(26,188,156,0.35);color:#1abc9c}
+    .pp-check input{display:none}
+    .pp-check .tick{width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:0.5rem;transition:all 0.15s}
+    .pp-check.checked .tick{background:rgba(26,188,156,0.3);border-color:#1abc9c;color:#1abc9c}
+    .pp-footer{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05)}
+    .pp-footer .pp-summary{flex:1;font-size:0.6rem;color:rgba(255,255,255,0.3);font-style:italic}
+    .pp-submit{
+      padding:10px 24px;border-radius:8px;border:none;cursor:pointer;
+      background:linear-gradient(135deg,#c9a84c,#e8c56a);color:#000;
+      font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+      transition:all 0.2s;display:flex;align-items:center;gap:6px;
+    }
+    .pp-submit:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
+  </style>
+</head>
+<body>
+<div id="bg"></div>
+
+<!-- Copy/Move modal -->
+<div class="modal-overlay" id="copyModal">
+  <div class="modal-box">
+    <h3 id="copyModalTitle">Copy to Folder</h3>
+    <div class="modal-folder-list" id="copyFolderList"></div>
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="closeCopyModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename modal -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal-box">
+    <h3>Rename Project</h3>
+    <input type="text" id="renameInput" placeholder="New name..." onkeydown="if(event.key==='Enter')saveRename()"/>
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="document.getElementById('renameModal').classList.remove('show')">Cancel</button>
+      <button class="mbtn-save" onclick="saveRename()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <header>
+    <a class="logo" href="/spaces">
+      <div class="logo-mark">🔍</div>
+      <div class="logo-name">Leads & CRM</div>
+    </a>
+    <nav class="h-nav">
+      <a class="hbtn hbtn-ghost" href="/spaces">← Spaces</a>
+      <a class="hbtn hbtn-ghost" href="/platform">Dashboard</a>
+      <a class="hbtn hbtn-accent" onclick="document.getElementById('chatInput').focus()">Talk to Kai</a>
+    </nav>
+  </header>
+
+  <div class="main">
+    <div class="left">
+      <!-- Pipeline counters -->
+      <div class="counters" id="counters"></div>
+
+      <!-- Tab bar -->
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('leads')">Leads</div>
+        <div class="tab" onclick="switchTab('research')">Research Pipeline</div>
+        <div class="tab" onclick="switchTab('market')">Market Research</div>
+        <div class="tab" onclick="switchTab('emails')">Email Send</div>
+        <div class="tab" onclick="switchTab('feedback')">Read Back</div>
+      </div>
+
+      <!-- Tab content -->
+      <div class="tab-content">
+        <!-- LEADS TAB -->
+        <div class="tab-pane active" id="pane-leads">
+          <!-- Vault view -->
+          <div id="vaultView">
+            <div class="vault-actions">
+              <button class="va-btn va-btn-outline" onclick="exportAllCSV()">📤 Export All</button>
+              <button class="va-btn va-btn-primary" onclick="toggleProspectPanel();document.getElementById('ppCount').value='10'">🔍 New Research</button>
+              <button class="va-btn va-btn-gold" onclick="toggleProspectPanel()">⚡ Vibe Prospecting</button>
+              <label style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:0.55rem;color:rgba(255,255,255,0.3);cursor:pointer"><input type="checkbox" id="selectAllFolders" onchange="toggleSelectAllFolders()"/> Select All</label>
+            </div>
+
+            <!-- PROSPECTING FORM -->
+            <div class="prospect-panel" id="prospectPanel">
+              <div class="pp-header">
+                <h3>⚡ Vibe Prospecting</h3>
+                <button class="pp-close" onclick="closeProspectPanel()">✕</button>
+              </div>
+
+              <div class="pp-row">
+                <div class="pp-group">
+                  <div class="pp-label">Location / City</div>
+                  <input class="pp-input" id="ppLocation" placeholder="e.g. Dubai, London, New York..." value="Dubai"/>
+                </div>
+                <div class="pp-group">
+                  <div class="pp-label">How many companies?</div>
+                  <select class="pp-select" id="ppCount">
+                    <option value="10">10 companies</option>
+                    <option value="20">20 companies</option>
+                    <option value="50" selected>50 companies</option>
+                    <option value="100">100 companies</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="pp-row">
+                <div class="pp-group" style="flex:2">
+                  <div class="pp-label">Custom prompt (optional)</div>
+                  <input class="pp-input" id="ppPrompt" placeholder="e.g. 'companies that need social media marketing' or 'luxury brands looking for content creation'"/>
+                </div>
+              </div>
+
+              <div class="pp-label" style="margin-bottom:6px">Industries — select all that apply</div>
+              <div class="pp-checkboxes" id="ppIndustries">
+              </div>
+
+              <div style="margin-top:12px">
+                <div class="pp-label" style="margin-bottom:6px">Must have</div>
+                <div class="pp-checkboxes" id="ppFilters">
+                </div>
+              </div>
+
+              <div class="pp-footer">
+                <div class="pp-summary" id="ppSummary">Configure your search and hit Start</div>
+                <button class="pp-submit" onclick="startProspecting()">⚡ Start Prospecting</button>
+              </div>
+            </div>
+
+            <div class="vault-grid" id="vaultGrid"></div>
+          </div>
+          <!-- Folder open view -->
+          <div class="folder-open" id="folderOpen">
+            <div class="fo-header">
+              <button class="fo-back" onclick="closeFolder()">← Back</button>
+              <div class="fo-title" id="foTitle">Folder</div>
+              <div style="display:flex;gap:5px">
+                <button class="va-btn va-btn-outline" onclick="exportFolderCSV()">📤 CSV</button>
+                <button class="va-btn va-btn-primary" onclick="findMore()">🔍 Find More</button>
+                <button class="va-btn va-btn-gold" onclick="autoOutreach()">📧 Outreach</button>
+              </div>
+            </div>
+            <div class="fo-sub" id="foSub"></div>
+            <div class="fo-stats" id="foStats"></div>
+            <!-- Bulk actions -->
+            <div class="bulk-bar" id="bulkBar">
+              <div class="bulk-count" id="bulkCount">0 selected</div>
+              <button class="bulk-btn bulk-btn-copy" onclick="bulkCopy()">📋 Copy to Folder</button>
+              <button class="bulk-btn bulk-btn-move" onclick="bulkMove()">📂 Move to Folder</button>
+              <button class="bulk-btn bulk-btn-export" onclick="bulkExport()">📤 Export</button>
+              <button class="bulk-btn bulk-btn-del" onclick="bulkDelete()">🗑️ Delete</button>
+            </div>
+            <div style="margin-bottom:6px;display:flex;align-items:center;gap:6px">
+              <label style="display:flex;align-items:center;gap:4px;font-size:0.55rem;color:rgba(255,255,255,0.3);cursor:pointer"><input type="checkbox" id="selectAllLeads" onchange="toggleSelectAll()"/> Select All</label>
+            </div>
+            <div class="leads-grid" id="leadsGrid"></div>
+          </div>
+        </div>
+
+        <!-- RESEARCH PIPELINE TAB -->
+        <div class="tab-pane" id="pane-research">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.55rem;color:rgba(255,255,255,0.3);cursor:pointer"><input type="checkbox" id="selectAllResearch" onchange="toggleSelectAllResearch()"/> Select All</label>
+            <div id="researchBulk" style="display:none;margin-left:8px;display:flex;gap:5px">
+              <button class="va-btn va-btn-outline" style="padding:5px 10px;font-size:0.5rem" onclick="archiveSelected()">📦 Archive Selected</button>
+              <button class="va-btn va-btn-outline" style="padding:5px 10px;font-size:0.5rem;border-color:rgba(231,76,60,0.2);color:rgba(231,76,60,0.7)" onclick="deleteSelectedResearch()">🗑️ Delete Selected</button>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:5px">
+              <button class="va-btn va-btn-outline" style="padding:5px 10px;font-size:0.5rem" onclick="archiveAllDone()">📦 Archive All Done</button>
+              <button class="va-btn va-btn-outline" style="padding:5px 10px;font-size:0.5rem;border-color:rgba(231,76,60,0.2);color:rgba(231,76,60,0.7)" onclick="clearAllResearch()">🗑️ Clear All</button>
+            </div>
+          </div>
+          <div class="item-list" id="researchList"></div>
+        </div>
+
+        <!-- MARKET RESEARCH TAB -->
+        <div class="tab-pane" id="pane-market">
+          <div class="item-list" id="marketList"></div>
+        </div>
+
+        <!-- EMAIL SEND TAB -->
+        <div class="tab-pane" id="pane-emails">
+          <div class="item-list" id="emailList"></div>
+        </div>
+
+        <!-- READ BACK / FEEDBACK TAB -->
+        <div class="tab-pane" id="pane-feedback">
+          <div class="item-list" id="feedbackList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat-col">
+      <div class="chat-header">
+        <div class="av" style="background-image:url(/static/img/avatar_kai.png)"></div>
+        <div class="info"><h4>Kai Tanaka</h4><span>Online — Research Lead</span></div>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="msg msg-ai">Hey! Use the tabs to browse your leads, research, emails and feedback. Click any folder to see contacts — you can select, copy, move and export. Ask me anything!</div>
+      </div>
+      <div class="typing-indicator" id="typing">Kai is working...</div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask Kai..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+        <button class="send-btn" onclick="sendMsg()">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ STATE ══
+let projects=[], allLeads=[], openPid=null, openLeads=[], selectedIds=new Set(), bulkMode='copy';
+let tasks=[], clients=[];
+
+// ══ DATA LOADING ══
+async function loadAll() {
+  const [pRes, tRes, cRes] = await Promise.all([
+    fetch('/api/projects').then(r=>r.json()).catch(()=>[]),
+    fetch('/api/tasks').then(r=>r.json()).catch(()=>[]),
+    fetch('/api/clients').then(r=>r.json()).catch(()=>[]),
+  ]);
+  projects=pRes; tasks=tRes; clients=cRes;
+
+  // Collect all leads
+  allLeads=[];
+  await Promise.all(projects.map(async p=>{
+    try{ const d=await fetch(`/api/projects/${p.id}/leads`).then(r=>r.json()); if(d.leads) d.leads.forEach(l=>{l.project_id=p.id;allLeads.push(l)})} catch(e){}
+  }));
+
+  renderCounters();
+  renderVault();
+  renderResearch();
+  renderEmails();
+  renderFeedback();
+  if(openPid) refreshFolder();
+}
+
+// ══ COUNTERS ══
+function renderCounters() {
+  const totalLeads=allLeads.length;
+  const researchCount=projects.length;
+  const marketCount=tasks.filter(t=>(t.title||'').toLowerCase().includes('research')||(t.title||'').toLowerCase().includes('market')).length;
+  const emailCount=tasks.filter(t=>(t.title||'').toLowerCase().includes('email')||(t.title||'').toLowerCase().includes('outreach')||(t.assigned_agent||'')==='elena').length;
+  const feedbackCount=tasks.filter(t=>(t.status||'')==='completed').length;
+  document.getElementById('counters').innerHTML=[
+    {v:totalLeads,l:'Leads'},{v:researchCount,l:'Research'},{v:marketCount,l:'Market'},{v:emailCount,l:'Emails'},{v:feedbackCount,l:'Done'}
+  ].map((c,i)=>`<div class="counter-box" onclick="switchTab('${['leads','research','market','emails','feedback'][i]}')"><div class="val">${c.v}</div><div class="lbl">${c.l}</div></div>`).join('');
+}
+
+// ══ TAB SWITCHING ══
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const tabs=['leads','research','market','emails','feedback'];
+    t.classList.toggle('active', tabs[i]===name);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+name).classList.add('active');
+}
+
+// ══ LEADS TAB — VAULT ══
+function renderVault() {
+  const g=document.getElementById('vaultGrid');
+  if(!projects.length){g.innerHTML='<div class="empty-state" style="grid-column:1/-1">No projects — click New Research or Vibe Prospecting</div>';return}
+  g.innerHTML=projects.map(p=>{
+    const age=p.created_at?timeAgo(p.created_at):'';
+    return `<div class="vault-card" onclick="openFolder(${p.id})">
+      <button class="vc-del" onclick="event.stopPropagation();delProject(${p.id},'${esc(p.name)}')">✕</button>
+      <div class="vc-icon">📁</div>
+      <div class="vc-name">${esc(p.name||'Untitled')}</div>
+      <div class="vc-desc">${esc(p.description||p.query||'')}</div>
+      <div class="vc-stats">
+        <div class="vc-stat"><div class="vc-dot" style="background:#1abc9c"></div>${p.lead_count||0} contacts</div>
+        <div class="vc-stat"><div class="vc-dot" style="background:#3498db"></div>${p.email_count||0} emails</div>
+        ${age?`<div class="vc-stat">${age}</div>`:''}
+      </div>
+    </div>`}).join('');
+}
+
+async function openFolder(pid) {
+  openPid=pid;
+  const p=projects.find(x=>x.id===pid)||{name:'Project'};
+  document.getElementById('foTitle').textContent=p.name||'Project';
+  document.getElementById('foSub').textContent=(p.description||p.query||'')+' — '+(p.lead_count||0)+' contacts';
+  document.getElementById('vaultView').style.display='none';
+  document.getElementById('folderOpen').classList.add('show');
+  selectedIds.clear(); updateBulk();
+  await refreshFolder();
+}
+
+async function refreshFolder() {
+  try{
+    const d=await fetch(`/api/projects/${openPid}/leads`).then(r=>r.json());
+    openLeads=d.leads||[];
+  }catch(e){openLeads=[]}
+  const total=openLeads.length, em=openLeads.filter(l=>l.email).length, ph=openLeads.filter(l=>l.phone).length;
+  document.getElementById('foStats').innerHTML=`
+    <div class="fo-stat"><div class="v">${total}</div><div class="l">Total</div></div>
+    <div class="fo-stat"><div class="v">${em}</div><div class="l">Have Email</div></div>
+    <div class="fo-stat"><div class="v">${ph}</div><div class="l">Have Phone</div></div>`;
+  renderLeadCards();
+}
+
+function renderLeadCards() {
+  const g=document.getElementById('leadsGrid');
+  if(!openLeads.length){g.innerHTML='<div class="empty-state" style="grid-column:1/-1">No contacts — click Find More</div>';return}
+  g.innerHTML=openLeads.map(l=>{
+    const sel=selectedIds.has(l.id);
+    return `<div class="lead-card ${sel?'selected':''}" id="lc-${l.id}">
+      <div class="lc-check ${sel?'checked':''}" onclick="toggleSelect(${l.id})">${sel?'✓':''}</div>
+      <button class="lc-del" onclick="delLead(${l.id})">✕</button>
+      <div class="lc-name">${esc(l.company_name||l.contact_name||'Unknown')}</div>
+      ${l.email?`<div class="lc-field">📧 <a href="mailto:${esc(l.email)}">${esc(l.email)}</a></div>`:''}
+      ${l.phone?`<div class="lc-field">📞 ${esc(l.phone)}</div>`:''}
+      ${l.website?`<div class="lc-field">🌐 <a href="${esc(l.website)}" target="_blank">${shortUrl(l.website)}</a></div>`:''}
+      <div class="lc-tags">
+        ${l.industry?`<span class="lc-tag lc-tag-ind">${esc(l.industry)}</span>`:''}
+        ${l.location?`<span class="lc-tag lc-tag-loc">📍 ${esc(l.location)}</span>`:''}
+      </div>
+      ${l.notes?`<div class="lc-score">${esc(l.notes)}</div>`:''}
+      <div class="lc-actions"><button class="lc-abtn" onclick="sendProposal(${l.id})">📄 Send Proposal</button></div>
+    </div>`}).join('');
+}
+
+// ══ SELECTION & BULK ══
+function toggleSelect(id){
+  if(selectedIds.has(id))selectedIds.delete(id);else selectedIds.add(id);
+  renderLeadCards(); updateBulk();
+}
+function toggleSelectAll(){
+  const all=document.getElementById('selectAllLeads').checked;
+  selectedIds.clear();
+  if(all) openLeads.forEach(l=>selectedIds.add(l.id));
+  renderLeadCards(); updateBulk();
+}
+function updateBulk(){
+  const bar=document.getElementById('bulkBar');
+  if(selectedIds.size>0){bar.classList.add('show');document.getElementById('bulkCount').textContent=selectedIds.size+' selected'}
+  else bar.classList.remove('show');
+}
+function bulkCopy(){bulkMode='copy';openCopyModal()}
+function bulkMove(){bulkMode='move';openCopyModal()}
+function bulkExport(){
+  const sel=openLeads.filter(l=>selectedIds.has(l.id));
+  const csv='Company,Contact,Email,Phone,Industry,Location\n'+sel.map(l=>[l.company_name,l.contact_name,l.email,l.phone,l.industry,l.location].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='leads_export.csv';a.click();URL.revokeObjectURL(url);
+}
+async function bulkDelete(){
+  if(!confirm(`Delete ${selectedIds.size} leads?`))return;
+  for(const id of selectedIds){try{await fetch(`/api/leads/${id}`,{method:'DELETE'})}catch(e){}}
+  selectedIds.clear(); await refreshFolder(); await loadAll();
+}
+
+// ══ COPY/MOVE MODAL ══
+function openCopyModal(){
+  document.getElementById('copyModalTitle').textContent=(bulkMode==='copy'?'Copy':'Move')+' to Folder';
+  const list=document.getElementById('copyFolderList');
+  list.innerHTML=projects.filter(p=>p.id!==openPid).map(p=>
+    `<div class="modal-folder" onclick="doCopyMove(${p.id})">📁 ${esc(p.name||'Untitled')}</div>`
+  ).join('');
+  if(!list.innerHTML) list.innerHTML='<div class="empty-state">No other folders</div>';
+  document.getElementById('copyModal').classList.add('show');
+}
+function closeCopyModal(){document.getElementById('copyModal').classList.remove('show')}
+async function doCopyMove(targetPid){
+  closeCopyModal();
+  const sel=openLeads.filter(l=>selectedIds.has(l.id));
+  for(const l of sel){
+    try{
+      await fetch('/api/leads',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({project_id:targetPid,company_name:l.company_name,contact_name:l.contact_name,email:l.email,phone:l.phone,website:l.website,industry:l.industry,location:l.location,company_size:l.company_size||'',source:l.source||'copy',notes:l.notes||'',tags:l.tags||''})
+      });
+    }catch(e){}
+  }
+  if(bulkMode==='move'){for(const id of selectedIds){try{await fetch(`/api/leads/${id}`,{method:'DELETE'})}catch(e){}}}
+  selectedIds.clear(); await refreshFolder(); await loadAll();
+  alert(`${sel.length} leads ${bulkMode==='copy'?'copied':'moved'} successfully!`);
+}
+
+// ══ RESEARCH PIPELINE TAB ══
+let selectedResearch = new Set();
+
+function renderResearch(){
+  const el=document.getElementById('researchList');
+  if(!projects.length){el.innerHTML='<div class="empty-state">No research in progress</div>';return}
+  el.innerHTML=projects.map(p=>{
+    const status=p.lead_count>0?'done':'in progress';
+    const query=p.description||p.query||'';
+    const sel=selectedResearch.has(p.id);
+    return `<div class="item-row" style="${sel?'border-color:rgba(26,188,156,0.4);background:rgba(26,188,156,0.05)':''}">
+    <div class="lc-check ${sel?'checked':''}" style="position:relative;flex-shrink:0" onclick="event.stopPropagation();toggleResearchSelect(${p.id})">${sel?'✓':''}</div>
+    <div class="ir-icon">${status==='done'?'✅':'🔄'}</div>
+    <div class="ir-info"><div class="ir-title">${esc(p.name)}</div><div class="ir-sub">${esc(query)}</div></div>
+    <div class="ir-badge ${status==='done'?'badge-done':'badge-progress'}">${status}</div>
+    ${p.created_at?`<div class="ir-time">${timeAgo(p.created_at)}</div>`:''}
+    <button class="va-btn va-btn-primary" style="padding:5px 10px;font-size:0.52rem;margin-left:6px" onclick="event.stopPropagation();rerunResearch(${p.id})">🔄 Run Again</button>
+    <button class="va-btn va-btn-outline" style="padding:5px 10px;font-size:0.52rem" onclick="event.stopPropagation();openFolder(${p.id});switchTab('leads')">📂 Open</button>
+  </div>`}).join('');
+  updateResearchBulk();
+}
+
+function toggleResearchSelect(pid){
+  if(selectedResearch.has(pid)) selectedResearch.delete(pid); else selectedResearch.add(pid);
+  renderResearch();
+}
+
+function toggleSelectAllResearch(){
+  const all=document.getElementById('selectAllResearch').checked;
+  selectedResearch.clear();
+  if(all) projects.forEach(p=>selectedResearch.add(p.id));
+  renderResearch();
+}
+
+function updateResearchBulk(){
+  const el=document.getElementById('researchBulk');
+  el.style.display=selectedResearch.size>0?'flex':'none';
+}
+
+async function archiveSelected(){
+  if(!selectedResearch.size)return;
+  if(!confirm(`Archive ${selectedResearch.size} project(s)? This will delete them and their leads.`))return;
+  for(const pid of selectedResearch){
+    try{await fetch(`/api/projects/${pid}`,{method:'DELETE'})}catch(e){}
+  }
+  selectedResearch.clear();
+  if(openPid && selectedResearch.has(openPid)) closeFolder();
+  await loadAll();
+}
+
+async function deleteSelectedResearch(){
+  if(!selectedResearch.size)return;
+  if(!confirm(`Delete ${selectedResearch.size} project(s) permanently?`))return;
+  for(const pid of selectedResearch){
+    try{await fetch(`/api/projects/${pid}`,{method:'DELETE'})}catch(e){}
+  }
+  selectedResearch.clear();
+  if(openPid && selectedResearch.has(openPid)) closeFolder();
+  await loadAll();
+}
+
+async function archiveAllDone(){
+  const done=projects.filter(p=>p.lead_count>0);
+  if(!done.length){alert('No completed projects to archive');return}
+  if(!confirm(`Archive ${done.length} completed project(s)?`))return;
+  for(const p of done){
+    try{await fetch(`/api/projects/${p.id}`,{method:'DELETE'})}catch(e){}
+  }
+  selectedResearch.clear();
+  await loadAll();
+}
+
+async function clearAllResearch(){
+  if(!projects.length)return;
+  if(!confirm(`Delete ALL ${projects.length} project(s)? This cannot be undone!`))return;
+  for(const p of projects){
+    try{await fetch(`/api/projects/${p.id}`,{method:'DELETE'})}catch(e){}
+  }
+  selectedResearch.clear();
+  closeFolder();
+  await loadAll();
+}
+
+function rerunResearch(pid){
+  const p=projects.find(x=>x.id===pid);
+  if(!p)return;
+  const query=p.description||p.query||p.name||'';
+  kaiCmd(`Run prospecting again for: ${query}. Same criteria as project "${p.name}". Use run_prospecting tool immediately.`);
+  addMsg('🔄 Re-running research for "'+p.name+'"...','ai');
+  setTimeout(loadAll,15000);
+}
+
+// ══ MARKET RESEARCH TAB ══
+function renderMarket(){
+  const el=document.getElementById('marketList');
+  const items=tasks.filter(t=>(t.title||'').toLowerCase().match(/research|market|analysis|trend/));
+  if(!items.length){el.innerHTML='<div class="empty-state">No market research tasks — ask Kai to analyze a market</div>';return}
+  el.innerHTML=items.map(t=>`<div class="item-row">
+    <div class="ir-icon">📊</div>
+    <div class="ir-info"><div class="ir-title">${esc(t.title)}</div><div class="ir-sub">${esc(t.description||'')}</div></div>
+    <div class="ir-badge ${t.status==='completed'?'badge-done':t.status==='in_progress'?'badge-progress':'badge-pending'}">${t.status||'pending'}</div>
+  </div>`).join('');
+}
+
+// ══ EMAIL SEND TAB ══
+function renderEmails(){
+  const el=document.getElementById('emailList');
+  const items=tasks.filter(t=>(t.title||'').toLowerCase().match(/email|outreach|send|proposal/)||(t.assigned_agent||'')==='elena');
+  if(!items.length){el.innerHTML='<div class="empty-state">No emails sent yet — use Auto-Outreach from a folder</div>';return}
+  el.innerHTML=items.map(t=>`<div class="item-row">
+    <div class="ir-icon">📧</div>
+    <div class="ir-info"><div class="ir-title">${esc(t.title)}</div><div class="ir-sub">${esc(t.description||'')}</div></div>
+    <div class="ir-badge ${t.status==='completed'?'badge-sent':t.status==='in_progress'?'badge-progress':'badge-pending'}">${t.status==='completed'?'sent':t.status||'pending'}</div>
+  </div>`).join('');
+}
+
+// ══ FEEDBACK TAB ══
+function renderFeedback(){
+  const el=document.getElementById('feedbackList');
+  const items=tasks.filter(t=>t.status==='completed');
+  if(!items.length){el.innerHTML='<div class="empty-state">No feedback yet — completed tasks will appear here</div>';return}
+  el.innerHTML=items.map(t=>`<div class="item-row">
+    <div class="ir-icon">✅</div>
+    <div class="ir-info"><div class="ir-title">${esc(t.title)}</div><div class="ir-sub">${esc(t.description||'')}</div></div>
+    <div class="ir-badge badge-done">Completed</div>
+  </div>`).join('');
+}
+
+// ══ FOLDER ACTIONS ══
+function closeFolder(){openPid=null;openLeads=[];selectedIds.clear();
+  document.getElementById('folderOpen').classList.remove('show');document.getElementById('vaultView').style.display=''}
+function exportAllCSV(){window.open('/api/leads/export/csv','_blank')}
+function exportFolderCSV(){if(openPid)window.open(`/api/leads/export/csv?project_id=${openPid}`,'_blank')}
+function newResearch(){toggleProspectPanel(); document.getElementById('ppCount').value='10'}
+
+// ── PROSPECT PANEL ──
+const INDUSTRIES = [
+  'Restaurants','Hotels','Real Estate','Fashion','Beauty & Spa','Fitness & Gym',
+  'Clinics & Medical','Law Firms','Retail & Shopping','Events & Wedding',
+  'Luxury Brands','Interior Design','Architecture','Education','Automotive',
+  'Food & Beverage','Travel & Tourism','Photography','E-commerce','Marketing Agencies'
+];
+const FILTERS = [
+  {id:'email', label:'Must have email', icon:'📧'},
+  {id:'phone', label:'Must have phone', icon:'📞'},
+  {id:'website', label:'Must have website', icon:'🌐'},
+  {id:'social', label:'Needs social media help', icon:'📱'},
+];
+
+// Render checkboxes on load
+(function initProspectForm(){
+  const indEl = document.getElementById('ppIndustries');
+  indEl.innerHTML = INDUSTRIES.map(ind =>
+    `<div class="pp-check" onclick="togglePPCheck(this)"><input type="checkbox" value="${ind}"/><div class="tick"></div>${ind}</div>`
+  ).join('');
+  const filtEl = document.getElementById('ppFilters');
+  filtEl.innerHTML = FILTERS.map(f =>
+    `<div class="pp-check" onclick="togglePPCheck(this)"><input type="checkbox" value="${f.id}"/><div class="tick">${f.icon}</div>${f.label}</div>`
+  ).join('');
+})();
+
+function togglePPCheck(el) {
+  const cb = el.querySelector('input');
+  cb.checked = !cb.checked;
+  el.classList.toggle('checked', cb.checked);
+  updatePPSummary();
+}
+
+function updatePPSummary() {
+  const loc = document.getElementById('ppLocation').value || 'anywhere';
+  const count = document.getElementById('ppCount').value;
+  const industries = [...document.querySelectorAll('#ppIndustries .pp-check.checked input')].map(i=>i.value);
+  const indText = industries.length ? industries.slice(0,3).join(', ') + (industries.length>3 ? ` +${industries.length-3} more` : '') : 'all industries';
+  document.getElementById('ppSummary').textContent = `Finding ${count} companies in ${loc} • ${indText}`;
+}
+
+document.getElementById('ppLocation').addEventListener('input', updatePPSummary);
+document.getElementById('ppCount').addEventListener('change', updatePPSummary);
+
+function toggleProspectPanel() {
+  const p = document.getElementById('prospectPanel');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) updatePPSummary();
+}
+function closeProspectPanel() { document.getElementById('prospectPanel').classList.remove('open'); }
+
+function startProspecting() {
+  const location = document.getElementById('ppLocation').value.trim() || 'Dubai';
+  const count = document.getElementById('ppCount').value;
+  const prompt = document.getElementById('ppPrompt').value.trim();
+  const industries = [...document.querySelectorAll('#ppIndustries .pp-check.checked input')].map(i=>i.value);
+  const filters = [...document.querySelectorAll('#ppFilters .pp-check.checked input')].map(i=>i.value);
+
+  // Build the command for Kai
+  let cmd = `Run prospecting campaign: find ${count} companies in ${location}`;
+  if (industries.length) cmd += `. Focus on industries: ${industries.join(', ')}`;
+  if (filters.includes('email')) cmd += `. Must have email addresses`;
+  if (filters.includes('phone')) cmd += `. Must have phone numbers`;
+  if (filters.includes('website')) cmd += `. Must have websites`;
+  if (filters.includes('social')) cmd += `. Target companies that need social media marketing`;
+  if (prompt) cmd += `. Additional criteria: ${prompt}`;
+  cmd += `. Use run_prospecting tool.`;
+
+  kaiCmd(cmd);
+  closeProspectPanel();
+
+  // Add status message
+  addMsg('🚀 Prospecting started! Kai is searching...', 'ai');
+  setTimeout(loadAll, 20000);
+}
+function findMore(){if(!openPid)return;const p=projects.find(x=>x.id===openPid);kaiCmd(`Find more leads for project "${p?.name}"`)}
+function autoOutreach(){if(!openPid)return;const p=projects.find(x=>x.id===openPid);if(confirm(`Start outreach for all contacts in "${p?.name}"?`))kaiCmd(`Delegate to Elena: outreach emails for all leads in "${p?.name}"`)}
+function sendProposal(lid){const l=openLeads.find(x=>x.id===lid);if(l)kaiCmd(`Generate proposal for ${l.company_name||l.contact_name} at ${l.email}`)}
+async function delProject(pid,name){if(!confirm(`Delete "${name}"?`))return;await fetch(`/api/projects/${pid}`,{method:'DELETE'});if(openPid===pid)closeFolder();await loadAll()}
+async function delLead(lid){if(!confirm('Delete this lead?'))return;await fetch(`/api/leads/${lid}`,{method:'DELETE'});openLeads=openLeads.filter(l=>l.id!==lid);selectedIds.delete(lid);renderLeadCards();updateBulk();loadAll()}
+
+// ══ HELPERS ══
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function shortUrl(u){try{return new URL(u).hostname}catch(e){return u}}
+function timeAgo(ds){const d=Date.now()-new Date(ds).getTime(),m=Math.floor(d/60000);if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago'}
+
+// ══ CHAT & WEBSOCKET ══
+let ws=null;
+const chatMsgs=document.getElementById('chatMsgs'), typingEl=document.getElementById('typing');
+function connectWS(){const proto=location.protocol==='https:'?'wss':'ws';ws=new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onmessage=e=>{const d=JSON.parse(e.data);
+    if(d.type==='agent_typing'){typingEl.style.display='block';chatMsgs.scrollTop=chatMsgs.scrollHeight}
+    else if(d.type==='agent_reply'){typingEl.style.display='none';addMsg(d.content||d.text||d.message,'ai');setTimeout(loadAll,2000)}
+    else if(d.type==='error'){typingEl.style.display='none';addMsg('Error: '+(d.content||d.text||''),'ai')}
+  };ws.onclose=()=>setTimeout(connectWS,2000)}
+connectWS();
+function addMsg(t,w){const d=document.createElement('div');d.className=`msg msg-${w}`;d.textContent=t;chatMsgs.appendChild(d);chatMsgs.scrollTop=chatMsgs.scrollHeight}
+function sendMsg(){const t=document.getElementById('chatInput').value.trim();if(!t||!ws||ws.readyState!==1)return;addMsg(t,'user');ws.send(JSON.stringify({type:'agent_chat',agent:'kai',content:t}));document.getElementById('chatInput').value=''}
+function kaiCmd(t){if(!ws||ws.readyState!==1)return;addMsg(t,'user');ws.send(JSON.stringify({type:'agent_chat',agent:'kai',content:t}))}
+
+// ══ INIT ══
+loadAll(); setInterval(loadAll,25000);
+</script>
+</body>
+</html>

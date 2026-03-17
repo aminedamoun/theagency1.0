@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY 1.0</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #fff;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       LOADING SCREEN
+    ═══════════════════════════════════════════════════════════ */
+    #loading {
+      position: fixed; inset: 0; z-index: 999;
+      background: #000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity 1.2s ease;
+    }
+    #loading.out { opacity: 0; pointer-events: none; }
+
+    .load-logo {
+      font-size: clamp(1.6rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #c9a84c 0%, #ffe08a 45%, #c9a84c 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 14px;
+    }
+    .load-tag {
+      font-size: 0.68rem; letter-spacing: 0.65em;
+      color: rgba(201,168,76,0.55); text-transform: uppercase;
+    }
+    .load-bar {
+      width: 200px; height: 2px;
+      background: rgba(201,168,76,0.12);
+      border-radius: 1px; margin-top: 40px; overflow: hidden;
+    }
+    .load-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #c9a84c, #ffe08a);
+      width: 0%; transition: width 0.3s ease;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SCENE CONTAINER
+    ═══════════════════════════════════════════════════════════ */
+    #scene {
+      position: fixed; inset: 0;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       OFFICE ROOM BACKGROUND
+    ═══════════════════════════════════════════════════════════ */
+    .room-bg {
+      position: absolute; inset: 0;
+    }
+
+    /* Ceiling */
+    .room-ceiling {
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 45%;
+      background: linear-gradient(to bottom,
+        #000408 0%,
+        #020810 60%,
+        #040c1a 100%
+      );
+    }
+    /* Ceiling receding lines */
+    .room-ceiling::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(92deg, transparent 49.5%, rgba(201,168,76,0.04) 50%, transparent 50.5%),
+        linear-gradient(88deg, transparent 49.5%, rgba(201,168,76,0.04) 50%, transparent 50.5%),
+        linear-gradient(85deg, transparent 49%, rgba(201,168,76,0.03) 50%, transparent 51%),
+        linear-gradient(95deg, transparent 49%, rgba(201,168,76,0.03) 50%, transparent 51%);
+    }
+
+    /* Back wall with ambient glow */
+    .room-wall {
+      position: absolute;
+      top: 25%; left: 0; right: 0; height: 40%;
+      background: linear-gradient(to bottom,
+        #030a18 0%,
+        #040d1f 50%,
+        #040a14 100%
+      );
+    }
+    /* Wall window / light source */
+    .room-wall::after {
+      content: '';
+      position: absolute;
+      top: 10%; left: 50%; transform: translateX(-50%);
+      width: 60%; height: 80%;
+      background: radial-gradient(ellipse, rgba(20,40,80,0.5) 0%, transparent 70%);
+    }
+
+    /* Floor */
+    .room-floor {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 42%;
+      background: linear-gradient(to bottom,
+        #060c18 0%,
+        #040810 50%,
+        #020508 100%
+      );
+      overflow: hidden;
+    }
+
+    /* Floor perspective grid */
+    .floor-grid-wrap {
+      position: absolute;
+      top: 0; left: -20%; width: 140%; height: 200%;
+      transform-origin: 50% 0%;
+      transform: perspective(500px) rotateX(68deg);
+    }
+    .floor-grid {
+      width: 100%; height: 100%;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.07) 1px, transparent 1px);
+      background-size: 80px 80px;
+    }
+
+    /* Floor reflection glow */
+    .floor-glow {
+      position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 80%; height: 60%;
+      background: radial-gradient(ellipse, rgba(10,25,60,0.6) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       COLORED ATMOSPHERE LIGHTS
+    ═══════════════════════════════════════════════════════════ */
+    .atmo {
+      position: absolute; border-radius: 50%;
+      pointer-events: none; mix-blend-mode: screen;
+    }
+    .atmo-blue {
+      top: 10%; left: -8%;
+      width: 55vw; height: 55vw;
+      background: radial-gradient(circle, rgba(30,60,180,0.18) 0%, transparent 65%);
+      animation: breathe 5s ease-in-out infinite;
+    }
+    .atmo-gold {
+      top: 5%; right: -10%;
+      width: 50vw; height: 50vw;
+      background: radial-gradient(circle, rgba(200,130,30,0.14) 0%, transparent 65%);
+      animation: breathe 6s ease-in-out infinite reverse;
+    }
+    .atmo-center {
+      top: 20%; left: 50%; transform: translateX(-50%);
+      width: 60vw; height: 30vw;
+      background: radial-gradient(ellipse, rgba(40,60,120,0.12) 0%, transparent 70%);
+    }
+    @keyframes breathe {
+      0%,100% { opacity: 0.7; transform: scale(1); }
+      50%      { opacity: 1.0; transform: scale(1.06); }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CANVAS (particles)
+    ═══════════════════════════════════════════════════════════ */
+    #atmo-canvas {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 1;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       AGENTS STAGE
+    ═══════════════════════════════════════════════════════════ */
+    .agents-stage {
+      position: absolute;
+      top: 0; bottom: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 60px;
+      z-index: 10;
+    }
+
+    /* Tight group wrapper — slightly scaled back for depth feel */
+    .agents-group {
+      display: flex;
+      align-items: flex-end;
+      width: min(92vw, 1380px);
+      flex-shrink: 0;
+      transform: scale(0.88);
+      transform-origin: center bottom;
+    }
+
+    /* Each agent gets 1/6 of the group. Image is WIDER than slot → natural overlap */
+    .agent-fig {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      cursor: pointer;
+      overflow: visible;
+      transition: transform 0.5s cubic-bezier(0.16,1,0.3,1),
+                  filter 0.4s ease;
+      transform-origin: bottom center;
+    }
+
+    /* Z-index by position (set via JS) so center is on top */
+    .agent-fig[data-depth="back"]  { filter: brightness(0.74) saturate(0.8); z-index: 1; }
+    .agent-fig[data-depth="mid"]   { filter: brightness(0.90) saturate(0.92); z-index: 3; }
+    .agent-fig[data-depth="front"] { filter: brightness(1.0); z-index: 5; }
+    .agent-fig[data-key="sarah"]   { filter: brightness(1.06); z-index: 8; }
+
+    /* Agent image — centered in its slot, wider than slot = overlap */
+    .agent-img {
+      display: block;
+      height: clamp(260px, 60vh, 620px);
+      width: auto;
+      max-width: none;
+      user-select: none;
+      pointer-events: none;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* Reflection */
+    .agent-reflection {
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: auto;
+      overflow: hidden;
+      height: 90px;
+      pointer-events: none;
+    }
+    .agent-reflection img {
+      display: block;
+      height: clamp(260px, 60vh, 620px);
+      width: auto;
+      transform: scaleY(-1);
+      transform-origin: bottom center;
+      opacity: 0.18;
+      -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+      mask-image: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+    }
+
+    /* Name tag on floor */
+    .agent-name-tag {
+      position: absolute;
+      bottom: -38px; left: 50%; transform: translateX(-50%);
+      text-align: center;
+      white-space: nowrap;
+      transition: color 0.3s, opacity 0.3s;
+    }
+    .tag-name {
+      font-size: 0.65rem; letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      font-weight: 600;
+    }
+    .tag-role {
+      font-size: 0.52rem; letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      margin-top: 2px;
+    }
+    .agent-fig:hover .tag-name,
+    .agent-fig.active .tag-name { color: #c9a84c; }
+    .agent-fig:hover .tag-role,
+    .agent-fig.active .tag-role { color: rgba(201,168,76,0.6); }
+
+    /* Hover glow halo behind agent */
+    .agent-halo {
+      position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 120%; padding-bottom: 130%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.14) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* ── HOVER STATE ── */
+    .agent-fig:hover,
+    .agent-fig.active {
+      z-index: 20 !important;
+    }
+    .agent-fig:hover .agent-halo,
+    .agent-fig.active .agent-halo { opacity: 1; }
+    .agent-fig:hover .agent-name-tag,
+    .agent-fig.active .agent-name-tag { color: #c9a84c; }
+
+    /* Hover: zoom toward viewer (scale only — no upward movement) */
+    .agent-fig:hover,
+    .agent-fig.active {
+      transform: scale(1.1) !important;
+      filter: brightness(1.1) saturate(1.1) !important;
+      z-index: 30 !important;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       TITLE
+    ═══════════════════════════════════════════════════════════ */
+    #title-overlay {
+      position: fixed;
+      top: 52px; left: 0; right: 0; z-index: 30;
+      text-align: center;
+      pointer-events: none;
+    }
+    .agency-name {
+      font-size: clamp(1.8rem, 4.5vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #c9a84c 0%, #ffe08a 35%, #c9a84c 65%, #fff6d0 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 50px rgba(201,168,76,0.45));
+    }
+    .agency-tag {
+      font-size: clamp(0.55rem, 1.2vw, 0.72rem);
+      letter-spacing: 0.6em;
+      color: rgba(201,168,76,0.6);
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+    .title-line {
+      width: 80px; height: 1px;
+      background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+      margin: 14px auto 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       HINT
+    ═══════════════════════════════════════════════════════════ */
+    #hover-hint {
+      position: fixed; bottom: 130px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 30; pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    #hover-hint.gone { opacity: 0; }
+    .hint-text {
+      font-size: 0.7rem; letter-spacing: 0.3em;
+      text-transform: uppercase; color: rgba(255,255,255,0.28);
+      animation: blink 3s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:.28;} 50%{opacity:.65;} }
+
+    /* ═══════════════════════════════════════════════════════════
+       AGENT INFO CARD
+    ═══════════════════════════════════════════════════════════ */
+    #info-card {
+      position: fixed;
+      top: 50%; left: 36px;
+      transform: translateY(-50%) translateX(-30px);
+      width: min(300px, 88vw);
+      /* ── Glassmorphism ── */
+      background: rgba(6, 12, 28, 0.42);
+      backdrop-filter: blur(32px) saturate(160%);
+      -webkit-backdrop-filter: blur(32px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-top: 1px solid rgba(255,255,255,0.15);
+      border-left: 1px solid rgba(255,255,255,0.13);
+      box-shadow:
+        0 24px 60px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.07),
+        0 0 0 0.5px rgba(201,168,76,0.12);
+      border-radius: 20px;
+      padding: 24px 22px 22px;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1),
+                  transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+    #info-card.show {
+      opacity: 1;
+      transform: translateY(-50%) translateX(0px);
+      pointer-events: auto;
+    }
+
+    /* Face portrait avatar */
+    .ic-avatar {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(201,168,76,0.5);
+      box-shadow: 0 0 20px rgba(201,168,76,0.2);
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+    .ic-avatar img {
+      width: 215%;
+      height: auto;
+      margin-left: -57%;
+      margin-top: 1%;
+      display: block;
+    }
+    .ic-name {
+      font-size: 1.65rem; font-weight: 800; color: #fff; letter-spacing: 0.03em;
+    }
+    .ic-role {
+      font-size: 0.68rem; font-weight: 600; color: #c9a84c;
+      letter-spacing: 0.28em; text-transform: uppercase; margin: 5px 0 18px;
+    }
+    .ic-sep {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.35), transparent);
+      margin-bottom: 18px;
+    }
+    .ic-bio {
+      font-size: 0.86rem; color: rgba(255,255,255,0.6); line-height: 1.65;
+      margin-bottom: 18px;
+    }
+    .ic-skills {
+      display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 22px;
+    }
+    .ic-skill {
+      font-size: 0.63rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(201,168,76,0.75);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 20px; padding: 4px 11px;
+    }
+    .ic-play {
+      width: 100%;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.35);
+      color: #c9a84c;
+      font-size: 0.73rem; font-weight: 700;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      padding: 13px 16px;
+      border-radius: 10px; cursor: pointer;
+      transition: all 0.25s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .ic-play:hover {
+      background: rgba(201,168,76,0.18);
+      border-color: rgba(201,168,76,0.6);
+      box-shadow: 0 0 24px rgba(201,168,76,0.18);
+    }
+    .ic-play.on {
+      background: rgba(80,200,130,0.1);
+      border-color: rgba(80,200,130,0.45);
+      color: #50c882;
+      animation: glow-green 1.6s ease-in-out infinite;
+    }
+    @keyframes glow-green { 0%,100%{box-shadow:0 0 10px rgba(80,200,130,0.15);} 50%{box-shadow:0 0 28px rgba(80,200,130,0.35);} }
+
+    /* ═══════════════════════════════════════════════════════════
+       TEAM DOTS (bottom bar)
+    ═══════════════════════════════════════════════════════════ */
+    #team-dots {
+      position: fixed; bottom: 92px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 18px;
+      z-index: 40;
+    }
+    .tdot {
+      display: flex; flex-direction: column; align-items: center;
+      cursor: pointer; transition: transform 0.25s;
+    }
+    .tdot:hover { transform: translateY(-4px); }
+    .tdot-ring {
+      width: 40px; height: 40px; border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(201,168,76,0.2);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .tdot-ring img { width: 215%; height: auto; margin-left: -57%; margin-top: 1%; display: block; }
+    .tdot-lbl {
+      font-size: 0.56rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+      margin-top: 6px; transition: color 0.3s;
+    }
+    .tdot.active .tdot-ring {
+      border-color: #c9a84c;
+      box-shadow: 0 0 16px rgba(201,168,76,0.45);
+    }
+    .tdot.active .tdot-lbl { color: #c9a84c; }
+
+    /* ═══════════════════════════════════════════════════════════
+       BOTTOM NAV
+    ═══════════════════════════════════════════════════════════ */
+    #bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      padding: 18px 20px 30px;
+      background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+    }
+    .btn {
+      padding: 13px 34px; border-radius: 50px; cursor: pointer;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: all 0.3s;
+    }
+    .btn-gold {
+      background: linear-gradient(135deg, #c9a84c, #e8c56a);
+      border: none; color: #000;
+      box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 8px 36px rgba(201,168,76,0.5);
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.5);
+    }
+    .btn-ghost:hover {
+      border-color: rgba(201,168,76,0.4);
+      color: #c9a84c;
+      background: rgba(201,168,76,0.04);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CURSOR GLOW
+    ═══════════════════════════════════════════════════════════ */
+    #cursor-glow {
+      position: fixed; pointer-events: none;
+      width: 380px; height: 380px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      z-index: 5; transition: width 0.3s, height 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="load-logo">THE AGENCY 1.0</div>
+  <div class="load-tag">Assembling Your Team</div>
+  <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
+</div>
+
+<!-- Cursor glow -->
+<div id="cursor-glow" id="cursorGlow"></div>
+
+<!-- Scene -->
+<div id="scene">
+
+  <!-- Office room layers -->
+  <div class="room-bg">
+    <div class="room-ceiling"></div>
+    <div class="room-wall"></div>
+    <div class="room-floor">
+      <div class="floor-grid-wrap"><div class="floor-grid"></div></div>
+      <div class="floor-glow"></div>
+    </div>
+  </div>
+
+  <!-- Atmospheric lights -->
+  <div class="atmo atmo-blue"></div>
+  <div class="atmo atmo-gold"></div>
+  <div class="atmo atmo-center"></div>
+
+  <!-- Particles canvas -->
+  <canvas id="atmo-canvas"></canvas>
+
+  <!-- Agents -->
+  <div class="agents-stage" id="agentsStage"></div>
+
+</div>
+
+<!-- Title -->
+<div id="title-overlay">
+  <div class="agency-name">THE AGENCY 1.0</div>
+  <div class="agency-tag">Your AI-Powered Creative Force &nbsp;·&nbsp; Dubai Prod</div>
+  <div class="title-line"></div>
+</div>
+
+<!-- Hover hint -->
+<div id="hover-hint">
+  <div class="hint-text">↑ Hover an agent to meet the team ↑</div>
+</div>
+
+<!-- Info card -->
+<div id="info-card">
+  <div class="ic-avatar"><img id="ic-avatar-img" src="" alt="" /></div>
+  <div class="ic-name" id="ic-name"></div>
+  <div class="ic-role" id="ic-role"></div>
+  <div class="ic-sep"></div>
+  <div class="ic-bio" id="ic-bio"></div>
+  <div class="ic-skills" id="ic-skills"></div>
+  <button class="ic-play" id="ic-play" onclick="playIntro()">
+    <span id="play-icon">▶</span>
+    <span id="play-label">Play Intro</span>
+  </button>
+</div>
+
+<!-- Team dots -->
+<div id="team-dots"></div>
+
+<!-- Bottom nav -->
+<div id="bottom-nav">
+  <a class="btn btn-ghost" href="/platform">Skip Intro</a>
+  <a class="btn btn-gold" href="/spaces">Enter The Agency &nbsp;→</a>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// AGENT DATA
+// ═══════════════════════════════════════════════════════════
+const AGENTS = [
+  {
+    key: 'kai', name: 'Kai', emoji: '🔍',
+    role: 'Research & Prospecting', roleShort: 'Researcher',
+    img: '/static/img/kai.png',
+    bio: 'I dig where others don\'t. Market research, lead lists, competitor analysis — I surface the intelligence your business needs to win.',
+    skills: ['Lead Generation', 'Market Research', 'Competitor Analysis'],
+    intro: "I'm Kai, your research specialist. I find leads, analyze markets, and surface insights that give your business a real competitive edge. If the information exists, I will find it.",
+    depth: 'back',
+    voice: { pitch: 0.85, rate: 0.88, gender: 'male' },
+  },
+  {
+    key: 'marcus', name: 'Marcus', emoji: '✍️',
+    role: 'Content & Copywriting', roleShort: 'Copywriter',
+    img: '/static/img/marcus.png',
+    bio: 'Words are my weapon. Captions, scripts, ad copy — I craft language that grabs attention and drives action.',
+    skills: ['Captions', 'Scripts', 'Ad Copy', 'Hashtags'],
+    intro: "I'm Marcus, your content specialist. I write captions, scripts, and copy that stop the scroll and make people take action. Tell me your message — I'll make it unforgettable.",
+    depth: 'mid',
+    voice: { pitch: 1.0, rate: 0.95, gender: 'male' },
+  },
+  {
+    key: 'elena', name: 'Elena', emoji: '📊',
+    role: 'Analytics & Reports', roleShort: 'Analytics',
+    img: '/static/img/elena.png',
+    bio: 'Numbers tell the real story. I track performance, build reports, and transform data into decisions that move your business forward.',
+    skills: ['Performance Reports', 'KPI Tracking', 'Data Analysis'],
+    intro: "I'm Elena, your analytics expert. I turn raw numbers into clear, actionable strategy. Performance metrics, KPIs, trends — all handled with precision.",
+    depth: 'mid',
+    voice: { pitch: 1.1, rate: 0.9, gender: 'female' },
+  },
+  {
+    key: 'sarah', name: 'Sarah', emoji: '👩‍💼',
+    role: 'CEO & Strategy', roleShort: 'CEO',
+    img: '/static/img/sarah.png',
+    bio: 'I run the show. Every task goes through me — I analyze, delegate, and execute. No roadblocks, only results.',
+    skills: ['Strategy', 'Task Management', 'Invoicing', 'Coordination'],
+    intro: "Hi, I'm Sarah — CEO of The Agency. I handle every task you send, coordinate the whole team, and deliver results without excuses. Give me a brief — it gets done.",
+    depth: 'front',
+    voice: { pitch: 0.95, rate: 0.88, gender: 'female' },
+  },
+  {
+    key: 'alex', name: 'Alex', emoji: '📧',
+    role: 'Email & Communications', roleShort: 'Communications',
+    img: '/static/img/alex.png',
+    bio: 'Every client relationship lives in the inbox. I write sharp professional emails and handle outreach so your communications always land.',
+    skills: ['Email Drafting', 'Client Outreach', 'Follow-ups'],
+    intro: "I'm Alex, your communications manager. Professional emails, client outreach, and follow-ups — your inbox is always in good hands.",
+    depth: 'mid',
+    voice: { pitch: 0.9, rate: 0.92, gender: 'male' },
+  },
+  {
+    key: 'zara', name: 'Zara', emoji: '🎨',
+    role: 'Design & Creative', roleShort: 'Creative Director',
+    img: '/static/img/zara.png',
+    bio: 'Visual storytelling is my craft. Images, videos, voiceovers — I produce creative work that makes your brand impossible to ignore.',
+    skills: ['Image Generation', 'Video', 'Voiceover', 'Branding'],
+    intro: "I'm Zara, the creative director. I produce visuals — images, videos, and voiceovers — that make your brand stand out and impossible to ignore.",
+    depth: 'mid',
+    voice: { pitch: 1.15, rate: 0.93, gender: 'female' },
+  },
+];
+
+// ═══════════════════════════════════════════════════════════
+// BUILD AGENT FIGURES
+// ═══════════════════════════════════════════════════════════
+const stage     = document.getElementById('agentsStage');
+const group     = document.createElement('div');
+group.className = 'agents-group';
+stage.appendChild(group);
+
+const dotsEl    = document.getElementById('team-dots');
+const loadFill  = document.getElementById('loadFill');
+let   loadCount = 0;
+
+AGENTS.forEach((a, i) => {
+  // Figure
+  const fig = document.createElement('div');
+  fig.className = 'agent-fig';
+  fig.setAttribute('data-depth', a.depth);
+  fig.setAttribute('data-key',   a.key);
+  fig.setAttribute('data-idx',   i);
+
+  const img = new Image();
+  img.className = 'agent-img';
+  img.alt = a.name;
+  img.src = a.img;
+  img.onload = () => {
+    loadCount++;
+    loadFill.style.width = (loadCount / AGENTS.length * 100) + '%';
+    if (loadCount === AGENTS.length) setTimeout(fadeOutLoading, 600);
+  };
+
+  // Reflection
+  const refWrap = document.createElement('div');
+  refWrap.className = 'agent-reflection';
+  const refImg = new Image();
+  refImg.src = a.img;
+  refImg.alt = '';
+  refImg.style.cssText = `height:clamp(260px, 60vh, 620px); width:auto; transform:scaleY(-1); display:block; opacity:0.18;`;
+  refImg.style.webkitMaskImage = 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)';
+  refImg.style.maskImage        = 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)';
+  refWrap.appendChild(refImg);
+
+  // Halo
+  const halo = document.createElement('div');
+  halo.className = 'agent-halo';
+
+  // Name tag (name + role)
+  const tag = document.createElement('div');
+  tag.className = 'agent-name-tag';
+  tag.innerHTML = `<div class="tag-name">${a.name}</div><div class="tag-role">${a.roleShort}</div>`;
+
+  fig.appendChild(halo);
+  fig.appendChild(img);
+  fig.appendChild(refWrap);
+  fig.appendChild(tag);
+  fig.addEventListener('mouseenter', () => activateAgent(i));
+  fig.addEventListener('click',      () => activateAgent(i));
+  group.appendChild(fig);
+
+  // Dot
+  const dot = document.createElement('div');
+  dot.className = 'tdot';
+  dot.id = `dot-${a.key}`;
+  const ring = document.createElement('div');
+  ring.className = 'tdot-ring';
+  const dImg = new Image();
+  dImg.src = a.img; dImg.alt = a.name;
+  ring.appendChild(dImg);
+  const lbl = document.createElement('div');
+  lbl.className = 'tdot-lbl'; lbl.textContent = a.name;
+  dot.appendChild(ring); dot.appendChild(lbl);
+  dot.addEventListener('click', () => activateAgent(i));
+  dotsEl.appendChild(dot);
+});
+
+// ═══════════════════════════════════════════════════════════
+// ACTIVE AGENT LOGIC
+// ═══════════════════════════════════════════════════════════
+let currentIdx = -1;
+const card = document.getElementById('info-card');
+
+function activateAgent(idx) {
+  if (currentIdx === idx) return;
+
+  // De-activate old
+  if (currentIdx >= 0) {
+    group.children[currentIdx].classList.remove('active');
+    const oldDot = document.getElementById(`dot-${AGENTS[currentIdx].key}`);
+    if (oldDot) oldDot.classList.remove('active');
+  }
+
+  currentIdx = idx;
+  const a = AGENTS[idx];
+
+  // Activate figure
+  group.children[idx].classList.add('active');
+  const dot = document.getElementById(`dot-${a.key}`);
+  if (dot) dot.classList.add('active');
+
+  // Fill card
+  const avatarImg = document.getElementById('ic-avatar-img');
+  avatarImg.src = a.img; avatarImg.alt = a.name;
+  document.getElementById('ic-name').textContent  = a.name;
+  document.getElementById('ic-role').textContent  = a.role;
+  document.getElementById('ic-bio').textContent   = a.bio;
+  document.getElementById('ic-skills').innerHTML  =
+    a.skills.map(s => `<span class="ic-skill">${s}</span>`).join('');
+
+  card.classList.add('show');
+  document.getElementById('hover-hint').classList.add('gone');
+  stopSpeech();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PARTICLES CANVAS
+// ═══════════════════════════════════════════════════════════
+const cvs = document.getElementById('atmo-canvas');
+const ctx = cvs.getContext('2d');
+let W = window.innerWidth, H = window.innerHeight;
+cvs.width = W; cvs.height = H;
+
+const DOTS = 220;
+const dots = Array.from({length: DOTS}, () => ({
+  x: Math.random() * W,
+  y: Math.random() * H,
+  r: Math.random() * 1.2 + 0.3,
+  vy: -(Math.random() * 0.35 + 0.08),
+  vx: (Math.random() - 0.5) * 0.12,
+  a: Math.random() * 0.4 + 0.08,
+}));
+
+function drawParticles() {
+  ctx.clearRect(0, 0, W, H);
+  dots.forEach(d => {
+    d.x += d.vx; d.y += d.vy;
+    if (d.y < -5)  d.y = H + 5;
+    if (d.x < -5)  d.x = W + 5;
+    if (d.x > W+5) d.x = -5;
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(201,168,76,${d.a})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+window.addEventListener('resize', () => {
+  W = window.innerWidth; H = window.innerHeight;
+  cvs.width = W; cvs.height = H;
+});
+
+// ═══════════════════════════════════════════════════════════
+// CURSOR GLOW + MOUSE PARALLAX
+// ═══════════════════════════════════════════════════════════
+const glow = document.querySelector('#cursor-glow');
+let mx = W/2, my = H/2;
+
+window.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  glow.style.left = mx + 'px';
+  glow.style.top  = my + 'py';
+  // subtle parallax on atmo lights
+  const dx = (mx / W - 0.5) * 18;
+  const dy = (my / H - 0.5) * 10;
+  document.querySelector('.atmo-blue').style.transform = `translate(${dx*-0.5}px, ${dy*-0.3}px)`;
+  document.querySelector('.atmo-gold').style.transform = `translate(${dx*0.4}px, ${dy*-0.25}px)`;
+});
+
+// ═══════════════════════════════════════════════════════════
+// SPEECH
+// ═══════════════════════════════════════════════════════════
+let speaking = false;
+if (window.speechSynthesis) {
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+}
+
+// Preferred voice names per agent key (matched in order)
+const VOICE_PREFS = {
+  sarah: ['Samantha','Karen','Moira','Tessa','en-GB Female','en-US Female'],
+  elena: ['Victoria','Veena','Fiona','en-AU Female','en-GB Female'],
+  zara:  ['Ting-Ting','Mei-Jia','Kyoko','Milena','en-US Female'],
+  marcus:['Daniel','Oliver','Rishi','en-GB Male','en-US Male'],
+  kai:   ['Alex','Fred','Tom','en-AU Male','en-US Male'],
+  alex:  ['Jorge','Enrique','Diego','en-US Male','en-GB Male'],
+};
+
+function pickVoice(agentKey, wantFemale) {
+  const allVoices = speechSynthesis.getVoices();
+  const prefs = VOICE_PREFS[agentKey] || [];
+  // 1. Try exact name match from prefs list
+  for (const pref of prefs) {
+    const match = allVoices.find(v => v.name.toLowerCase().includes(pref.toLowerCase()));
+    if (match) return match;
+  }
+  // 2. Fallback: any voice matching gender + English
+  const engVoices = allVoices.filter(v => /en[-_]/i.test(v.lang));
+  const genderMatch = engVoices.filter(v =>
+    wantFemale ? /female|woman|girl/i.test(v.name) : /male|man/i.test(v.name)
+  );
+  if (genderMatch.length) return genderMatch[0];
+  // 3. Any English voice
+  return engVoices[0] || allVoices[0] || null;
+}
+
+function playIntro() {
+  if (currentIdx < 0) return;
+  if (speaking) { stopSpeech(); return; }
+  const a = AGENTS[currentIdx];
+  if (!window.speechSynthesis) return;
+
+  const utt = new SpeechSynthesisUtterance(a.intro);
+  utt.pitch  = a.voice.pitch;
+  utt.rate   = a.voice.rate;
+  utt.volume = 1;
+
+  const v = pickVoice(a.key, a.voice.gender === 'female');
+  if (v) utt.voice = v;
+
+  utt.onstart = () => {
+    speaking = true;
+    document.getElementById('ic-play').classList.add('on');
+    document.getElementById('play-label').textContent = 'Speaking…';
+    document.getElementById('play-icon').textContent  = '■';
+  };
+  utt.onend = utt.onerror = stopSpeech;
+  speechSynthesis.speak(utt);
+}
+function stopSpeech() {
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  speaking = false;
+  const btn = document.getElementById('ic-play');
+  if (btn) {
+    btn.classList.remove('on');
+    document.getElementById('play-label').textContent = 'Play Intro';
+    document.getElementById('play-icon').textContent  = '▶';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOADING FADE
+// ═══════════════════════════════════════════════════════════
+function fadeOutLoading() {
+  const el = document.getElementById('loading');
+  el.classList.add('out');
+  setTimeout(() => el.style.display = 'none', 1300);
+}
+
+</script>
+</body>
+</html>

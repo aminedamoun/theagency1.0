@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY — Sheets & Calendar</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#0a0e1a;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+    .app{display:flex;height:100vh;flex-direction:column}
+
+    .topbar{height:42px;display:flex;align-items:center;padding:0 20px;background:#0f1525;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;gap:8px}
+    .tb-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+    .tb-logo-i{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#2ecc71,#27ae60);display:flex;align-items:center;justify-content:center;font-size:0.7rem}
+    .tb-name{font-size:0.62rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.35)}
+    .tb-sep{width:1px;height:18px;background:rgba(255,255,255,0.06)}
+    .tb-fill{flex:1}
+    .tb-btn{padding:7px 16px;border-radius:7px;font-size:0.62rem;font-weight:600;border:none;cursor:pointer;transition:all 0.15s}
+    .tb-g{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.45)}
+    .tb-g:hover{background:rgba(46,204,113,0.1);color:#2ecc71}
+
+    .main{flex:1;display:flex;flex-direction:column;min-height:0}
+    .tabs{display:flex;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;padding:0 20px}
+    .tab{padding:12px 20px;font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+    .tab:hover{color:rgba(255,255,255,0.6)}
+    .tab.on{color:#2ecc71;border-bottom-color:#2ecc71}
+    .body{flex:1;overflow-y:auto;padding:20px}
+    .body::-webkit-scrollbar{width:4px}
+    .body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+    .pane{display:none}.pane.on{display:block}
+
+    /* Stats */
+    .stats{display:flex;gap:10px;margin-bottom:16px}
+    .stat{flex:1;padding:16px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)}
+    .stat .v{font-size:1.5rem;font-weight:900;color:#2ecc71}
+    .stat .l{font-size:0.55rem;color:rgba(255,255,255,0.3);margin-top:2px}
+
+    /* Sheet table */
+    .sheet-table{width:100%;border-collapse:collapse}
+    .sheet-table th{text-align:left;padding:8px 12px;font-size:0.55rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid rgba(255,255,255,0.06);position:sticky;top:0;background:#0a0e1a}
+    .sheet-table td{padding:10px 12px;font-size:0.65rem;border-bottom:1px solid rgba(255,255,255,0.03);color:rgba(255,255,255,0.6)}
+    .sheet-table tr:hover td{background:rgba(46,204,113,0.03)}
+    .sheet-table .caption-cell{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .badge{padding:2px 8px;border-radius:10px;font-size:0.48rem;font-weight:700;display:inline-block}
+    .b-draft{background:rgba(241,196,15,0.1);color:#f1c40f;border:1px solid rgba(241,196,15,0.12)}
+    .b-scheduled{background:rgba(52,152,219,0.1);color:#3498db;border:1px solid rgba(52,152,219,0.12)}
+    .b-published{background:rgba(46,204,113,0.1);color:#2ecc71;border:1px solid rgba(46,204,113,0.12)}
+    .b-designed{background:rgba(155,89,182,0.1);color:#9b59b6;border:1px solid rgba(155,89,182,0.12)}
+    .plat{padding:2px 8px;border-radius:10px;font-size:0.48rem;font-weight:700}
+    .p-ig{background:rgba(225,48,108,0.1);color:#e1306c}
+    .p-tt{background:rgba(255,255,255,0.06);color:#fff}
+    .p-li{background:rgba(0,119,181,0.1);color:#0077b5}
+    .p-fb{background:rgba(24,119,242,0.1);color:#1877f2}
+
+    /* Calendar */
+    .cal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .cal-head h3{flex:1;font-size:0.9rem;font-weight:700}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .cal-dh{text-align:center;font-size:0.5rem;font-weight:700;color:rgba(255,255,255,0.25);padding:6px}
+    .cal-day{min-height:90px;padding:6px;border-radius:8px;background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.03)}
+    .cal-day.today{border-color:rgba(46,204,113,0.4);background:rgba(46,204,113,0.03)}
+    .cal-day .dn{font-size:0.58rem;font-weight:700;color:rgba(255,255,255,0.3);margin-bottom:3px}
+    .cal-day.today .dn{color:#2ecc71}
+    .cal-post{padding:3px 5px;border-radius:4px;font-size:0.42rem;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+    .cal-post:hover{opacity:0.8}
+    .cp-ig{background:rgba(225,48,108,0.12);color:#e1306c}
+    .cp-tt{background:rgba(255,255,255,0.06);color:#fff}
+    .cp-li{background:rgba(0,119,181,0.12);color:#0077b5}
+    .cp-fb{background:rgba(24,119,242,0.12);color:#1877f2}
+    .cp-default{background:rgba(46,204,113,0.1);color:#2ecc71}
+
+    .empty{text-align:center;padding:30px;color:rgba(255,255,255,0.1);font-size:0.7rem}
+    .filter-row{display:flex;gap:6px;margin-bottom:12px;align-items:center}
+    .filter-row select,.filter-row input{padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.6rem;outline:none}
+    .filter-row select:focus,.filter-row input:focus{border-color:rgba(46,204,113,0.4)}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <a class="tb-logo" href="/spaces"><div class="tb-logo-i">📊</div></a>
+    <span class="tb-name">Sheets & Calendar</span>
+    <div class="tb-sep"></div>
+    <button class="tb-btn tb-g" onclick="location.href='/spaces'">← Spaces</button>
+    <div class="tb-fill"></div>
+    <button class="tb-btn tb-g" onclick="exportCSV()">📥 Export CSV</button>
+    <button class="tb-btn tb-g" onclick="loadData()">🔄 Refresh</button>
+  </div>
+
+  <div class="main">
+    <div class="tabs">
+      <div class="tab on" onclick="sw('sheet')">📊 Content Sheet</div>
+      <div class="tab" onclick="sw('calendar')">📅 Calendar</div>
+    </div>
+    <div class="body">
+      <!-- SHEET VIEW -->
+      <div class="pane on" id="p-sheet">
+        <div class="stats" id="sheetStats"></div>
+        <div class="filter-row">
+          <select id="filterStatus" onchange="renderSheet()">
+            <option value="all">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="published">Published</option>
+            <option value="designed">Designed</option>
+          </select>
+          <select id="filterPlatform" onchange="renderSheet()">
+            <option value="all">All Platforms</option>
+            <option value="instagram">Instagram</option>
+            <option value="tiktok">TikTok</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="facebook">Facebook</option>
+            <option value="youtube">YouTube</option>
+          </select>
+          <input type="text" id="filterSearch" placeholder="Search captions..." oninput="renderSheet()"/>
+          <div style="margin-left:auto;font-size:0.55rem;color:rgba(255,255,255,0.2)" id="countLabel"></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="sheet-table" id="sheetTable">
+            <thead><tr><th>#</th><th>Platform</th><th>Type</th><th>Status</th><th>Caption</th><th>Scheduled</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="sheetBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CALENDAR VIEW -->
+      <div class="pane" id="p-calendar">
+        <div class="cal-head">
+          <button class="tb-btn tb-g" onclick="calPrev()">←</button>
+          <h3 id="calTitle"></h3>
+          <button class="tb-btn tb-g" onclick="calToday()">Today</button>
+          <button class="tb-btn tb-g" onclick="calNext()">→</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let content=[], calDate=new Date();
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+const PC={instagram:'p-ig',tiktok:'p-tt',linkedin:'p-li',facebook:'p-fb'};
+const CC={instagram:'cp-ig',tiktok:'cp-tt',linkedin:'cp-li',facebook:'cp-fb'};
+
+function sw(n){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+n)?.classList.add('on');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const i={sheet:0,calendar:1}[n];
+  if(i!==undefined)document.querySelectorAll('.tab')[i]?.classList.add('on');
+  if(n==='calendar')renderCalendar();
+}
+
+async function loadData(){
+  try{const r=await fetch('/api/content');content=await r.json()}catch(e){content=[]}
+  renderStats();renderSheet();
+}
+
+function renderStats(){
+  document.getElementById('sheetStats').innerHTML=`
+    <div class="stat"><div class="v">${content.length}</div><div class="l">Total Content</div></div>
+    <div class="stat"><div class="v">${content.filter(c=>c.status==='draft').length}</div><div class="l">Drafts</div></div>
+    <div class="stat"><div class="v">${content.filter(c=>c.status==='scheduled').length}</div><div class="l">Scheduled</div></div>
+    <div class="stat"><div class="v">${content.filter(c=>c.status==='published').length}</div><div class="l">Published</div></div>`;
+}
+
+function renderSheet(){
+  const status=document.getElementById('filterStatus').value;
+  const platform=document.getElementById('filterPlatform').value;
+  const search=document.getElementById('filterSearch').value.toLowerCase();
+
+  let items=content;
+  if(status!=='all')items=items.filter(c=>c.status===status);
+  if(platform!=='all')items=items.filter(c=>c.platform===platform);
+  if(search)items=items.filter(c=>(c.caption||'').toLowerCase().includes(search));
+
+  document.getElementById('countLabel').textContent=`${items.length} of ${content.length} items`;
+
+  const body=document.getElementById('sheetBody');
+  if(!items.length){body.innerHTML='<tr><td colspan="8" class="empty">No content matches filters</td></tr>';return}
+
+  body.innerHTML=items.map((c,i)=>{
+    const bc=c.status==='draft'?'b-draft':c.status==='scheduled'?'b-scheduled':c.status==='published'?'b-published':'b-designed';
+    const pc=PC[c.platform]||'';
+    return `<tr>
+      <td style="color:rgba(255,255,255,0.2)">${c.id}</td>
+      <td><span class="plat ${pc}">${c.platform||'—'}</span></td>
+      <td style="color:rgba(255,255,255,0.3)">${c.content_type||'post'}</td>
+      <td><span class="badge ${bc}">${c.status||'draft'}</span></td>
+      <td class="caption-cell" title="${esc((c.caption||'').substring(0,200))}">${esc((c.caption||'').substring(0,60))}</td>
+      <td style="color:rgba(255,255,255,0.25);font-size:0.55rem">${(c.scheduled_at||'—').split('T')[0]}</td>
+      <td style="color:rgba(255,255,255,0.2);font-size:0.55rem">${(c.created_at||'').split('T')[0]}</td>
+      <td style="display:flex;gap:3px">
+        <button style="padding:3px 6px;border-radius:3px;border:none;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);font-size:0.45rem;cursor:pointer" onclick="navigator.clipboard.writeText(\`${esc((c.caption||'').replace(/`/g,"'").replace(/\\/g,''))}\`)">📋</button>
+        <button style="padding:3px 6px;border-radius:3px;border:none;background:rgba(46,204,113,0.1);color:#2ecc71;font-size:0.45rem;cursor:pointer" onclick="changeStatus(${c.id},'published')">✅</button>
+        <button style="padding:3px 6px;border-radius:3px;border:none;background:rgba(231,76,60,0.1);color:#e74c3c;font-size:0.45rem;cursor:pointer" onclick="deleteContent(${c.id})">🗑</button>
+      </td>
+    </tr>`}).join('');
+}
+
+async function changeStatus(id,status){
+  try{await fetch(`/api/content/${id}/status`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});await loadData()}catch(e){}
+}
+
+async function deleteContent(id){
+  if(!confirm('Delete this content?'))return;
+  // No delete endpoint yet, just mark as draft
+  try{await fetch(`/api/content/${id}/status`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'draft'})});await loadData()}catch(e){}
+}
+
+function exportCSV(){
+  const headers='ID,Platform,Type,Status,Caption,Scheduled,Created';
+  const rows=content.map(c=>`${c.id},"${(c.platform||'')}","${(c.content_type||'')}","${(c.status||'')}","${(c.caption||'').replace(/"/g,'""').substring(0,200)}","${(c.scheduled_at||'')}","${(c.created_at||'')}"`);
+  const csv=headers+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='content_'+Date.now()+'.csv';a.click();
+}
+
+// Calendar
+function renderCalendar(){
+  const year=calDate.getFullYear(),month=calDate.getMonth();
+  document.getElementById('calTitle').textContent=calDate.toLocaleDateString('en',{month:'long',year:'numeric'});
+  const grid=document.getElementById('calGrid');
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date();
+
+  let h='';
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>h+=`<div class="cal-dh">${d}</div>`);
+  for(let i=0;i<firstDay;i++)h+='<div class="cal-day" style="opacity:0.3"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dt=new Date(year,month,d),isT=dt.toDateString()===today.toDateString(),ds=dt.toISOString().split('T')[0];
+    const posts=content.filter(c=>(c.scheduled_at||c.created_at||'').split('T')[0]===ds);
+    h+=`<div class="cal-day ${isT?'today':''}">
+      <div class="dn">${d}</div>
+      ${posts.slice(0,3).map(p=>{
+        const cc=CC[p.platform]||'cp-default';
+        return `<div class="cal-post ${cc}" title="${esc((p.caption||'').substring(0,60))}">${(p.platform||'').substring(0,2).toUpperCase()} ${esc((p.caption||'').substring(0,18))}</div>`;
+      }).join('')}
+      ${posts.length>3?`<div style="font-size:0.38rem;color:rgba(255,255,255,0.15)">+${posts.length-3} more</div>`:''}
+    </div>`;
+  }
+  grid.innerHTML=h;
+}
+function calPrev(){calDate.setMonth(calDate.getMonth()-1);renderCalendar()}
+function calNext(){calDate.setMonth(calDate.getMonth()+1);renderCalendar()}
+function calToday(){calDate=new Date();renderCalendar()}
+
+loadData();
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY — Video Studio</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+    .app{display:flex;height:100vh;flex-direction:column}
+    .topbar{height:36px;display:flex;align-items:center;padding:0 12px;background:#111;border-bottom:1px solid #222;flex-shrink:0;gap:6px}
+    .tb-btn{padding:5px 12px;border-radius:5px;font-size:0.6rem;font-weight:600;border:none;cursor:pointer;transition:all 0.12s;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5)}
+    .tb-btn:hover{background:rgba(230,126,34,0.12);color:#e67e22}
+    .tb-sep{width:1px;height:16px;background:#222}
+    .tb-fill{flex:1}
+    .tb-title{font-size:0.58rem;color:rgba(255,255,255,0.25);letter-spacing:0.2em;text-transform:uppercase}
+    .tb-accent{background:#e67e22!important;color:#fff!important}
+    .editor-frame{flex:1;width:100%;border:none}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <button class="tb-btn" onclick="location.href='/space/creative-choice'">← Back</button>
+    <div class="tb-sep"></div>
+    <span class="tb-title">Video Studio — React Video Editor Pro</span>
+    <div class="tb-fill"></div>
+    <button class="tb-btn" onclick="location.href='/spaces'">Spaces</button>
+    <button class="tb-btn" onclick="window.open('http://localhost:3200/embed','_blank')">🔗 Open Full Window</button>
+  </div>
+  <iframe class="editor-frame" src="http://localhost:3200/embed" allow="autoplay; camera; microphone; clipboard-write"></iframe>
+</div>
+</body>
+</html>

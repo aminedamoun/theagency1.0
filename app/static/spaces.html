@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY 1.0 — Spaces</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      width:100%; height:100%; overflow:hidden;
+      background:#020509;
+      font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+      color:#fff;
+    }
+
+    /* Background */
+    #bg {
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(ellipse 130% 55% at 50% -5%,  rgba(18,42,105,0.45) 0%, transparent 60%),
+        radial-gradient(ellipse 45%  55% at  0% 55%,  rgba(28,18,80,0.28)  0%, transparent 55%),
+        radial-gradient(ellipse 45%  50% at 100% 70%, rgba(90,50,10,0.18)  0%, transparent 55%),
+        #020509;
+    }
+    #bg-canvas { position:fixed; inset:0; z-index:1; pointer-events:none; }
+
+    /* Shell */
+    .shell {
+      position:relative; z-index:10;
+      height:100vh;
+      display:flex; flex-direction:column;
+      padding:18px 64px 24px;
+      gap:0;
+    }
+    .shell-body {
+      flex:1; display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:18px;
+    }
+
+    /* Header */
+    header {
+      flex-shrink:0;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .logo { display:flex; align-items:center; gap:11px; text-decoration:none; }
+    .logo-mark {
+      width:34px; height:34px; border-radius:8px;
+      background:linear-gradient(135deg,#c9a84c,#ffe08a);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:900; font-size:0.76rem; color:#000;
+    }
+    .logo-name { font-size:0.64rem; letter-spacing:0.42em; text-transform:uppercase; color:rgba(255,255,255,0.4); }
+    .h-nav { display:flex; gap:8px; }
+    .hbtn {
+      padding:8px 18px; border-radius:50px;
+      font-size:0.65rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase;
+      text-decoration:none; transition:all 0.2s; border:none; cursor:pointer;
+    }
+    .hbtn-ghost { background:transparent; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.4); }
+    .hbtn-ghost:hover { border-color:rgba(201,168,76,0.4); color:#c9a84c; }
+    .hbtn-gold { background:linear-gradient(135deg,#c9a84c,#e8c56a); color:#000; }
+    .hbtn-gold:hover { box-shadow:0 0 20px rgba(201,168,76,0.4); }
+
+    /* Hero */
+    .hero { flex-shrink:0; text-align:center; padding:8px 0 4px; }
+    .hero-sup { font-size:0.58rem; letter-spacing:0.65em; text-transform:uppercase; color:rgba(201,168,76,0.55); margin-bottom:6px; }
+    .hero-title { font-size:clamp(1.6rem,2.6vw,2.4rem); font-weight:900; color:#fff; letter-spacing:0.04em; }
+
+    /* Grid — 4 equal columns × 2 rows */
+    .grid {
+      flex:0 0 auto;
+      width:100%;
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 190px);
+      gap:12px;
+    }
+
+    /* Glass card */
+    .gcard {
+      position:relative; overflow:hidden;
+      border-radius:14px;
+      background:rgba(9,16,34,0.52);
+      backdrop-filter:blur(28px) saturate(160%);
+      -webkit-backdrop-filter:blur(28px) saturate(160%);
+      border:1px solid rgba(255,255,255,0.07);
+      border-top:1px solid rgba(255,255,255,0.13);
+      border-left:1px solid rgba(255,255,255,0.1);
+      box-shadow:0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+      text-decoration:none; display:flex; flex-direction:column;
+      padding:14px 15px 13px;
+      cursor:pointer;
+      transition:transform 0.07s ease, box-shadow 0.25s ease;
+      transform-style:preserve-3d;
+    }
+
+    /* Shine */
+    .gcard::after {
+      content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+      background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.1) 0%, transparent 55%);
+      opacity:0; transition:opacity 0.3s;
+    }
+    .gcard:hover::after { opacity:1; }
+
+    /* Glow blob */
+    .glow {
+      position:absolute; top:-50px; right:-40px;
+      width:180px; height:180px; border-radius:50%;
+      filter:blur(60px); opacity:0.15; pointer-events:none;
+      transition:opacity 0.4s;
+    }
+    .gcard:hover .glow { opacity:0.28; }
+
+    /* Grid pattern */
+    .gpat {
+      position:absolute; inset:0; border-radius:inherit; pointer-events:none; opacity:0.022;
+      background-image:linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),
+                       linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px);
+      background-size:28px 28px;
+    }
+
+    /* Content */
+    .gc-body { position:relative; z-index:2; display:flex; flex-direction:column; height:100%; overflow:hidden; }
+
+    .gc-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:9px; }
+    .gc-icon {
+      width:30px; height:30px; border-radius:7px;
+      background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+      display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0;
+    }
+    .gc-avatar {
+      width:30px; height:30px; border-radius:50%; overflow:hidden;
+      border:2px solid rgba(255,255,255,0.12); flex-shrink:0;
+    }
+    .gc-avatar img { width:215%; height:auto; margin-left:-57%; margin-top:1%; display:block; }
+
+    .gc-label { font-size:0.5rem; letter-spacing:0.35em; text-transform:uppercase; color:var(--accent); font-weight:600; margin-bottom:3px; }
+    .gc-title { font-size:clamp(0.88rem,1.2vw,1.05rem); font-weight:800; color:#fff; line-height:1.2; margin-bottom:5px; }
+    .gc-desc  {
+      font-size:0.67rem; color:rgba(255,255,255,0.44); line-height:1.45; margin-bottom:8px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    }
+
+    .gc-tags  { display:flex; flex-wrap:nowrap; gap:4px; margin-bottom:9px; overflow:hidden; }
+    .gc-tag   {
+      font-size:0.48rem; letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap;
+      padding:2px 7px; border-radius:20px; flex-shrink:0;
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+      color:rgba(255,255,255,0.4); transition:all 0.2s;
+    }
+    .gcard:hover .gc-tag { border-color:rgba(var(--accent-rgb),0.3); color:rgba(255,255,255,0.68); }
+
+    .gc-btn {
+      display:inline-flex; align-items:center; gap:5px; align-self:flex-start; margin-top:auto;
+      font-size:0.57rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase;
+      color:var(--accent); border:1px solid rgba(var(--accent-rgb),0.3);
+      padding:6px 12px; border-radius:7px; background:rgba(var(--accent-rgb),0.06);
+      text-decoration:none; transition:all 0.22s;
+    }
+    .gcard:hover .gc-btn {
+      background:rgba(var(--accent-rgb),0.14); border-color:rgba(var(--accent-rgb),0.55);
+      box-shadow:0 0 16px rgba(var(--accent-rgb),0.2);
+    }
+    .gc-btn .arr { transition:transform 0.2s; }
+    .gcard:hover .gc-btn .arr { transform:translateX(3px); }
+
+    /* Entry animation */
+    .gcard { opacity:0; animation:cin 0.5s ease forwards; }
+    @keyframes cin { to { opacity:1; } }
+    .gcard:nth-child(1){animation-delay:0.04s} .gcard:nth-child(2){animation-delay:0.10s}
+    .gcard:nth-child(3){animation-delay:0.16s} .gcard:nth-child(4){animation-delay:0.22s}
+    .gcard:nth-child(5){animation-delay:0.28s} .gcard:nth-child(6){animation-delay:0.34s}
+    .gcard:nth-child(7){animation-delay:0.40s} .gcard:nth-child(8){animation-delay:0.46s}
+  </style>
+</head>
+<body>
+
+<div id="bg"></div>
+<canvas id="bg-canvas"></canvas>
+
+<div class="shell">
+
+  <header>
+    <a class="logo" href="/">
+      <div class="logo-mark">DP</div>
+      <div class="logo-name">The Agency 1.0</div>
+    </a>
+    <nav class="h-nav">
+      <a class="hbtn hbtn-ghost" href="/">← Team</a>
+      <a class="hbtn hbtn-ghost" href="/platform">Dashboard</a>
+      <a class="hbtn hbtn-gold"  href="/platform?page=chat">Talk to Sarah</a>
+    </nav>
+  </header>
+
+  <div class="shell-body">
+    <div class="hero">
+      <div class="hero-sup">Choose Your Space</div>
+      <div class="hero-title">Where Do You Want To Work Today?</div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+</div>
+
+<script>
+const SPACES = [
+  {
+    icon:'👑', label:'Command Center',  title:'CEO Office',
+    desc:'Delegate everything to Sarah — strategy, invoices, task management, team coordination.',
+    tags:['Strategy','Invoicing','Delegation','Coordination'],
+    img:'/static/img/sarah.png', accent:'#c9a84c', rgb:'201,168,76', link:'/space/dashboard',
+  },
+  {
+    icon:'📱', label:'Content & Social Media', title:'Social Media',
+    desc:'Full content pipeline — research, strategy, copywriting, scheduling. Sarah coordinates the team from idea to published post.',
+    tags:['Copywriting','Strategy','Scheduling','Instagram','TikTok','LinkedIn'],
+    img:'/static/img/marcus.png', accent:'#4a9fd4', rgb:'74,159,212', link:'/space/content',
+  },
+  {
+    icon:'🎬', label:'Creative Lab',     title:'Video & Image',
+    desc:'AI images, video production, post design — from concept to final creative asset in minutes.',
+    tags:['AI Images','Video Editor','Post Design','Reels'],
+    img:'/static/img/zara.png', accent:'#f07840', rgb:'240,120,64', link:'/space/creative-choice',
+  },
+  {
+    icon:'🔍', label:'Lead & CRM',       title:'Lead Generation',
+    desc:'Kai finds leads, builds prospect lists and researches companies. Your pipeline starts here.',
+    tags:['Prospecting','Company Research','CRM','Pipeline'],
+    img:'/static/img/kai.png', accent:'#a06cd5', rgb:'160,108,213', link:'/space/leads',
+  },
+  {
+    icon:'📧', label:'Communications',   title:'Email & Outreach',
+    desc:'Professional emails, proposals, client outreach — send branded PDFs and track responses.',
+    tags:['Email','Proposals','Outreach','Follow-ups'],
+    img:'/static/img/alex.png', accent:'#e67e22', rgb:'230,126,34', link:'/space/email',
+  },
+  {
+    icon:'📊', label:'Sheets & Calendar', title:'Content Calendar',
+    desc:'View all your content in a calendar and sheet. Track status, schedule posts, manage your pipeline.',
+    tags:['Calendar','Content Sheet','Schedule','Pipeline'],
+    img:'/static/img/sarah.png', accent:'#2ecc71', rgb:'46,204,113', link:'/space/sheets',
+  },
+  {
+    icon:'🏠', label:'Full Platform',    title:'Dashboard',
+    desc:'All agents, all tools, all spaces in one unified dashboard view.',
+    tags:['All Agents','All Tools','Overview'],
+    img:'/static/img/sarah.png', accent:'#c9a84c', rgb:'201,168,76', link:'/platform',
+  },
+];
+
+const grid = document.getElementById('grid');
+
+SPACES.forEach((s, i) => {
+  const card = document.createElement('a');
+  card.className = 'gcard';
+  card.href = s.link;
+  card.style.cssText = `--accent:${s.accent};--accent-rgb:${s.rgb};animation-delay:${0.04+i*0.06}s`;
+  card.innerHTML = `
+    <div class="glow" style="background:${s.accent}"></div>
+    <div class="gpat"></div>
+    <div class="gc-body">
+      <div class="gc-top">
+        <div class="gc-icon">${s.icon}</div>
+        <div class="gc-avatar"><img src="${s.img}" alt=""/></div>
+      </div>
+      <div class="gc-label">${s.label}</div>
+      <div class="gc-title">${s.title}</div>
+      <div class="gc-desc">${s.desc}</div>
+      <div class="gc-tags">${s.tags.map(t=>`<span class="gc-tag">${t}</span>`).join('')}</div>
+      <div class="gc-btn">Open <span class="arr">→</span></div>
+    </div>`;
+  grid.appendChild(card);
+});
+
+// 3D tilt
+document.querySelectorAll('.gcard').forEach(card => {
+  card.parentElement.style.perspective = '900px';
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width  - 0.5;
+    const y = (e.clientY - r.top)  / r.height - 0.5;
+    card.style.transform = `perspective(900px) rotateY(${x*11}deg) rotateX(${y*-11}deg) scale3d(1.02,1.02,1.02)`;
+    card.style.boxShadow = `${-x*16}px ${-y*16}px 44px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06)`;
+    card.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+    card.style.setProperty('--my', ((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(900px) rotateY(0) rotateX(0) scale3d(1,1,1)';
+    card.style.boxShadow = '';
+  });
+});
+
+// Particles
+const cvs = document.getElementById('bg-canvas');
+const ctx = cvs.getContext('2d');
+cvs.width = innerWidth; cvs.height = innerHeight;
+const pts = Array.from({length:130}, () => ({
+  x:Math.random()*cvs.width, y:Math.random()*cvs.height,
+  r:Math.random()*1+0.3, vy:-(Math.random()*0.18+0.04), a:Math.random()*0.2+0.04,
+}));
+(function draw(){
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  pts.forEach(p=>{ p.y+=p.vy; if(p.y<-4)p.y=cvs.height+4;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(201,168,76,${p.a})`; ctx.fill(); });
+  requestAnimationFrame(draw);
+})();
+window.addEventListener('resize',()=>{ cvs.width=innerWidth; cvs.height=innerHeight; });
+</script>
+</body>
+</html>

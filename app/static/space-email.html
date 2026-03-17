@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY — Email & Outreach</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#0a0e1a;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+
+    .app{display:flex;height:100vh;flex-direction:column}
+
+    /* Top bar */
+    .topbar{height:42px;display:flex;align-items:center;padding:0 16px;background:#131825;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;gap:6px}
+    .tb-logo{display:flex;align-items:center;gap:8px;text-decoration:none;margin-right:12px}
+    .tb-logo-i{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#e67e22,#d35400);display:flex;align-items:center;justify-content:center;font-size:0.7rem}
+    .tb-logo span{font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.4)}
+    .tb-btn{padding:6px 14px;border-radius:6px;font-size:0.62rem;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);transition:all 0.15s}
+    .tb-btn:hover{background:rgba(230,126,34,0.12);color:#e67e22}
+    .tb-sep{width:1px;height:18px;background:rgba(255,255,255,0.06)}
+    .tb-fill{flex:1}
+    .tb-accent{background:linear-gradient(135deg,#e67e22,#d35400)!important;color:#fff!important}
+    .tb-green{background:rgba(46,204,113,0.12)!important;color:#2ecc71!important;border:1px solid rgba(46,204,113,0.15)!important}
+
+    /* Main layout */
+    .main{flex:1;display:flex;min-height:0}
+
+    /* Sidebar tabs */
+    .sidebar{width:200px;display:flex;flex-direction:column;background:#111827;border-right:1px solid rgba(255,255,255,0.05);flex-shrink:0}
+    .sb-head{padding:14px 16px 10px;font-size:0.55rem;font-weight:700;color:rgba(230,126,34,0.6);text-transform:uppercase;letter-spacing:0.12em}
+    .sb-item{padding:10px 16px;font-size:0.72rem;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.45);transition:all 0.12s;display:flex;align-items:center;gap:10px;border-left:3px solid transparent}
+    .sb-item:hover{background:rgba(230,126,34,0.06);color:rgba(255,255,255,0.7)}
+    .sb-item.active{background:rgba(230,126,34,0.08);color:#e67e22;border-left-color:#e67e22}
+    .sb-item .badge{margin-left:auto;padding:1px 7px;border-radius:10px;font-size:0.5rem;font-weight:700;background:rgba(230,126,34,0.15);color:#e67e22}
+    .sb-divider{height:1px;background:rgba(255,255,255,0.04);margin:8px 12px}
+    .sb-agent{padding:12px 16px;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,0.04);margin-top:auto}
+    .sb-avatar{width:32px;height:32px;border-radius:50%;background-size:cover;background-position:center top;border:2px solid #e67e22}
+    .sb-agent-info .name{font-size:0.68rem;font-weight:700;color:#fff}
+    .sb-agent-info .role{font-size:0.5rem;color:rgba(230,126,34,0.7)}
+
+    /* Content area */
+    .content{flex:1;display:flex;flex-direction:column;min-width:0}
+    .tab-content{flex:1;overflow-y:auto;padding:16px 20px}
+    .tab-content::-webkit-scrollbar{width:4px}
+    .tab-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+
+    /* Section headers */
+    .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .sec-head h2{font-size:1rem;font-weight:800}
+    .sec-head .sub{font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:2px}
+    .sec-actions{display:flex;gap:5px}
+    .sa-btn{padding:6px 14px;border-radius:6px;font-size:0.58rem;font-weight:600;border:none;cursor:pointer;transition:all 0.15s}
+    .sa-outline{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)}
+    .sa-outline:hover{background:rgba(230,126,34,0.08);border-color:rgba(230,126,34,0.3);color:#e67e22}
+    .sa-primary{background:linear-gradient(135deg,#e67e22,#d35400);color:#fff}
+
+    /* Stats row */
+    .stats-row{display:flex;gap:10px;margin-bottom:16px}
+    .stat-card{flex:1;padding:14px 16px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05)}
+    .stat-card .val{font-size:1.4rem;font-weight:900;color:#e67e22}
+    .stat-card .lbl{font-size:0.55rem;color:rgba(255,255,255,0.35);margin-top:2px}
+
+    /* Email list */
+    .email-list{display:flex;flex-direction:column;gap:4px}
+    .email-row{
+      display:flex;align-items:center;gap:12px;padding:12px 14px;
+      border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);
+      cursor:pointer;transition:all 0.12s;
+    }
+    .email-row:hover{background:rgba(230,126,34,0.04);border-color:rgba(230,126,34,0.15)}
+    .email-row.unread{background:rgba(230,126,34,0.03);border-left:3px solid #e67e22}
+    .email-row .e-check{width:16px;height:16px;border-radius:3px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;flex-shrink:0}
+    .email-row .e-from{width:180px;font-size:0.7rem;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+    .email-row .e-subject{flex:1;font-size:0.68rem;color:rgba(255,255,255,0.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .email-row .e-date{font-size:0.55rem;color:rgba(255,255,255,0.2);flex-shrink:0;width:70px;text-align:right}
+    .email-row .e-badge{padding:2px 8px;border-radius:10px;font-size:0.48rem;font-weight:600;flex-shrink:0}
+
+    /* Email viewer */
+    .email-viewer{display:none;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:20px;margin-top:8px}
+    .email-viewer.open{display:block}
+    .ev-from{font-size:0.75rem;font-weight:700;color:#fff;margin-bottom:2px}
+    .ev-to{font-size:0.6rem;color:rgba(255,255,255,0.3);margin-bottom:4px}
+    .ev-subject{font-size:0.85rem;font-weight:700;margin-bottom:12px}
+    .ev-body{font-size:0.72rem;color:rgba(255,255,255,0.6);line-height:1.6;white-space:pre-wrap;max-height:300px;overflow-y:auto}
+    .ev-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05)}
+
+    /* Lead cards for outreach */
+    .leads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
+    .lead-card{
+      padding:14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);
+      transition:all 0.12s;position:relative;
+    }
+    .lead-card:hover{border-color:rgba(230,126,34,0.2)}
+    .lead-card.selected{border-color:rgba(230,126,34,0.5);background:rgba(230,126,34,0.04)}
+    .lc-check{position:absolute;top:10px;left:10px;width:16px;height:16px;border-radius:3px;border:1px solid rgba(255,255,255,0.15);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:#e67e22;background:rgba(255,255,255,0.03)}
+    .lc-check.on{background:rgba(230,126,34,0.2);border-color:#e67e22}
+    .lc-name{font-size:0.75rem;font-weight:700;color:#fff;margin-bottom:4px;padding-left:22px}
+    .lc-field{font-size:0.62rem;color:rgba(255,255,255,0.4);margin-bottom:2px;display:flex;align-items:center;gap:5px}
+    .lc-field a{color:#e67e22;text-decoration:none}
+    .lc-tags{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap}
+    .lc-tag{padding:2px 7px;border-radius:4px;font-size:0.48rem;font-weight:600}
+    .lc-tag-ind{background:rgba(230,126,34,0.1);color:#e67e22;border:1px solid rgba(230,126,34,0.15)}
+    .lc-actions{display:flex;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)}
+    .lc-btn{flex:1;padding:6px;border-radius:5px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.5);font-size:0.55rem;font-weight:600;cursor:pointer;text-align:center;transition:all 0.12s}
+    .lc-btn:hover{background:rgba(230,126,34,0.08);border-color:rgba(230,126,34,0.25);color:#e67e22}
+
+    /* Compose area */
+    .compose-box{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px}
+    .compose-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .compose-label{font-size:0.6rem;font-weight:600;color:rgba(255,255,255,0.35);width:50px;flex-shrink:0}
+    .compose-input{flex:1;padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:#fff;font-size:0.7rem;outline:none}
+    .compose-input:focus{border-color:rgba(230,126,34,0.4)}
+    .compose-ta{width:100%;height:200px;resize:none;padding:12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:#fff;font-size:0.7rem;outline:none;font-family:inherit;line-height:1.6}
+    .compose-ta:focus{border-color:rgba(230,126,34,0.4)}
+    .compose-actions{display:flex;gap:6px;margin-top:10px;align-items:center}
+
+    /* Bulk bar */
+    .bulk-bar{display:none;align-items:center;gap:8px;padding:10px 14px;margin-bottom:10px;background:rgba(230,126,34,0.06);border:1px solid rgba(230,126,34,0.15);border-radius:8px}
+    .bulk-bar.show{display:flex}
+    .bulk-count{font-size:0.72rem;font-weight:700;color:#e67e22;margin-right:auto}
+
+    /* Campaign log */
+    .campaign-list{display:flex;flex-direction:column;gap:4px}
+    .campaign-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)}
+    .cr-icon{font-size:1.1rem}
+    .cr-info{flex:1}
+    .cr-title{font-size:0.7rem;font-weight:700;color:#fff}
+    .cr-sub{font-size:0.55rem;color:rgba(255,255,255,0.3)}
+    .cr-badge{padding:3px 8px;border-radius:10px;font-size:0.5rem;font-weight:600}
+    .badge-sent{background:rgba(46,204,113,0.12);color:#2ecc71;border:1px solid rgba(46,204,113,0.15)}
+    .badge-opened{background:rgba(52,152,219,0.12);color:#3498db;border:1px solid rgba(52,152,219,0.15)}
+    .badge-replied{background:rgba(230,126,34,0.12);color:#e67e22;border:1px solid rgba(230,126,34,0.15)}
+    .badge-pending{background:rgba(241,196,15,0.1);color:#f1c40f;border:1px solid rgba(241,196,15,0.12)}
+
+    .empty{text-align:center;padding:30px;color:rgba(255,255,255,0.12);font-size:0.7rem}
+    .loading{text-align:center;padding:20px;color:rgba(230,126,34,0.4);font-size:0.65rem}
+    @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <a class="tb-logo" href="/spaces"><div class="tb-logo-i">📧</div><span>Email & Outreach</span></a>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="refreshInbox()">🔄 Refresh Inbox</button>
+    <button class="tb-btn" onclick="switchTab('compose')">✏️ Compose</button>
+    <div class="tb-fill"></div>
+    <button class="tb-btn tb-accent" onclick="switchTab('outreach')">🚀 Mass Outreach</button>
+    <button class="tb-btn tb-green" onclick="switchTab('proposals')">📄 Proposals</button>
+  </div>
+
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-head">Mailbox</div>
+      <div class="sb-item active" onclick="switchTab('inbox')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        Inbox <span class="badge" id="inboxCount">0</span>
+      </div>
+      <div class="sb-item" onclick="switchTab('sent')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Sent
+      </div>
+      <div class="sb-item" onclick="switchTab('compose')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Compose
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-head">Outreach</div>
+      <div class="sb-item" onclick="switchTab('outreach')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Leads Outreach <span class="badge" id="leadsCount">0</span>
+      </div>
+      <div class="sb-item" onclick="switchTab('proposals')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Proposals
+      </div>
+      <div class="sb-item" onclick="switchTab('campaigns')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Campaign Log
+      </div>
+      <div class="sb-divider"></div>
+      <!-- Elena -->
+      <div class="sb-agent">
+        <div class="sb-avatar" style="background-image:url(/static/img/avatar_elena.png)"></div>
+        <div class="sb-agent-info">
+          <div class="name">Elena Voronova</div>
+          <div class="role">Communications Manager</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="tab-content">
+        <!-- INBOX -->
+        <div class="tab-pane active" id="pane-inbox">
+          <div class="sec-head">
+            <div><h2>📥 Inbox</h2><div class="sub">Your latest emails</div></div>
+            <div class="sec-actions">
+              <button class="sa-btn sa-outline" onclick="refreshInbox()">🔄 Refresh</button>
+              <select id="inboxFilter" onchange="refreshInbox()" style="padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.6rem;outline:none">
+                <option value="10">Last 10</option>
+                <option value="25">Last 25</option>
+                <option value="50">Last 50</option>
+              </select>
+            </div>
+          </div>
+          <div id="inboxList" class="email-list"><div class="loading">Loading inbox...</div></div>
+          <div class="email-viewer" id="emailViewer"></div>
+        </div>
+
+        <!-- SENT -->
+        <div class="tab-pane" id="pane-sent">
+          <div class="sec-head"><div><h2>📤 Sent</h2><div class="sub">Emails you've sent</div></div></div>
+          <div id="sentList" class="campaign-list"><div class="empty">Sent emails will appear here after outreach</div></div>
+        </div>
+
+        <!-- COMPOSE -->
+        <div class="tab-pane" id="pane-compose">
+          <div class="sec-head"><div><h2>✏️ Compose Email</h2><div class="sub">Ready-to-send — edit if needed, check attachments, and send</div></div></div>
+          <div class="compose-box">
+            <div class="compose-row">
+              <div class="compose-label">To</div>
+              <input class="compose-input" id="compTo" placeholder="email@example.com"/>
+            </div>
+            <div class="compose-row">
+              <div class="compose-label">Subject</div>
+              <input class="compose-input" id="compSubject" placeholder="Subject line..."/>
+            </div>
+            <textarea class="compose-ta" id="compBody" style="height:260px"></textarea>
+
+            <!-- Attachments checkboxes -->
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;padding:12px;border-radius:8px;background:rgba(230,126,34,0.04);border:1px solid rgba(230,126,34,0.1)">
+              <div style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Attachments</div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);transition:all 0.12s" onmouseover="this.style.borderColor='rgba(230,126,34,0.3)'" onmouseout="this.style.borderColor=''">
+                <input type="checkbox" id="attachPortfolio" checked style="accent-color:#e67e22;width:16px;height:16px"/>
+                <div><div style="font-size:0.7rem;font-weight:600;color:#fff">📄 Marketing Portfolio & Services PDF</div><div style="font-size:0.52rem;color:rgba(255,255,255,0.3)">Branded Dubai Prod proposal with all services, pricing, and case studies</div></div>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);transition:all 0.12s" onmouseover="this.style.borderColor='rgba(230,126,34,0.3)'" onmouseout="this.style.borderColor=''">
+                <input type="checkbox" id="attachPricing" style="accent-color:#e67e22;width:16px;height:16px"/>
+                <div><div style="font-size:0.7rem;font-weight:600;color:#fff">💰 Pricing & Packages</div><div style="font-size:0.52rem;color:rgba(255,255,255,0.3)">Detailed pricing for social media, content, video packages</div></div>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);transition:all 0.12s" onmouseover="this.style.borderColor='rgba(230,126,34,0.3)'" onmouseout="this.style.borderColor=''">
+                <input type="checkbox" id="attachCaseStudy" style="accent-color:#e67e22;width:16px;height:16px"/>
+                <div><div style="font-size:0.7rem;font-weight:600;color:#fff">📊 Case Studies & Results</div><div style="font-size:0.52rem;color:rgba(255,255,255,0.3)">Client success stories with real metrics and ROI</div></div>
+              </label>
+            </div>
+
+            <div class="compose-actions">
+              <button class="sa-btn sa-primary" onclick="sendCompose()" style="padding:10px 24px;font-size:0.72rem">📤 Send Email</button>
+              <button class="sa-btn sa-outline" onclick="regenerateEmail()">🔄 Regenerate</button>
+              <div style="margin-left:auto;font-size:0.55rem;color:rgba(255,255,255,0.2)" id="compStatus"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OUTREACH (Leads with emails) -->
+        <div class="tab-pane" id="pane-outreach">
+          <div class="sec-head">
+            <div><h2>🚀 Leads Outreach</h2><div class="sub">All leads with email addresses — select and send proposals</div></div>
+            <div class="sec-actions">
+              <button class="sa-btn sa-outline" onclick="selectAllLeads()">☑ Select All</button>
+              <button class="sa-btn sa-primary" onclick="sendBulkProposals()">📧 Send Proposals to Selected</button>
+            </div>
+          </div>
+          <div class="stats-row" id="outreachStats"></div>
+          <div class="bulk-bar" id="bulkBar">
+            <div class="bulk-count" id="bulkCount">0 selected</div>
+            <button class="sa-btn sa-outline" onclick="sendBulkProposals()">📧 Send Proposals</button>
+            <button class="sa-btn sa-outline" onclick="sendBulkEmail()">✉️ Custom Email</button>
+            <button class="sa-btn sa-outline" onclick="clearSelection()">✕ Clear</button>
+          </div>
+          <div id="outreachList" class="leads-grid"><div class="loading">Loading leads...</div></div>
+        </div>
+
+        <!-- PROPOSALS with PDF Preview -->
+        <div class="tab-pane" id="pane-proposals">
+          <div class="sec-head">
+            <div><h2>📄 Proposals & Documents</h2><div class="sub">View, preview, and send marketing proposals</div></div>
+            <div class="sec-actions">
+              <button class="sa-btn sa-outline" onclick="loadProposals()">🔄 Refresh</button>
+              <button class="sa-btn sa-primary" onclick="generateProposal()">+ Generate New Proposal</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;min-height:0">
+            <!-- Proposals list -->
+            <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 180px);overflow-y:auto" id="proposalsList">
+              <div class="loading">Loading...</div>
+            </div>
+            <!-- PDF Preview -->
+            <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;min-height:400px">
+              <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:8px">
+                <span style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.5)">Preview</span>
+                <div style="flex:1"></div>
+                <button class="sa-btn sa-outline" style="font-size:0.55rem;padding:4px 10px" id="previewDl" onclick="downloadPreview()">📥 Download</button>
+                <button class="sa-btn sa-outline" style="font-size:0.55rem;padding:4px 10px" id="previewSend" onclick="sendPreview()">📤 Send</button>
+              </div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:auto" id="pdfPreview">
+                <div style="color:rgba(255,255,255,0.1);font-size:0.7rem;text-align:center;padding:30px">
+                  Select a proposal to preview<br>or generate a new one
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CAMPAIGNS / ANALYTICS -->
+        <div class="tab-pane" id="pane-campaigns">
+          <div class="sec-head"><div><h2>📊 Campaign Analytics</h2><div class="sub">Track email performance and responses</div></div></div>
+          <!-- Analytics stats -->
+          <div class="stats-row" id="campaignStats">
+            <div class="stat-card"><div class="val" id="statSent">0</div><div class="lbl">Total Sent</div></div>
+            <div class="stat-card"><div class="val" id="statProposals">0</div><div class="lbl">Proposals Generated</div></div>
+            <div class="stat-card"><div class="val" id="statLeads">0</div><div class="lbl">Leads Contacted</div></div>
+            <div class="stat-card"><div class="val" id="statReplies">0</div><div class="lbl">Replies Received</div></div>
+          </div>
+          <!-- Activity timeline -->
+          <div style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin:12px 0 8px">Activity Timeline</div>
+          <div id="campaignList" class="campaign-list"><div class="empty">Email activity will appear here as you send</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ STATE ═══
+let emails=[], leads=[], selectedLeads=new Set(), ws=null;
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// ═══ TABS ═══
+function switchTab(name){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+name)?.classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(s=>s.classList.remove('active'));
+  const tabs=['inbox','sent','compose','outreach','proposals','campaigns'];
+  const idx=tabs.indexOf(name);
+  if(idx>=0) document.querySelectorAll('.sb-item')[idx]?.classList.add('active');
+}
+
+// ═══ INBOX ═══
+async function refreshInbox(){
+  const limit=parseInt(document.getElementById('inboxFilter')?.value||10);
+  const el=document.getElementById('inboxList');
+  el.innerHTML='<div class="loading">📥 Fetching emails...</div>';
+
+  // Ask Elena to fetch via WebSocket
+  elenaCmd(`Fetch my emails. Limit: ${limit}. Unread only: false. Use fetch_emails tool immediately.`);
+}
+
+function renderInbox(emailData){
+  const el=document.getElementById('inboxList');
+  if(!emailData||!emailData.length){el.innerHTML='<div class="empty">No emails found</div>';return}
+  emails=emailData;
+  document.getElementById('inboxCount').textContent=emails.length;
+  el.innerHTML=emails.map((e,i)=>`
+    <div class="email-row ${e.unread?'unread':''}" onclick="viewEmail(${i})">
+      <div class="e-from">${esc(e.from||e.sender||'')}</div>
+      <div class="e-subject">${esc(e.subject||'(no subject)')}</div>
+      <div class="e-date">${esc(e.date||'')}</div>
+    </div>`).join('');
+}
+
+function viewEmail(idx){
+  const e=emails[idx];if(!e)return;
+  const v=document.getElementById('emailViewer');
+  v.innerHTML=`
+    <div class="ev-from">From: ${esc(e.from||e.sender||'')}</div>
+    <div class="ev-to">To: ${esc(e.to||'')}</div>
+    <div class="ev-subject">${esc(e.subject||'')}</div>
+    <div class="ev-body">${esc(e.body||e.body_text||'')}</div>
+    <div class="ev-actions">
+      <button class="sa-btn sa-outline" onclick="replyTo('${esc(e.from||e.sender||'')}','${esc(e.subject||'')}')">↩ Reply</button>
+      <button class="sa-btn sa-outline" onclick="forwardEmail(${idx})">↪ Forward</button>
+    </div>`;
+  v.classList.add('open');
+}
+
+function replyTo(from, subject){
+  document.getElementById('compTo').value=from;
+  document.getElementById('compSubject').value='Re: '+subject;
+  switchTab('compose');
+  document.getElementById('compBody').focus();
+}
+
+// ═══ COMPOSE ═══
+// Default email template
+function getEmailTemplate(companyName, industry, contactName){
+  const name = contactName || 'there';
+  const comp = companyName || 'your company';
+  const ind = industry || 'your industry';
+  return `Dear ${name},
+
+I hope this message finds you well. My name is Amine, and I'm reaching out from Dubai Prod — a full-service social media and content creation agency based in Dubai.
+
+We specialize in helping businesses like ${comp} in the ${ind} sector build a powerful online presence that drives real results. Our team of experts delivers:
+
+🎯 Social Media Management — Strategy, content planning & daily management across Instagram, TikTok, LinkedIn, and Facebook
+📸 Content Creation — Professional photography, copywriting, captions & hashtag strategies
+🎬 Video Production — Reels, stories, promotional videos & brand films
+🎨 Visual Design — Brand identity, graphics, thumbnails & creative assets
+📊 Analytics & Reporting — Monthly performance reports with actionable insights
+
+We've helped businesses across Dubai achieve 3-5x growth in engagement and followers within the first 3 months.
+
+I'd love to schedule a brief 15-minute call to discuss how we can help ${comp} stand out on social media. Would you be available this week?
+
+Looking forward to hearing from you.
+
+Best regards,
+Amine Damoun
+Dubai Prod — Social Media Agency
+📞 +971 525 616 853
+🌐 www.dubaiprod.com
+📧 info@dubaiprod.com`;
+}
+
+function sendCompose(){
+  const to=document.getElementById('compTo').value.trim();
+  const subject=document.getElementById('compSubject').value.trim();
+  const body=document.getElementById('compBody').value.trim();
+  if(!to||!subject||!body){alert('Fill in all fields');return}
+
+  const wantProposal = document.getElementById('attachPortfolio').checked;
+
+  // Extract company name from the To field or subject
+  const companyGuess = subject.replace(/.*for\s*/i,'').replace(/['']s.*$/,'').replace(/\|.*$/,'').trim();
+
+  let cmd;
+  if(wantProposal){
+    cmd = `Use send_email tool with these EXACT parameters:
+to="${to}"
+subject="${subject}"
+body="${body}"
+attach_proposal=true
+client_name="${companyGuess}"
+client_company="${companyGuess}"
+
+This will auto-generate the PDF proposal and attach it to the email. Send immediately.`;
+  } else {
+    cmd = `Use send_email tool with: to="${to}", subject="${subject}", body="${body}". Send immediately.`;
+  }
+
+  document.getElementById('compStatus').textContent='📤 Sending...';
+  elenaCmd(cmd);
+}
+
+function regenerateEmail(){
+  const to=document.getElementById('compTo').value.trim();
+  const subject=document.getElementById('compSubject').value.trim();
+  // Extract company name from subject
+  const company = subject.replace(/Social Media.*for\s*/i,'').replace(/Services.*$/i,'').trim() || 'the company';
+  elenaCmd(`Write a fresh professional outreach email for ${company} (${to}). We offer social media, content, video. Make it different from the standard template. Write ONLY the email body, nothing else.`);
+}
+
+// ═══ OUTREACH (Leads) ═══
+async function loadLeads(){
+  try{
+    // Get all leads from all projects
+    const projRes=await fetch('/api/projects');
+    const projects=await projRes.json();
+    leads=[];
+    for(const p of projects){
+      try{
+        const lr=await fetch(`/api/projects/${p.id}/leads`);
+        const data=await lr.json();
+        if(data.leads) data.leads.forEach(l=>{l.project_name=p.name;leads.push(l)});
+      }catch(e){}
+    }
+    // Also get clients
+    const cr=await fetch('/api/clients');
+    const clients=await cr.json();
+    clients.forEach(c=>{
+      if(c.email && !leads.find(l=>l.email===c.email)){
+        leads.push({id:'c'+c.id,company_name:c.company||c.name,contact_name:c.name,email:c.email,phone:c.phone,industry:'client',status:'active',project_name:'Clients'});
+      }
+    });
+  }catch(e){console.error(e)}
+
+  const withEmail=leads.filter(l=>l.email);
+  document.getElementById('leadsCount').textContent=withEmail.length;
+
+  // Stats
+  document.getElementById('outreachStats').innerHTML=`
+    <div class="stat-card"><div class="val">${leads.length}</div><div class="lbl">Total Leads</div></div>
+    <div class="stat-card"><div class="val">${withEmail.length}</div><div class="lbl">With Email</div></div>
+    <div class="stat-card"><div class="val">${leads.filter(l=>l.phone).length}</div><div class="lbl">With Phone</div></div>
+    <div class="stat-card"><div class="val">${selectedLeads.size}</div><div class="lbl">Selected</div></div>`;
+
+  renderLeadsGrid();
+}
+
+function renderLeadsGrid(){
+  const withEmail=leads.filter(l=>l.email);
+  const el=document.getElementById('outreachList');
+  if(!withEmail.length){el.innerHTML='<div class="empty">No leads with email addresses.<br>Go to Leads & CRM space to find some!</div>';return}
+  el.innerHTML=withEmail.map(l=>{
+    const sel=selectedLeads.has(l.id);
+    return `<div class="lead-card ${sel?'selected':''}">
+      <div class="lc-check ${sel?'on':''}" onclick="toggleLead(${l.id})">${sel?'✓':''}</div>
+      <div class="lc-name">${esc(l.company_name||l.contact_name||'Unknown')}</div>
+      <div class="lc-field">📧 <a href="mailto:${esc(l.email)}">${esc(l.email)}</a></div>
+      ${l.phone?`<div class="lc-field">📞 ${esc(l.phone)}</div>`:''}
+      ${l.website?`<div class="lc-field">🌐 ${esc(l.website)}</div>`:''}
+      <div class="lc-tags">
+        ${l.industry?`<span class="lc-tag lc-tag-ind">${esc(l.industry)}</span>`:''}
+        ${l.project_name?`<span class="lc-tag" style="background:rgba(52,152,219,0.1);color:#3498db;border:1px solid rgba(52,152,219,0.15)">${esc(l.project_name)}</span>`:''}
+      </div>
+      <div class="lc-actions">
+        <button class="lc-btn" onclick="composeToLead(${l.id})">✉️ Compose Email</button>
+        <button class="lc-btn" onclick="quickSendToLead(${l.id})">⚡ Quick Send</button>
+      </div>
+    </div>`}).join('');
+  updateBulk();
+}
+
+function toggleLead(id){
+  if(selectedLeads.has(id))selectedLeads.delete(id);else selectedLeads.add(id);
+  renderLeadsGrid();
+}
+function selectAllLeads(){
+  const withEmail=leads.filter(l=>l.email);
+  if(selectedLeads.size===withEmail.length){selectedLeads.clear()}
+  else{withEmail.forEach(l=>selectedLeads.add(l.id))}
+  renderLeadsGrid();
+}
+function clearSelection(){selectedLeads.clear();renderLeadsGrid()}
+function updateBulk(){
+  const bar=document.getElementById('bulkBar');
+  bar.classList.toggle('show',selectedLeads.size>0);
+  document.getElementById('bulkCount').textContent=selectedLeads.size+' selected';
+}
+
+function sendProposalTo(id){
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  elenaCmd(`Generate a marketing proposal for "${l.company_name||l.contact_name}" (${l.industry||'business'}). Then send it to ${l.email}. Use generate_proposal tool first, then compose and send the email with proposal attached.`);
+  showNotif(`📄 Generating proposal for ${l.company_name}...`,'working');
+}
+
+function composeToLead(id){
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  document.getElementById('compTo').value=l.email;
+  document.getElementById('compSubject').value=`Elevate ${l.company_name||'Your Business'}'s Social Media Presence | Dubai Prod`;
+  document.getElementById('compBody').value=getEmailTemplate(l.company_name, l.industry, l.contact_name);
+  document.getElementById('attachPortfolio').checked=true;
+  switchTab('compose');
+}
+
+function sendBulkProposals(){
+  const selected=leads.filter(l=>selectedLeads.has(l.id)&&l.email);
+  if(!selected.length){alert('Select leads first');return}
+  if(!confirm(`Send proposals to ${selected.length} leads?`))return;
+  const names=selected.map(l=>l.company_name||l.contact_name).join(', ');
+  elenaCmd(`Send marketing proposals to these companies: ${names}. Their emails: ${selected.map(l=>l.email).join(', ')}. Generate individual proposals for each using generate_proposal tool, then send each one by email. Do them all.`);
+  showNotif(`🚀 Sending proposals to ${selected.length} leads...`,'working');
+  selectedLeads.clear();renderLeadsGrid();
+}
+
+function quickSendToLead(id){
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  if(!confirm(`Send outreach email + portfolio PDF to ${l.company_name||l.email}?`))return;
+  const subject=`Elevate ${l.company_name||'Your Business'}'s Social Media Presence | Dubai Prod`;
+  const body=getEmailTemplate(l.company_name, l.industry, l.contact_name);
+  elenaCmd(`Use send_email tool with these EXACT parameters:
+to="${l.email}"
+subject="${subject}"
+body="${body}"
+attach_proposal=true
+client_name="${l.contact_name||l.company_name}"
+client_company="${l.company_name}"
+
+This will auto-generate the PDF proposal and attach it. Send immediately.`);
+}
+
+function sendBulkEmail(){
+  const selected=leads.filter(l=>selectedLeads.has(l.id)&&l.email);
+  if(!selected.length)return;
+  const subject=prompt('Email subject:');if(!subject)return;
+  const body=prompt('Email body (Elena will polish it):');if(!body)return;
+  elenaCmd(`Send this email to ${selected.length} leads: ${selected.map(l=>l.email).join(', ')}\nSubject: ${subject}\nBody: ${body}\nPolish the text professionally and send to all.`);
+  showNotif(`📧 Sending to ${selected.length} leads...`,'working');
+}
+
+// ═══ PROPOSALS ═══
+let currentPreviewUrl = '';
+
+function generateProposal(){
+  const name=prompt('Client/Company name:');if(!name)return;
+  elenaCmd(`Generate a marketing proposal PDF for "${name}". Use generate_proposal tool. Include all our services.`);
+  setTimeout(loadProposals, 8000);
+}
+
+async function loadProposals(){
+  const el=document.getElementById('proposalsList');
+  try{
+    // Scan uploads for proposal PDFs
+    const content=await fetch('/api/content').then(r=>r.json()).catch(()=>[]);
+    // Also check for proposal files via tasks
+    const tasks=await fetch('/api/tasks').then(r=>r.json()).catch(()=>[]);
+
+    // Build list from both sources
+    let items=[];
+    content.filter(c=>c.media_url&&(c.media_url.includes('proposal')||c.media_url.includes('.pdf'))).forEach(c=>{
+      items.push({name:c.caption||c.media_url.split('/').pop(),url:c.media_url,date:c.created_at||'',type:'proposal'});
+    });
+
+    // Also list any generated PDFs from uploads
+    // We'll add a direct file listing approach
+    if(!items.length){
+      // Try to find proposals via the file naming convention
+      el.innerHTML=`<div class="empty" style="padding:16px;font-size:0.6rem">No proposals yet.<br>Click "+ Generate New Proposal" to create one.<br><br>Or click "📄 Proposal" on any lead<br>in the Outreach tab.</div>`;
+      return;
+    }
+
+    el.innerHTML=items.map((p,i)=>`
+      <div class="campaign-row" style="cursor:pointer" onclick="previewPDF('${esc(p.url)}','${esc(p.name)}')">
+        <div class="cr-icon">📄</div>
+        <div class="cr-info">
+          <div class="cr-title">${esc(p.name)}</div>
+          <div class="cr-sub">${p.date}</div>
+        </div>
+        <div style="display:flex;gap:3px">
+          <button class="sa-btn sa-outline" style="font-size:0.5rem;padding:3px 8px" onclick="event.stopPropagation();window.open('${p.url}','_blank')">📥</button>
+        </div>
+      </div>`).join('');
+  }catch(e){el.innerHTML='<div class="empty">Error loading proposals</div>'}
+
+  loadAnalytics();
+}
+
+function previewPDF(url, name){
+  currentPreviewUrl = url;
+  const preview = document.getElementById('pdfPreview');
+  if(url.endsWith('.pdf')){
+    preview.innerHTML=`<iframe src="${url}" style="width:100%;height:100%;border:none;background:#fff"></iframe>`;
+  } else {
+    preview.innerHTML=`<img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain"/>`;
+  }
+}
+
+function downloadPreview(){
+  if(currentPreviewUrl) window.open(currentPreviewUrl,'_blank');
+}
+
+function sendPreview(){
+  if(!currentPreviewUrl)return;
+  const to=prompt('Send to email:');
+  if(!to)return;
+  elenaCmd(`Send the proposal at ${currentPreviewUrl} to ${to}. Write a professional cover email and use send_email tool.`);
+}
+
+// ═══ ANALYTICS ═══
+async function loadAnalytics(){
+  try{
+    const tasks=await fetch('/api/tasks').then(r=>r.json()).catch(()=>[]);
+    const content=await fetch('/api/content').then(r=>r.json()).catch(()=>[]);
+
+    const emailTasks=tasks.filter(t=>(t.title||'').toLowerCase().match(/email|outreach|send|proposal/)||(t.assigned_agent||'')==='elena');
+    const proposalCount=content.filter(c=>c.media_url&&c.media_url.includes('proposal')).length;
+    const sentCount=emailTasks.filter(t=>t.status==='completed').length;
+    const pendingCount=emailTasks.filter(t=>t.status!=='completed').length;
+
+    document.getElementById('statSent').textContent=sentCount;
+    document.getElementById('statProposals').textContent=proposalCount;
+    document.getElementById('statLeads').textContent=leads.filter(l=>l.email).length;
+    document.getElementById('statReplies').textContent='—';
+
+    // Timeline
+    const timeline=document.getElementById('campaignList');
+    if(!emailTasks.length){timeline.innerHTML='<div class="empty">No email activity yet. Start sending from the Outreach tab!</div>';return}
+    timeline.innerHTML=emailTasks.sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')).map(t=>{
+      const status=t.status==='completed'?'sent':t.status==='in_progress'?'sending':'pending';
+      const badge=status==='sent'?'badge-sent':status==='sending'?'badge-opened':'badge-pending';
+      return `<div class="campaign-row">
+        <div class="cr-icon">${status==='sent'?'✅':status==='sending'?'📤':'⏳'}</div>
+        <div class="cr-info"><div class="cr-title">${esc(t.title||'Email task')}</div><div class="cr-sub">${esc(t.description||'').substring(0,80)}</div></div>
+        <div class="cr-badge ${badge}">${status}</div>
+      </div>`}).join('');
+  }catch(e){}
+}
+
+// ═══ WEBSOCKET (Elena) ═══
+function connectWS(){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onmessage=e=>{
+    const d=JSON.parse(e.data);
+    if(d.type==='agent_typing'){
+      showNotif('🔄 Elena is working...','working');
+    }
+    else if(d.type==='agent_reply'){
+      const c=d.content||d.text||d.message||'';
+
+      // Show the response
+      if(c.toLowerCase().includes('sent')){
+        showNotif('✅ '+c.substring(0,100),'success');
+        // Update compose status
+        const st=document.getElementById('compStatus');
+        if(st) st.textContent='✅ Email sent!';
+      } else if(c.toLowerCase().includes('error')||c.toLowerCase().includes('fail')){
+        showNotif('❌ '+c.substring(0,100),'error');
+      } else {
+        showNotif('📨 '+c.substring(0,100),'info');
+      }
+
+      // Parse emails from reply
+      if(c.includes('From:')&&c.includes('Subject:')){
+        const parsed=parseEmailsFromReply(c);
+        if(parsed.length) renderInbox(parsed);
+      }
+      // Check for proposal
+      if(c.includes('/uploads/')&&c.includes('proposal')){
+        loadProposals();
+        // Preview it
+        const m=c.match(/\/uploads\/[a-zA-Z0-9_.\-]+\.pdf/i);
+        if(m) previewPDF(m[0], 'Generated Proposal');
+      }
+    }
+    else if(d.type==='error'){
+      showNotif('❌ '+(d.content||d.text||d.message||'Error'),'error');
+    }
+  };
+  ws.onclose=()=>setTimeout(connectWS,2000);
+}
+connectWS();
+
+// Notification toast
+function showNotif(msg, type){
+  let container=document.getElementById('notifContainer');
+  if(!container){
+    container=document.createElement('div');
+    container.id='notifContainer';
+    container.style.cssText='position:fixed;top:50px;right:16px;z-index:999;display:flex;flex-direction:column;gap:6px;max-width:400px';
+    document.body.appendChild(container);
+  }
+  const colors={success:'rgba(46,204,113,0.15)',error:'rgba(231,76,60,0.15)',info:'rgba(52,152,219,0.15)',working:'rgba(230,126,34,0.1)'};
+  const borders={success:'rgba(46,204,113,0.3)',error:'rgba(231,76,60,0.3)',info:'rgba(52,152,219,0.3)',working:'rgba(230,126,34,0.2)'};
+  const n=document.createElement('div');
+  n.style.cssText=`padding:12px 16px;border-radius:8px;background:${colors[type]||colors.info};border:1px solid ${borders[type]||borders.info};color:#fff;font-size:0.7rem;line-height:1.4;backdrop-filter:blur(12px);animation:slideIn 0.3s ease;box-shadow:0 4px 20px rgba(0,0,0,0.3)`;
+  n.textContent=msg;
+  container.appendChild(n);
+  setTimeout(()=>{n.style.opacity='0';n.style.transition='opacity 0.3s';setTimeout(()=>n.remove(),300)}, type==='working'?10000:5000);
+}
+
+function elenaCmd(t){
+  if(!ws||ws.readyState!==1){showNotif('❌ Not connected to server. Refresh the page.','error');return}
+  ws.send(JSON.stringify({type:'agent_chat',agent:'elena',content:t}));
+  showNotif('📤 Sending to Elena...','working');
+}
+
+function parseEmailsFromReply(text){
+  const blocks=text.split('---');
+  return blocks.map(b=>{
+    const from=(b.match(/From:\s*(.+)/)||[])[1]||'';
+    const subject=(b.match(/Subject:\s*(.+)/)||[])[1]||'';
+    const date=(b.match(/Date:\s*(.+)/)||[])[1]||'';
+    const body=b.replace(/From:.*\n|Subject:.*\n|Date:.*\n|To:.*\n/g,'').trim();
+    if(!from&&!subject)return null;
+    return{from,subject,date,body_text:body,to:'',unread:false};
+  }).filter(Boolean);
+}
+
+// ═══ INIT ═══
+loadLeads();
+loadProposals();
+// Auto-fetch inbox on load
+setTimeout(refreshInbox,1000);
+</script>
+</body>
+</html>

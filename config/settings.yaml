@@ -1,0 +1,26 @@
+safety:
+  confirm_before_destructive: true
+  confirm_before_send: true
+  max_actions_per_task: 50
+
+browser:
+  headless: true
+  allowed_domains:
+    - "*"
+  timeout_seconds: 30
+
+logging:
+  log_all_actions: true
+  log_dir: "logs"
+
+email:
+  imap_host: "imap.gmail.com"
+  imap_port: 993
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  default_folder: "INBOX"
+  fetch_limit: 10
+
+llm:
+  provider: "openai"       # openai or anthropic
+  model: "gpt-4o"           # or claude-sonnet-4-20250514

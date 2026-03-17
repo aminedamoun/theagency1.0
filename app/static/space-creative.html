@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE AGENCY — Creative Studio</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script src="/static/js/templates.js"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+
+    /* ═══ EDITOR (always visible) ═══ */
+    .editor{display:flex;height:100vh;flex-direction:column}
+
+    /* Top bar */
+    .topbar{height:40px;display:flex;align-items:center;padding:0 10px;background:#252536;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;gap:4px}
+    .tb-btn{padding:4px 10px;border-radius:5px;font-size:0.58rem;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:3px;transition:all 0.12s}
+    .tb-btn:hover{background:rgba(155,89,182,0.12);color:#c39bd3}
+    .tb-sep{width:1px;height:18px;background:rgba(255,255,255,0.06)}
+    .tb-title{flex:1;text-align:center;font-size:0.6rem;color:rgba(255,255,255,0.3);cursor:pointer}
+    .tb-title:hover{color:rgba(255,255,255,0.6)}
+    .tb-accent{background:linear-gradient(135deg,#9b59b6,#8e44ad)!important;color:#fff!important}
+    .tb-save{background:rgba(46,204,113,0.12)!important;color:#2ecc71!important;border:1px solid rgba(46,204,113,0.2)!important}
+
+    /* Workspace */
+    .workspace{flex:1;display:flex;min-height:0}
+
+    /* Sidebar icons */
+    .sidebar{width:64px;display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;background:#222233;border-right:1px solid rgba(255,255,255,0.05);flex-shrink:0}
+    .sb-i{width:54px;padding:8px 0;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.12s;color:rgba(255,255,255,0.6);font-size:0.6rem;font-weight:600}
+    .sb-i:hover{background:rgba(155,89,182,0.1);color:#fff}
+    .sb-i.active{background:rgba(155,89,182,0.18);color:#fff}
+    .sb-i .ic{font-size:1.3rem;display:block;margin-bottom:2px}
+
+    /* Left panel */
+    .lpanel{width:260px;display:none;flex-direction:column;background:#2a2a3e;border-right:1px solid rgba(255,255,255,0.05);flex-shrink:0;overflow:hidden}
+    .lpanel.open{display:flex}
+    .lp-head{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.04);flex-shrink:0}
+    .lp-head h3{font-size:0.9rem;font-weight:800;color:#fff}
+    .lp-x{width:22px;height:22px;border-radius:4px;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);font-size:0.65rem;display:flex;align-items:center;justify-content:center}
+    .lp-x:hover{background:rgba(231,76,60,0.15);color:#e74c3c}
+    .lp-search{margin:8px;padding:7px 10px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);color:#fff;font-size:0.65rem;outline:none;flex-shrink:0}
+    .lp-search:focus{border-color:rgba(155,89,182,0.4)}
+    .lp-search::placeholder{color:rgba(255,255,255,0.15)}
+    .lp-body{flex:1;overflow-y:auto;padding:6px 8px}
+    .lp-body::-webkit-scrollbar{width:3px}
+    .lp-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:3px}
+    .lp-label{font-size:0.58rem;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;margin:10px 0 6px}
+    .lp-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+    .lp-tag{padding:4px 10px;border-radius:6px;font-size:0.55rem;font-weight:600;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.55);cursor:pointer;transition:all 0.12s}
+    .lp-tag:hover,.lp-tag.on{background:rgba(155,89,182,0.15);border-color:rgba(155,89,182,0.35);color:#fff}
+
+    /* Draggable items */
+    .drag-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+    .drag-item{
+      border-radius:6px;overflow:hidden;cursor:grab;
+      border:1px solid rgba(255,255,255,0.05);transition:all 0.12s;
+      position:relative;
+    }
+    .drag-item:hover{border-color:rgba(155,89,182,0.3)}
+    .drag-item:active{cursor:grabbing}
+    .drag-item .di-img{aspect-ratio:1;background:#111;overflow:hidden}
+    .drag-item .di-img img{width:100%;height:100%;object-fit:cover}
+    .drag-item .di-label{padding:3px 5px;font-size:0.45rem;color:rgba(255,255,255,0.4);background:rgba(0,0,0,0.3)}
+    .drag-item .di-overlay{position:absolute;inset:0;display:flex;gap:2px;padding:3px;opacity:0;transition:opacity 0.12s;align-items:flex-start}
+    .drag-item:hover .di-overlay{opacity:1}
+    .di-btn{padding:2px 6px;border-radius:3px;border:none;font-size:0.4rem;font-weight:700;cursor:pointer}
+    .di-btn-add{background:rgba(155,89,182,0.85);color:#fff}
+    .di-btn-bg{background:rgba(0,0,0,0.7);color:#fff}
+
+    /* Text items */
+    .text-item{padding:10px;border-radius:6px;cursor:grab;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);margin-bottom:3px;transition:all 0.12s}
+    .text-item:hover{background:rgba(155,89,182,0.06);border-color:rgba(155,89,182,0.2)}
+    .text-item:active{cursor:grabbing}
+
+    /* Element items */
+    .elem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+    .elem-i{aspect-ratio:1;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);cursor:grab;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all 0.12s}
+    .elem-i:hover{background:rgba(155,89,182,0.1);border-color:rgba(155,89,182,0.2)}
+
+    /* Template items */
+    .tmpl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+    .tmpl-card{aspect-ratio:1;border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all 0.12s;position:relative}
+    .tmpl-card:hover{border-color:rgba(155,89,182,0.4);transform:scale(1.02)}
+    .tmpl-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.5rem;font-weight:700;text-align:center;padding:6px;line-height:1.2}
+
+    /* AI section */
+    .ai-area{display:flex;flex-direction:column;gap:4px}
+    .ai-ta{width:100%;height:100px;resize:none;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);color:#fff;font-size:0.65rem;padding:8px;outline:none;font-family:inherit}
+    .ai-ta:focus{border-color:rgba(155,89,182,0.4)}
+    .ai-ta::placeholder{color:rgba(255,255,255,0.12)}
+    .ai-btn{padding:8px;border-radius:6px;border:none;cursor:pointer;font-size:0.6rem;font-weight:700;transition:all 0.12s;text-align:center}
+    .ai-go{background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff}
+    .ai-go:hover{box-shadow:0 0 12px rgba(155,89,182,0.3)}
+    .ai-sec{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.4)}
+    .ai-sec:hover{background:rgba(155,89,182,0.06);color:#c39bd3}
+
+    /* ═══ CANVAS AREA ═══ */
+    .canvas-area{flex:1;display:flex;flex-direction:column;background:#15152a;min-width:0}
+    .format-bar{height:32px;display:flex;align-items:center;justify-content:center;gap:3px;background:#1e1e32;border-bottom:1px solid rgba(155,89,182,0.1);flex-shrink:0;padding:0 8px}
+    .fmt-b{padding:4px 10px;border-radius:4px;font-size:0.52rem;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.3);transition:all 0.12s}
+    .fmt-b:hover{color:rgba(255,255,255,0.6)}
+    .fmt-b.on{background:rgba(155,89,182,0.18);color:#c39bd3}
+    .fmt-info{font-size:0.46rem;color:rgba(255,255,255,0.2);margin-left:8px}
+    .obj-bar{height:30px;display:flex;align-items:center;gap:2px;padding:0 6px;background:#222236;border-bottom:1px solid rgba(255,255,255,0.04);flex-shrink:0}
+    .ob{padding:3px 7px;border-radius:3px;font-size:0.5rem;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.3);transition:all 0.1s}
+    .ob:hover{background:rgba(155,89,182,0.1);color:#c39bd3}
+    .ob-sep{width:1px;height:14px;background:rgba(255,255,255,0.05)}
+    .viewport{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .cv-frame{position:relative;box-shadow:0 4px 30px rgba(0,0,0,0.4);transition:transform 0.15s}
+    .cv-frame canvas{display:block}
+    .cv-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:10;flex-direction:column;gap:6px}
+    .cv-loading.on{display:flex}
+    .spinner{width:28px;height:28px;border:3px solid rgba(155,89,182,0.2);border-top-color:#9b59b6;border-radius:50%;animation:spin 0.7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .zoom-bar{height:28px;display:flex;align-items:center;justify-content:center;gap:6px;background:#1e1e32;border-top:1px solid rgba(255,255,255,0.04);flex-shrink:0}
+    .zm{padding:2px 8px;border-radius:3px;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.3);font-size:0.6rem;font-weight:700}
+    .zm:hover{color:#c39bd3}
+    .zoom-bar input[type=range]{width:80px;height:3px;accent-color:#9b59b6}
+    .zoom-bar span{font-size:0.46rem;color:rgba(255,255,255,0.2);width:32px;text-align:center}
+
+    /* ═══ RIGHT PANEL ═══ */
+    .rpanel{width:220px;display:flex;flex-direction:column;background:#2a2a3e;border-left:1px solid rgba(255,255,255,0.05);flex-shrink:0;overflow-y:auto;padding:10px;gap:8px;font-size:0.6rem}
+    .rpanel::-webkit-scrollbar{width:3px}
+    .rpanel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:3px}
+    .rp-t{font-size:0.56rem;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em}
+    .rp-row{display:flex;align-items:center;gap:4px}
+    .rp-lbl{font-size:0.52rem;color:rgba(255,255,255,0.4);width:24px;flex-shrink:0}
+    .rp-in{flex:1;padding:4px 6px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:0.55rem;outline:none}
+    .rp-in:focus{border-color:rgba(155,89,182,0.4)}
+    .rp-sel{flex:1;padding:4px;border-radius:4px;background:rgba(20,20,35,0.9);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:0.52rem;outline:none;cursor:pointer}
+    .rp-slider{flex:1;height:3px;accent-color:#9b59b6}
+    .colors{display:flex;flex-wrap:wrap;gap:3px}
+    .sw{width:16px;height:16px;border-radius:3px;cursor:pointer;border:2px solid transparent;transition:all 0.1s}
+    .sw:hover,.sw.on{border-color:#fff;transform:scale(1.15)}
+    .rp-btn{padding:3px 6px;border-radius:3px;border:none;cursor:pointer;font-size:0.46rem;font-weight:600;transition:all 0.1s}
+    .zara-log{margin-top:auto;max-height:80px;overflow-y:auto;padding:4px;border-radius:4px;background:rgba(155,89,182,0.04);border:1px solid rgba(155,89,182,0.08)}
+    .zara-log::-webkit-scrollbar{width:2px}
+    .zara-log::-webkit-scrollbar-thumb{background:rgba(155,89,182,0.15)}
+    .zl{font-size:0.46rem;color:rgba(255,255,255,0.3);margin-bottom:2px;line-height:1.3}
+    .zl.u{color:rgba(155,89,182,0.6);font-weight:600}
+
+    /* Drop target highlight */
+    .viewport.drag-over{outline:2px dashed rgba(155,89,182,0.5);outline-offset:-4px}
+  </style>
+</head>
+<body>
+<input type="file" id="fileUp" multiple accept="image/*,.svg" style="display:none" onchange="handleFileUpload(event)"/>
+
+<!-- ═══ EDITOR ═══ -->
+<div class="editor" id="editor">
+  <div class="topbar">
+    <button class="tb-btn" onclick="goHome()">← Projects</button>
+    <button class="tb-btn" onclick="newBlankProject()" title="New design">+ New</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="undo()">↩</button>
+    <button class="tb-btn" onclick="redo()">↪</button>
+    <div class="tb-sep"></div>
+    <div class="tb-title" id="projTitle" onclick="renameProject()">Untitled Design</div>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="exportPNG()">📥 PNG</button>
+    <button class="tb-btn" onclick="exportJPG()">📥 JPG</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn tb-accent" onclick="openTool('ai')">✨ AI Generate</button>
+    <button class="tb-btn tb-save" onclick="saveProject()">💾 Save</button>
+  </div>
+
+  <div class="workspace">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-i active" onclick="openTool('templates')"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>Templates</div>
+      <div class="sb-i" onclick="openTool('photos')"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>Photos</div>
+      <div class="sb-i" onclick="openTool('elements')"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><rect x="3" y="3" width="4" height="4" rx="1"/><rect x="17" y="17" width="4" height="4" rx="1"/></svg></div>Elements</div>
+      <div class="sb-i" onclick="openTool('text')"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="8" y1="20" x2="16" y2="20"/></svg></div>Text</div>
+      <div class="sb-i" onclick="openTool('uploads')"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>Upload</div>
+      <div class="sb-i" onclick="openTool('ai')"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>AI Magic</div>
+      <div class="sb-i" onclick="openTool('bg')"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 12h20"/><path d="M12 2v20"/></svg></div>Background</div>
+      <div class="sb-i" onclick="openTool('projects')"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>Projects</div>
+    </div>
+
+    <!-- Left Panel -->
+    <div class="lpanel" id="lpanel"></div>
+
+    <!-- Canvas -->
+    <div class="canvas-area">
+      <div class="format-bar">
+        <button class="fmt-b on" data-fmt="square" onclick="changeFormat('square',this)">◻ Post</button>
+        <button class="fmt-b" data-fmt="landscape" onclick="changeFormat('landscape',this)">▬ Landscape</button>
+        <button class="fmt-b" data-fmt="story" onclick="changeFormat('story',this)">📱 Story</button>
+        <button class="fmt-b" data-fmt="youtube" onclick="changeFormat('youtube',this)">📺 YouTube</button>
+        <button class="fmt-b" data-fmt="fb" onclick="changeFormat('fb',this)">👤 FB Cover</button>
+        <div class="fmt-info" id="fmtInfo">1080 × 1080</div>
+      </div>
+      <div class="obj-bar">
+        <button class="ob" onclick="bringFront()">⬆</button>
+        <button class="ob" onclick="moveUp()">↑</button>
+        <button class="ob" onclick="moveDown()">↓</button>
+        <button class="ob" onclick="sendBack()">⬇</button>
+        <div class="ob-sep"></div>
+        <button class="ob" onclick="dupObj()">⧉</button>
+        <button class="ob" onclick="delObj()">🗑</button>
+        <button class="ob" onclick="flipH()">↔</button>
+        <button class="ob" onclick="flipV()">↕</button>
+        <div class="ob-sep"></div>
+        <button class="ob" onclick="fitObj()">⬜ Fill</button>
+        <button class="ob" onclick="centerObj()">⊞ Center</button>
+      </div>
+      <div class="viewport" id="viewport">
+        <div class="cv-frame" id="cvFrame">
+          <canvas id="fc"></canvas>
+          <div class="cv-loading" id="cvLoading"><div class="spinner"></div><div style="font-size:0.55rem;color:rgba(155,89,182,0.6)">Generating...</div></div>
+        </div>
+      </div>
+      <div class="zoom-bar">
+        <button class="zm" onclick="zoomBy(-0.15)">−</button>
+        <input type="range" min="20" max="250" value="100" id="zSlider" oninput="zoomTo(this.value)"/>
+        <button class="zm" onclick="zoomBy(0.15)">+</button>
+        <span id="zLabel">100%</span>
+        <button class="zm" onclick="zoomReset()">Fit</button>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="rpanel" id="rpanel">
+      <!-- Live preview -->
+      <div class="rp-t">Preview</div>
+      <div id="miniPreview" style="width:100%;aspect-ratio:1;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);background:#111;margin-bottom:4px;cursor:pointer" onclick="refreshMini()" title="Click to refresh">
+        <img id="miniImg" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+
+      <!-- Properties -->
+      <div class="rp-t">Properties</div>
+      <div id="props"><div style="color:rgba(255,255,255,0.1);text-align:center;padding:6px;font-size:0.44rem">Select an element</div></div>
+
+      <!-- Color + Opacity in one row -->
+      <div class="rp-t">Color</div>
+      <div class="colors" id="colorPalette"></div>
+      <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
+        <span style="font-size:0.4rem;color:rgba(255,255,255,0.2)">Opacity</span>
+        <input type="range" class="rp-slider" min="0" max="100" value="100" oninput="setOpacity(this.value)" style="flex:1;height:3px"/>
+      </div>
+
+      <!-- Layers -->
+      <div class="rp-t" style="margin-top:4px">Layers</div>
+      <div id="layersList" style="max-height:100px;overflow-y:auto;display:flex;flex-direction:column;gap:1px"></div>
+
+      <!-- Zara -->
+      <div class="rp-t" style="margin-top:4px">Zara</div>
+      <div class="zara-log" id="zaraLog"><div class="zl">Ready</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let cv=null, zoom=1, currentProjectId=null, projectsList=[];
+let cW=500, cH=500, fullW=1080, fullH=1080, fmt='square', aiFmt='1024x1024';
+let undos=[], redos=[], uploads=[], ws=null;
+const FONTS=['Segoe UI','Arial','Georgia','Impact','Times New Roman','Courier New','Verdana','Trebuchet MS','Palatino','Comic Sans MS','Futura','Helvetica','Montserrat','Roboto','Open Sans','Lato','Oswald','Raleway','Playfair Display'];
+const COLORS=['#000','#fff','#c9a84c','#9b59b6','#3498db','#e74c3c','#2ecc71','#1abc9c','#e67e22','#f39c12','#ecf0f1','#34495e','#e91e63','#00bcd4'];
+const FMTS={square:{cw:520,ch:520,w:1080,h:1080},landscape:{cw:640,ch:360,w:1920,h:1080},story:{cw:320,ch:568,w:1080,h:1920},youtube:{cw:640,ch:360,w:1280,h:720},fb:{cw:640,ch:244,w:820,h:312},pin:{cw:300,ch:450,w:1000,h:1500}};
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// ═══════════════════════════════════════
+//  START SCREEN
+// ═══════════════════════════════════════
+async function loadProjects(){
+  try{const r=await fetch('/api/design-projects');projectsList=await r.json()}catch(e){projectsList=[]}
+  renderProjects();
+}
+
+function renderProjects(){
+  const g=document.getElementById('projGrid');
+  if(!g)return;
+  if(!projectsList.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,255,255,0.25);font-size:0.65rem">No saved projects yet.<br>Create a design and click Save.</div>';return}
+  g.innerHTML=projectsList.map(p=>`
+    <div style="border-radius:8px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,0.08);transition:all 0.15s;position:relative;background:rgba(255,255,255,0.03)" onclick="openProject(${p.id})" onmouseover="this.style.borderColor='rgba(155,89,182,0.4)'" onmouseout="this.style.borderColor=''">
+      <div style="aspect-ratio:1;background:#0a0a15;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        ${p.thumb_url?`<img src="${p.thumb_url}" style="width:100%;height:100%;object-fit:contain"/>`:'<div style="font-size:2rem;opacity:0.08">🎨</div>'}
+      </div>
+      <div style="padding:6px 8px">
+        <div style="font-size:0.62rem;font-weight:700;color:#fff;margin-bottom:1px">${esc(p.name||'Untitled')}</div>
+        <div style="font-size:0.48rem;color:rgba(255,255,255,0.3)">${p.width||1080}×${p.height||1080}</div>
+      </div>
+      <button style="position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(231,76,60,0.8);color:#fff;font-size:0.5rem;display:none;align-items:center;justify-content:center;cursor:pointer;border:none" onmouseover="this.style.display='flex'" onclick="event.stopPropagation();delProject(${p.id})">✕</button>
+    </div>`).join('');
+  // Show delete on hover
+  g.querySelectorAll('[onclick^="openProject"]').forEach(el=>{
+    const del=el.querySelector('button');
+    el.addEventListener('mouseenter',()=>del.style.display='flex');
+    el.addEventListener('mouseleave',()=>del.style.display='none');
+  });
+}
+
+function newBlankProject(){
+  currentProjectId=null;
+  cv.clear();
+  cv.setBackgroundColor('#ffffff',cv.renderAll.bind(cv));
+  undos=[];redos=[];saveState();
+  document.getElementById('projTitle').textContent='Untitled Design';
+  zl('✨ New blank canvas');
+}
+
+function startEditor(){
+  initCanvas();
+  document.querySelectorAll('.fmt-b').forEach(b=>b.classList.toggle('on',b.dataset.fmt===fmt));
+  document.getElementById('fmtInfo').textContent=`${fullW} × ${fullH}`;
+  openTool('templates');
+  loadProjects();
+  setInterval(autoSave,45000);
+}
+
+function goHome(){
+  window.location.href='/spaces';
+}
+
+function newFromEditor(){
+  if(confirm('Save current design first?')) saveProject();
+  currentProjectId=null;
+  // Keep same format, just clear
+  cv.clear();
+  cv.setBackgroundColor('#ffffff',cv.renderAll.bind(cv));
+  undos=[];redos=[];saveState();
+  document.getElementById('projTitle').textContent='Untitled Design';
+  zl('✨ New blank canvas');
+}
+
+// ═══════════════════════════════════════
+//  CANVAS
+// ═══════════════════════════════════════
+let _canvasInited=false;
+function initCanvas(){
+  if(_canvasInited){
+    // Already exists — just clear and resize
+    cv.clear();
+    cv.setBackgroundColor('#ffffff',cv.renderAll.bind(cv));
+    cv.setDimensions({width:cW,height:cH});
+    cv.renderAll();
+    undos=[];redos=[];
+    saveState();
+    return;
+  }
+  _canvasInited=true;
+  cv=new fabric.Canvas('fc',{width:cW,height:cH,backgroundColor:'#ffffff',preserveObjectStacking:true});
+  cv.on('selection:created',()=>{updateProps();renderLayers()});
+  cv.on('selection:updated',()=>{updateProps();renderLayers()});
+  cv.on('selection:cleared',()=>{clearProps();renderLayers()});
+  cv.on('object:modified',saveState);
+  cv.on('object:added',()=>{refreshMini();renderLayers()});
+  cv.on('object:removed',()=>{refreshMini();renderLayers()});
+  saveState();
+  // Drop target
+  const vp=document.getElementById('viewport');
+  vp.addEventListener('dragover',e=>{e.preventDefault();vp.classList.add('drag-over')});
+  vp.addEventListener('dragleave',()=>vp.classList.remove('drag-over'));
+  vp.addEventListener('drop',e=>{e.preventDefault();vp.classList.remove('drag-over');handleDrop(e)});
+  // Colors
+  document.getElementById('colorPalette').innerHTML=COLORS.map(c=>`<div class="sw" style="background:${c}" onclick="applyColor('${c}')"></div>`).join('');
+  // Mouse wheel zoom
+  vp.addEventListener('wheel',e=>{
+    if(e.ctrlKey||e.metaKey){e.preventDefault();zoomBy(e.deltaY>0?-0.08:0.08)}
+  },{passive:false});
+}
+
+function changeFormat(f,el){
+  const s=FMTS[f];if(!s)return;
+  fmt=f;cW=s.cw;cH=s.ch;fullW=s.w;fullH=s.h;
+  const m={square:'1024x1024',landscape:'1792x1024',story:'1024x1792',youtube:'1792x1024',fb:'1792x1024',pin:'1024x1792'};
+  aiFmt=m[f]||'1024x1024';
+  cv.setDimensions({width:cW,height:cH});cv.renderAll();
+  document.querySelectorAll('.fmt-b').forEach(b=>b.classList.remove('on'));
+  if(el)el.classList.add('on');
+  document.getElementById('fmtInfo').textContent=`${fullW} × ${fullH}`;
+}
+
+// ═══════════════════════════════════════
+//  TOOLS PANEL
+// ═══════════════════════════════════════
+function openTool(name){
+  document.querySelectorAll('.sb-i').forEach((s,i)=>{
+    s.classList.toggle('active',['templates','photos','elements','text','uploads','ai','bg','projects'][i]===name);
+  });
+  const lp=document.getElementById('lpanel');
+  lp.innerHTML=buildPanel(name);lp.classList.add('open');
+  if(name==='templates')renderTmplGrid('all');
+  if(name==='photos')setTimeout(()=>searchPhotos('popular'),50);
+}
+function closePanel(){document.getElementById('lpanel').classList.remove('open')}
+
+function buildPanel(n){
+  const h=`<div class="lp-head"><h3>${{templates:'📐 Templates',photos:'📷 Stock Photos',elements:'⬡ Elements',text:'T Text',uploads:'📁 Uploads',ai:'✨ AI Generate',bg:'🖼 Background'}[n]||n}</h3><button class="lp-x" onclick="closePanel()">✕</button></div>`;
+  if(n==='templates')return h+`<input class="lp-search" placeholder="Search..." oninput="filterTmpl(this.value)"/><div class="lp-body"><div class="lp-tags" id="tmplTags">${TEMPLATE_CATEGORIES.map(c=>`<span class="lp-tag ${c.id==='all'?'on':''}" onclick="filterTmplCat('${c.id}',this)">${c.icon} ${c.label}</span>`).join('')}</div><div class="tmpl-grid" id="tGrid"></div></div>`;
+  if(n==='photos')return h+`<input class="lp-search" id="photoQ" placeholder="Search photos..." onkeydown="if(event.key==='Enter')searchPhotos()"/><div class="lp-body"><div class="lp-tags">${['people','fitness','food','real estate','city dubai','fashion','nature','coffee','texture','business'].map(t=>`<span class="lp-tag" onclick="searchPhotos('${t}')">${t}</span>`).join('')}</div><div class="drag-grid" id="photoGrid"><div style="grid-column:1/-1;text-align:center;padding:12px;color:rgba(255,255,255,0.1);font-size:0.5rem">Click a tag or search</div></div><div style="text-align:center;font-size:0.38rem;color:rgba(255,255,255,0.1);margin-top:4px">Photos by Pexels</div></div>`;
+  if(n==='elements')return h+`<div class="lp-body"><div class="lp-label">Shapes</div><div class="elem-grid"><div class="elem-i" draggable="true" ondragstart="dragStart(event,'rect')" onclick="addRect()">▬</div><div class="elem-i" draggable="true" ondragstart="dragStart(event,'circle')" onclick="addCircle()">●</div><div class="elem-i" draggable="true" ondragstart="dragStart(event,'triangle')" onclick="addTri()">▲</div><div class="elem-i" draggable="true" ondragstart="dragStart(event,'star')" onclick="addStar()">★</div><div class="elem-i" onclick="addLine()">─</div><div class="elem-i" onclick="addRect('#9b59b6')">◼</div><div class="elem-i" onclick="addRect('#e74c3c')">◼</div><div class="elem-i" onclick="addRect('#3498db')">◼</div></div></div>`;
+  if(n==='text')return h+`<div class="lp-body"><div class="text-item" draggable="true" ondragstart="dragStart(event,'heading')" onclick="addText('Add a heading',40,900)" style="font-size:1.1rem;font-weight:900">Add a heading</div><div class="text-item" draggable="true" ondragstart="dragStart(event,'subheading')" onclick="addText('Add a subheading',24,600)" style="font-size:0.8rem;font-weight:600">Add a subheading</div><div class="text-item" draggable="true" ondragstart="dragStart(event,'body')" onclick="addText('Body text',16,400)" style="font-size:0.65rem">Add body text</div><div class="lp-label">Styled</div><div class="text-item" onclick="addText('BOLD IMPACT',42,900,'Impact')" style="font-family:Impact;font-size:1rem">BOLD IMPACT</div><div class="text-item" onclick="addText('Elegant Serif',32,300,'Georgia')" style="font-family:Georgia;font-size:0.9rem;font-weight:300">Elegant Serif</div><div class="text-item" onclick="addText('SPACED OUT',20,700,'Arial',500)" style="letter-spacing:0.4em;font-size:0.6rem;font-weight:700">S P A C E D</div></div>`;
+  if(n==='uploads')return h+`<div class="lp-body"><div style="padding:18px;border-radius:8px;border:2px dashed rgba(155,89,182,0.2);text-align:center;cursor:pointer;color:rgba(255,255,255,0.2);font-size:0.6rem;margin-bottom:6px" onclick="document.getElementById('fileUp').click()">📁 Upload images</div><div class="drag-grid" id="uploadGrid">${uploads.map((u,i)=>`<div class="drag-item" onclick="addImg('${u}')"><div class="di-img"><img src="${u}"/></div></div>`).join('')}</div></div>`;
+  if(n==='ai')return h+`<div class="lp-body"><div class="ai-area"><div class="lp-label">Prompt</div><textarea class="ai-ta" id="aiP" placeholder="Describe your design..."></textarea><button class="ai-btn ai-go" onclick="aiGenerate()">⚡ Generate Image</button><button class="ai-btn ai-sec" onclick="aiVideo()">🎬 Video</button><button class="ai-btn ai-sec" onclick="aiVoice()">🎙 Voiceover</button><div class="lp-label">Quick</div>${['luxury property, gold accents','fitness promo, dark gym','food photography, elegant','YouTube thumbnail, bold text','fashion editorial, studio','motivational quote, gradient'].map(q=>`<button class="ai-btn ai-sec" onclick="document.getElementById('aiP').value='${q}';aiGenerate()">${q.split(',')[0]}</button>`).join('')}</div></div>`;
+  if(n==='projects'){loadProjects();return h+`<div class="lp-body"><div class="lp-label">Saved Projects</div><div style="display:flex;gap:4px;margin-bottom:6px"><button class="ai-btn ai-go" style="flex:1;padding:6px" onclick="newBlankProject()">+ New Project</button></div><div class="drag-grid" id="projGrid"><div style="grid-column:1/-1;text-align:center;padding:12px;color:rgba(255,255,255,0.1);font-size:0.5rem">Loading...</div></div></div>`}
+  if(n==='bg')return h+`<div class="lp-body"><div class="lp-label">Solid</div><div style="display:flex;flex-wrap:wrap;gap:4px">${COLORS.map(c=>`<div class="sw" style="background:${c};width:28px;height:28px;border-radius:6px" onclick="setBg('${c}')"></div>`).join('')}</div><div class="lp-label">Gradients</div><div style="display:flex;flex-wrap:wrap;gap:4px">${['#667eea,#764ba2','#f093fb,#f5576c','#4facfe,#00f2fe','#43e97b,#38f9d7','#fa709a,#fee140','#1a1a2e,#16213e','#0c0c0c,#1a1a1a','#c9a84c,#ffe08a','#a18cd1,#fbc2eb'].map(g=>`<div class="sw" style="background:linear-gradient(135deg,${g});width:28px;height:28px;border-radius:6px" onclick="setBgGrad('${g}')"></div>`).join('')}</div></div>`;
+  return h;
+}
+
+// ═══════════════════════════════════════
+//  TEMPLATES
+// ═══════════════════════════════════════
+let tmplCat='all';
+function renderTmplGrid(cat,search){
+  let items=TEMPLATE_LIBRARY;
+  if(cat&&cat!=='all')items=items.filter(t=>t.category.includes(cat));
+  if(search){const s=search.toLowerCase();items=items.filter(t=>t.name.toLowerCase().includes(s))}
+  const g=document.getElementById('tGrid');if(!g)return;
+  g.innerHTML=items.map((t,i)=>{
+    const idx=TEMPLATE_LIBRARY.indexOf(t);
+    const tx=t.elements.find(e=>e.type==='text');
+    const tx2=t.elements.filter(e=>e.type==='text')[1];
+    return `<div class="tmpl-card" onclick="applyTmpl(${idx})"><div class="tmpl-bg" style="background:${t.bg};color:${tx?.color||'#fff'};font-size:${Math.min(12,(tx?.size||20)*0.28)}px;font-weight:${tx?.weight||700}">${tx?.text||t.name}<br><span style="font-size:0.4rem;font-weight:400;opacity:0.5">${tx2?.text||''}</span></div></div>`;
+  }).join('')||'<div style="grid-column:1/-1;text-align:center;padding:12px;color:rgba(255,255,255,0.1);font-size:0.5rem">No templates</div>';
+}
+function filterTmplCat(cat,el){tmplCat=cat;document.querySelectorAll('#tmplTags .lp-tag').forEach(t=>t.classList.remove('on'));if(el)el.classList.add('on');renderTmplGrid(cat)}
+function filterTmpl(s){renderTmplGrid(tmplCat,s)}
+
+function applyTmpl(idx){
+  const t=TEMPLATE_LIBRARY[idx];if(!t)return;
+  // Match format
+  const fMap={'1024x1024':'square','1792x1024':'landscape','1024x1792':'story'};
+  const f=fMap[t.format]||'square';
+  changeFormat(f,document.querySelector(`.fmt-b[data-fmt="${f}"]`));
+  cv.clear();
+  // BG
+  const cols=t.bg.match(/#[a-f0-9]{3,6}/gi);
+  if(cols&&cols.length>=2)setBgGrad(cols.join(','));
+  else cv.setBackgroundColor(t.bg,cv.renderAll.bind(cv));
+  // Elements
+  t.elements.forEach(e=>{
+    const x=(e.x/100)*cW, y=(e.y/100)*cH;
+    if(e.type==='text'){
+      cv.add(new fabric.IText(e.text||'Text',{left:x,top:y,fontSize:e.size||28,fontWeight:e.weight||700,fill:e.color||'#fff',fontFamily:e.font||'Segoe UI',originX:'center',shadow:e.shadow||'0 2px 6px rgba(0,0,0,0.4)',charSpacing:e.spacing||0}));
+    }else if(e.type==='rect'){
+      cv.add(new fabric.Rect({left:x,top:y,width:(e.w/100)*cW,height:Math.max((e.h/100)*cH,2),fill:e.fill||'#fff',originX:'center',rx:e.radius||0,ry:e.radius||0}));
+    }else if(e.type==='circle'){
+      cv.add(new fabric.Circle({left:x,top:y,radius:(e.r/100)*Math.min(cW,cH),fill:e.fill||'rgba(255,255,255,0.1)',originX:'center',originY:'center'}));
+    }
+  });
+  cv.renderAll();saveState();zl('📐 Template: '+t.name);
+}
+
+// ═══════════════════════════════════════
+//  PHOTOS (Pexels)
+// ═══════════════════════════════════════
+async function searchPhotos(q){
+  if(!q)q=document.getElementById('photoQ')?.value?.trim();if(!q)return;
+  const g=document.getElementById('photoGrid');if(!g)return;
+  g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:12px;color:rgba(155,89,182,0.4);font-size:0.5rem">🔍 Searching...</div>';
+  try{
+    const r=await fetch(`/api/stock-photos?query=${encodeURIComponent(q)}&per_page=20`);
+    const photos=await r.json();
+    window._photos=photos;
+    if(!photos.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:12px;color:rgba(255,255,255,0.1);font-size:0.5rem">No results</div>';return}
+    g.innerHTML=photos.map((p,i)=>`
+      <div class="drag-item" draggable="true" ondragstart="dragStartPhoto(event,${i})">
+        <div class="di-img"><img src="${esc(p.thumb)}" loading="lazy"/></div>
+        <div class="di-overlay">
+          <button class="di-btn di-btn-add" onclick="event.stopPropagation();addPhotoObj(${i})">+ Add</button>
+          <button class="di-btn di-btn-bg" onclick="event.stopPropagation();addPhotoBg(${i})">BG</button>
+        </div>
+      </div>`).join('');
+  }catch(e){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:12px;color:rgba(231,76,60,0.4);font-size:0.5rem">${e.message}</div>`}
+}
+
+function addPhotoObj(i){const p=window._photos?.[i];if(p)loadImgAsObj(p.large)}
+function addPhotoBg(i){const p=window._photos?.[i];if(p)loadImgAsBg(p.large)}
+
+function loadImgAsObj(url){
+  fabric.Image.fromURL(url,img=>{
+    if(!img?.width)return;
+    const s=Math.min(cW*0.7/img.width,cH*0.7/img.height,1);
+    img.set({scaleX:s,scaleY:s,left:cW/2,top:cH/2,originX:'center',originY:'center'});
+    cv.add(img);cv.setActiveObject(img);cv.renderAll();saveState();zl('📷 Photo added');
+  },{crossOrigin:'anonymous'});
+}
+
+function loadImgAsBg(url){
+  fabric.Image.fromURL(url,img=>{
+    if(!img?.width)return;
+    const s=Math.max(cW/img.width,cH/img.height);
+    img.set({scaleX:s,scaleY:s,left:cW/2,top:cH/2,originX:'center',originY:'center',name:'bg'});
+    cv.getObjects().filter(o=>o.name==='bg').forEach(o=>cv.remove(o));
+    cv.insertAt(img,0);cv.setActiveObject(img);cv.renderAll();saveState();zl('🖼 Background set');
+  },{crossOrigin:'anonymous'});
+}
+
+// ═══════════════════════════════════════
+//  DRAG & DROP
+// ═══════════════════════════════════════
+function dragStart(e,type){e.dataTransfer.setData('type',type)}
+function dragStartPhoto(e,idx){e.dataTransfer.setData('type','photo');e.dataTransfer.setData('idx',''+idx)}
+
+function handleDrop(e){
+  const type=e.dataTransfer.getData('type');
+  if(type==='photo'){const i=parseInt(e.dataTransfer.getData('idx'));addPhotoObj(i);return}
+  if(type==='heading')addText('Add a heading',40,900);
+  else if(type==='subheading')addText('Add a subheading',24,600);
+  else if(type==='body')addText('Body text',16,400);
+  else if(type==='rect')addRect();
+  else if(type==='circle')addCircle();
+  else if(type==='triangle')addTri();
+  else if(type==='star')addStar();
+  // Handle file drops
+  if(e.dataTransfer.files?.length){
+    for(const f of e.dataTransfer.files){
+      if(!f.type.startsWith('image'))continue;
+      const url=URL.createObjectURL(f);uploads.push(url);loadImgAsObj(url);
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+//  CANVAS OBJECTS
+// ═══════════════════════════════════════
+function addText(t,sz,wt,ff,sp){cv.add(new fabric.IText(t||'Text',{left:cW/2,top:cH/2,fontSize:sz||28,fontWeight:wt||700,fill:'#fff',fontFamily:ff||'Segoe UI',originX:'center',originY:'center',shadow:'0 2px 6px rgba(0,0,0,0.4)',charSpacing:sp||0}));cv.renderAll();saveState()}
+function addRect(c){cv.add(new fabric.Rect({left:cW/2,top:cH/2,width:120,height:80,fill:c||'#9b59b6',rx:6,ry:6,originX:'center',originY:'center',opacity:0.85}));cv.renderAll();saveState()}
+function addCircle(){cv.add(new fabric.Circle({left:cW/2,top:cH/2,radius:50,fill:'#3498db',originX:'center',originY:'center',opacity:0.85}));cv.renderAll();saveState()}
+function addTri(){cv.add(new fabric.Triangle({left:cW/2,top:cH/2,width:100,height:100,fill:'#e74c3c',originX:'center',originY:'center',opacity:0.85}));cv.renderAll();saveState()}
+function addStar(){const p=[];for(let i=0;i<5;i++){const a=Math.PI*2*i/5-Math.PI/2,b=a+Math.PI/5;p.push({x:50+40*Math.cos(a),y:50+40*Math.sin(a)},{x:50+18*Math.cos(b),y:50+18*Math.sin(b)})}cv.add(new fabric.Polygon(p,{left:cW/2,top:cH/2,fill:'#f1c40f',originX:'center',originY:'center'}));cv.renderAll();saveState()}
+function addLine(){cv.add(new fabric.Line([cW*0.2,cH/2,cW*0.8,cH/2],{stroke:'#fff',strokeWidth:2}));cv.renderAll();saveState()}
+function addImg(url){loadImgAsObj(url)}
+
+function setBg(c){cv.setBackgroundColor(c,cv.renderAll.bind(cv));cv.setBackgroundImage(null,cv.renderAll.bind(cv));saveState()}
+function setBgGrad(colors){const c=colors.split(',');if(c.length>=2){cv.setBackgroundColor(new fabric.Gradient({type:'linear',coords:{x1:0,y1:0,x2:cW,y2:cH},colorStops:[{offset:0,color:c[0].trim()},{offset:1,color:c[1].trim()}]}),cv.renderAll.bind(cv));cv.setBackgroundImage(null,cv.renderAll.bind(cv));saveState()}}
+
+// Object ops
+function delObj(){const o=cv.getActiveObject();if(o){cv.remove(o);cv.discardActiveObject();cv.renderAll();saveState()}}
+function dupObj(){const o=cv.getActiveObject();if(o)o.clone(c=>{c.set({left:o.left+15,top:o.top+15});cv.add(c);cv.setActiveObject(c);cv.renderAll();saveState()})}
+function bringFront(){const o=cv.getActiveObject();if(o){cv.bringToFront(o);cv.renderAll();saveState()}}
+function sendBack(){const o=cv.getActiveObject();if(o){cv.sendToBack(o);cv.renderAll();saveState()}}
+function moveUp(){const o=cv.getActiveObject();if(o){cv.bringForward(o);cv.renderAll()}}
+function moveDown(){const o=cv.getActiveObject();if(o){cv.sendBackwards(o);cv.renderAll()}}
+function flipH(){const o=cv.getActiveObject();if(o){o.set('flipX',!o.flipX);cv.renderAll();saveState()}}
+function flipV(){const o=cv.getActiveObject();if(o){o.set('flipY',!o.flipY);cv.renderAll();saveState()}}
+function fitObj(){const o=cv.getActiveObject();if(o?.width){const s=Math.max(cW/o.width,cH/o.height);o.set({scaleX:s,scaleY:s,left:cW/2,top:cH/2,originX:'center',originY:'center',angle:0});cv.renderAll();saveState()}}
+function centerObj(){const o=cv.getActiveObject();if(o){o.set({left:cW/2,top:cH/2,originX:'center',originY:'center'});cv.renderAll();saveState()}}
+function applyColor(c){const o=cv.getActiveObject();if(o){o.set('fill',c);cv.renderAll()}else setBg(c)}
+function setOpacity(v){const o=cv.getActiveObject();if(o){o.set('opacity',v/100);cv.renderAll()}}
+
+// Undo/Redo
+function saveState(){undos.push(JSON.stringify(cv));if(undos.length>25)undos.shift();redos=[];refreshMini();renderLayers()}
+function undo(){if(undos.length<2)return;redos.push(undos.pop());cv.loadFromJSON(undos[undos.length-1],()=>cv.renderAll())}
+function redo(){if(!redos.length)return;const s=redos.pop();undos.push(s);cv.loadFromJSON(s,()=>cv.renderAll())}
+
+// Zoom
+function zoomBy(d){zoom=Math.max(0.2,Math.min(3,zoom+d));applyZoom()}
+function zoomTo(v){zoom=v/100;applyZoom()}
+function zoomReset(){zoom=1;applyZoom()}
+function applyZoom(){document.getElementById('cvFrame').style.transform=`scale(${zoom})`;document.getElementById('zLabel').textContent=Math.round(zoom*100)+'%';document.getElementById('zSlider').value=Math.round(zoom*100)}
+
+// ═══════════════════════════════════════
+//  PROPERTIES PANEL
+// ═══════════════════════════════════════
+function updateProps(){
+  const o=cv.getActiveObject();if(!o)return;
+  const isT=o.type==='i-text';const isI=o.type==='image';
+  let h='';
+  if(isT){
+    h+=`<div class="rp-row"><input class="rp-in" value="${(o.text||'').replace(/"/g,'&quot;')}" oninput="sp('text',this.value)"/></div>`;
+    h+=`<div class="rp-row"><select class="rp-sel" onchange="sp('fontFamily',this.value)">${FONTS.map(f=>`<option ${o.fontFamily===f?'selected':''}>${f}</option>`).join('')}</select></div>`;
+    h+=`<div class="rp-row"><div class="rp-lbl">Sz</div><input class="rp-in" type="number" value="${o.fontSize||28}" oninput="sp('fontSize',+this.value)" style="width:40px"/><select class="rp-sel" onchange="sp('fontWeight',+this.value)" style="width:55px"><option value="300" ${o.fontWeight==300?'selected':''}>Light</option><option value="400" ${o.fontWeight==400?'selected':''}>Reg</option><option value="600" ${o.fontWeight==600?'selected':''}>Semi</option><option value="700" ${o.fontWeight==700?'selected':''}>Bold</option><option value="900" ${o.fontWeight==900?'selected':''}>Black</option></select></div>`;
+    h+=`<div class="rp-row"><button class="rp-btn" style="${o.fontStyle==='italic'?'background:rgba(155,89,182,0.2);color:#c39bd3':''}" onclick="sp('fontStyle',cv.getActiveObject()?.fontStyle==='italic'?'normal':'italic')"><i>I</i></button><button class="rp-btn" style="${o.underline?'background:rgba(155,89,182,0.2);color:#c39bd3':''}" onclick="sp('underline',!cv.getActiveObject()?.underline)"><u>U</u></button><button class="rp-btn" onclick="sp('shadow','0 0 12px rgba(155,89,182,0.6)')">Glow</button><button class="rp-btn" onclick="sp('shadow','0 3px 6px rgba(0,0,0,0.5)')">Drop</button></div>`;
+  }
+  if(isI)h+=`<div class="rp-row"><button class="rp-btn" onclick="fitObj()" style="background:rgba(155,89,182,0.1);color:#c39bd3">⬜ Fill Canvas</button><button class="rp-btn" onclick="centerObj()">⊞ Center</button></div>`;
+  h+=`<div class="rp-row"><div class="rp-lbl">X</div><input class="rp-in" type="number" value="${Math.round(o.left||0)}" oninput="sp('left',+this.value)" style="width:40px"/><div class="rp-lbl">Y</div><input class="rp-in" type="number" value="${Math.round(o.top||0)}" oninput="sp('top',+this.value)" style="width:40px"/></div>`;
+  h+=`<div class="rp-row"><div class="rp-lbl">↻</div><input type="range" class="rp-slider" min="0" max="360" value="${Math.round(o.angle||0)}" oninput="sp('angle',+this.value)"/><span style="font-size:0.42rem;color:rgba(255,255,255,0.2);width:22px">${Math.round(o.angle||0)}°</span></div>`;
+  document.getElementById('props').innerHTML=h;
+}
+function clearProps(){document.getElementById('props').innerHTML='<div style="color:rgba(255,255,255,0.1);text-align:center;padding:6px;font-size:0.44rem">Select an element</div>'}
+function sp(k,v){const o=cv.getActiveObject();if(o){o.set(k,v);cv.renderAll()}}
+
+// Mini preview + Layers
+function refreshMini(){
+  const img=document.getElementById('miniImg');
+  if(img&&cv)img.src=cv.toDataURL({format:'png',multiplier:0.3});
+}
+function renderLayers(){
+  const el=document.getElementById('layersList');if(!el||!cv)return;
+  const objs=cv.getObjects().slice().reverse();
+  const active=cv.getActiveObject();
+  if(!objs.length){el.innerHTML='<div style="font-size:0.42rem;color:rgba(255,255,255,0.08);padding:4px;text-align:center">No layers</div>';return}
+  el.innerHTML=objs.map((o,i)=>{
+    const idx=cv.getObjects().length-1-i;
+    const isActive=o===active;
+    const name=o.type==='i-text'?(o.text||'').substring(0,12):o.type==='image'?'Image':o.type==='rect'?'Rectangle':o.type==='circle'?'Circle':o.type;
+    const icon=o.type==='i-text'?'T':o.type==='image'?'📷':o.type==='rect'?'■':o.type==='circle'?'●':o.type==='triangle'?'▲':'★';
+    return `<div style="display:flex;align-items:center;gap:4px;padding:3px 4px;border-radius:3px;cursor:pointer;background:${isActive?'rgba(155,89,182,0.15)':'transparent'};border:1px solid ${isActive?'rgba(155,89,182,0.25)':'transparent'}" onclick="cv.setActiveObject(cv.getObjects()[${idx}]);cv.renderAll();updateProps()">
+      <span style="font-size:0.55rem;width:14px;text-align:center">${icon}</span>
+      <span style="font-size:0.44rem;color:${isActive?'#c39bd3':'rgba(255,255,255,0.35)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(name)}</span>
+      <span style="font-size:0.35rem;color:rgba(255,255,255,0.12)">${o.type==='i-text'?Math.round(o.fontSize)+'px':''}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+//  UPLOADS
+// ═══════════════════════════════════════
+function handleFileUpload(e){for(const f of e.target.files){if(!f.type.startsWith('image'))continue;uploads.push(URL.createObjectURL(f))}if(document.getElementById('uploadGrid'))openTool('uploads')}
+
+// ═══════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════
+function exportPNG(){const m=fullW/cW;const u=cv.toDataURL({format:'png',multiplier:m});dl(u,'design_'+Date.now()+'.png');zl('📥 PNG '+fullW+'×'+fullH)}
+function exportJPG(){const m=fullW/cW;const u=cv.toDataURL({format:'jpeg',quality:0.92,multiplier:m});dl(u,'design_'+Date.now()+'.jpg');zl('📥 JPG')}
+function dl(u,n){const a=document.createElement('a');a.href=u;a.download=n;a.click()}
+
+// ═══════════════════════════════════════
+//  PROJECT SAVE/LOAD
+// ═══════════════════════════════════════
+async function saveProject(){
+  const name=document.getElementById('projTitle')?.textContent||'Untitled';
+  const jsonStr=JSON.stringify(cv.toJSON());
+  let thumbUrl='';
+  try{const b=await(await fetch(cv.toDataURL({format:'png',multiplier:0.25}))).blob();const fd=new FormData();fd.append('file',b,`thumb_${Date.now()}.png`);const r=await fetch('/upload',{method:'POST',body:fd});thumbUrl=(await r.json()).url||''}catch(e){console.log('Thumb upload err:',e)}
+  const body={name,canvas_json:jsonStr,thumb_url:thumbUrl,format:aiFmt,width:fullW,height:fullH};
+  try{
+    if(currentProjectId){await fetch(`/api/design-projects/${currentProjectId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});zl('💾 Saved')}
+    else{const r=await fetch('/api/design-projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});currentProjectId=(await r.json()).id;zl('💾 Created')}
+  }catch(e){zl('❌ Save failed')}
+}
+
+async function autoSave(){if(cv&&currentProjectId)await saveProject()}
+
+async function openProject(pid){
+  const p=projectsList.find(x=>x.id===pid);if(!p)return;
+  currentProjectId=pid;
+
+  // Find matching format
+  fmt=Object.entries(FMTS).find(([k,v])=>v.w===(p.width||1080)&&v.h===(p.height||1080))?.[0]||'square';
+  const f=FMTS[fmt]||FMTS.square;
+  cW=f.cw;cH=f.ch;fullW=p.width||f.w;fullH=p.height||f.h;
+  aiFmt=p.format||'1024x1024';
+
+  // Update format bar
+  document.querySelectorAll('.fmt-b').forEach(b=>b.classList.toggle('on',b.dataset.fmt===fmt));
+  document.getElementById('fmtInfo').textContent=`${fullW} × ${fullH}`;
+  document.getElementById('projTitle').textContent=p.name||'Untitled';
+
+  // Clear and resize canvas, then load JSON
+  cv.clear();
+  cv.setDimensions({width:cW,height:cH});
+  try{
+    cv.loadFromJSON(p.canvas_json,()=>{
+      cv.renderAll();
+      undos=[];redos=[];saveState();
+      zl('📂 Opened: '+p.name);
+    });
+  }catch(e){zl('❌ Failed to load')}
+}
+
+async function delProject(pid){
+  if(!confirm('Delete this project?'))return;
+  await fetch(`/api/design-projects/${pid}`,{method:'DELETE'});
+  loadProjects();
+}
+
+function renameProject(){
+  const n=prompt('Project name:',document.getElementById('projTitle').textContent);
+  if(n)document.getElementById('projTitle').textContent=n;
+}
+
+// ═══════════════════════════════════════
+//  AI (ZARA)
+// ═══════════════════════════════════════
+function connectWS(){const p=location.protocol==='https:'?'wss':'ws';ws=new WebSocket(`${p}://${location.host}/ws`);
+  ws.onmessage=e=>{const d=JSON.parse(e.data);
+    if(d.type==='agent_typing')zl('🎨 Working...');
+    else if(d.type==='agent_reply'){
+      document.getElementById('cvLoading').classList.remove('on');
+      const c=d.content||d.text||d.message||'';zl(c.length>150?c.substring(0,150)+'...':c);
+      // Image
+      const m=c.match(/\/uploads\/[a-zA-Z0-9_.\-]+\.(png|jpg|jpeg|webp|gif)/i);
+      if(m)loadImgAsBg(m[0]);
+      // Text layers
+      const tl=c.match(/```TEXT_LAYERS\s*\n?([\s\S]*?)```/)||c.match(/\[\s*\{[^}]*"text"\s*:\s*"[^"]*"[^}]*"x"\s*:\s*\d+[\s\S]*?\]\s*(?=```|$)/);
+      if(tl){try{const layers=JSON.parse((tl[1]||tl[0]).trim());setTimeout(()=>{layers.forEach(l=>{cv.add(new fabric.IText(l.text||'',{left:(l.x/100)*cW,top:(l.y/100)*cH,fontSize:l.size||28,fontWeight:l.weight||700,fill:l.color||'#fff',fontFamily:l.font||'Segoe UI',originX:'center',shadow:'0 2px 8px rgba(0,0,0,0.5)'}))});cv.renderAll();saveState();zl('✏️ Text added — double-click to edit')},1500)}catch(e){}}
+    }
+    else if(d.type==='error'){document.getElementById('cvLoading').classList.remove('on');zl('❌ '+(d.content||'Error'))}
+  };ws.onclose=()=>setTimeout(connectWS,2000)}
+connectWS();
+
+function aiGenerate(){
+  const p=document.getElementById('aiP')?.value?.trim();
+  if(!p){alert('Write a prompt');return}
+  document.getElementById('cvLoading').classList.add('on');
+  zl('🎨 '+p);
+
+  // Map format to the correct DALL-E size
+  let dalleSize='1024x1024';
+  if(fullW>fullH) dalleSize='1792x1024';  // landscape
+  else if(fullH>fullW) dalleSize='1024x1792';  // portrait/story
+
+  // Build detailed prompt for better results
+  const sizeLabel=fullW>fullH?'landscape wide':fullH>fullW?'portrait vertical':'square';
+  const cmd = `Generate image: ${p}.
+IMPORTANT: Use generate_image tool with size="${dalleSize}" and style="natural".
+The design is ${sizeLabel} format (${fullW}×${fullH}).
+${fullH>fullW ? 'This is a VERTICAL/PORTRAIT image for stories/reels. Compose vertically.' : ''}
+Return the file path. Then add TEXT_LAYERS block with editable text.`;
+
+  ws.send(JSON.stringify({type:'agent_chat',agent:'zara',content:cmd}));
+}
+function aiVideo(){const p=document.getElementById('aiP')?.value?.trim()||'promo reel';zl(p);ws.send(JSON.stringify({type:'agent_chat',agent:'zara',content:`Create video: ${p}. Use create_video tool.`}))}
+function aiVoice(){const p=document.getElementById('aiP')?.value?.trim()||'brand narration';zl(p);ws.send(JSON.stringify({type:'agent_chat',agent:'zara',content:`Generate voiceover: ${p}. Use generate_voiceover tool.`}))}
+
+function zl(t){const l=document.getElementById('zaraLog');if(!l)return;const d=document.createElement('div');d.className='zl';d.textContent=t;l.appendChild(d);l.scrollTop=9999;while(l.children.length>10)l.children[0].remove()}
+
+// ═══════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+  if(e.key==='Delete'||e.key==='Backspace')delObj();
+  if(e.ctrlKey&&e.key==='z'){e.preventDefault();undo()}
+  if(e.ctrlKey&&e.key==='y'){e.preventDefault();redo()}
+  if(e.ctrlKey&&e.key==='d'){e.preventDefault();dupObj()}
+  if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveProject()}
+});
+
+// ═══════════════════════════════════════
+//  INIT — go directly to canvas
+// ═══════════════════════════════════════
+startEditor();
+</script>
+</body>
+</html>

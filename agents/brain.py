@@ -1065,7 +1065,7 @@ async def _exec_tool_inner(name: str, args: dict) -> str:
                 logger.warning(f"[brain] Drive upload skipped: {_e}")
 
             # Send via WhatsApp (always — client + owner copy)
-            wa = await send_invoice_whatsapp(client, inv_num, total, drive_link)
+            wa = await send_invoice_whatsapp(client, inv_num, total, drive_link, pdf_path=path)
             result["whatsapp"] = wa
 
             # Push confirmation via WhatsApp Cloud API

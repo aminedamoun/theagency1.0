@@ -365,8 +365,40 @@ def build_whatsapp_links(client: dict, invoice_number: str, amount: float, drive
     }
 
 
-async def _send_whatsapp_cloud(phone: str, message: str) -> bool:
-    """Send a WhatsApp message via Meta Cloud API."""
+async def _upload_media_to_meta(file_path: str) -> str:
+    """Upload a file to Meta's servers and return the media ID."""
+    import os, httpx
+    token = os.getenv("WHATSAPP_TOKEN")
+    phone_id = os.getenv("WHATSAPP_PHONE_ID")
+    if not token or not phone_id:
+        return ""
+    url = f"https://graph.facebook.com/v22.0/{phone_id}/media"
+    try:
+        from pathlib import Path
+        fp = Path(file_path)
+        if not fp.exists():
+            logger.error(f"[invoice] File not found for upload: {file_path}")
+            return ""
+        async with httpx.AsyncClient(timeout=30) as c:
+            res = await c.post(url,
+                data={"messaging_product": "whatsapp", "type": "application/pdf"},
+                files={"file": (fp.name, open(fp, "rb"), "application/pdf")},
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            if res.status_code == 200:
+                media_id = res.json().get("id", "")
+                logger.info(f"[invoice] Uploaded to Meta: {fp.name} → {media_id}")
+                return media_id
+            else:
+                logger.error(f"[invoice] Media upload failed: {res.text}")
+                return ""
+    except Exception as e:
+        logger.error(f"[invoice] Media upload error: {e}")
+        return ""
+
+
+async def _send_whatsapp_cloud(phone: str, message: str, document_path: str = "") -> bool:
+    """Send a WhatsApp message (with optional PDF attachment) via Meta Cloud API."""
     import os, httpx
     token = os.getenv("WHATSAPP_TOKEN")
     phone_id = os.getenv("WHATSAPP_PHONE_ID")
@@ -376,44 +408,71 @@ async def _send_whatsapp_cloud(phone: str, message: str) -> bool:
     if not digits:
         return False
     url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
     try:
-        async with httpx.AsyncClient(timeout=10) as c:
+        async with httpx.AsyncClient(timeout=15) as c:
+            # Send document if path provided
+            if document_path:
+                media_id = await _upload_media_to_meta(document_path)
+                if media_id:
+                    from pathlib import Path as _P
+                    res = await c.post(url, json={
+                        "messaging_product": "whatsapp",
+                        "to": digits,
+                        "type": "document",
+                        "document": {
+                            "id": media_id,
+                            "caption": message,
+                            "filename": _P(document_path).name,
+                        },
+                    }, headers=headers)
+                    return res.status_code == 200
+
+            # Fallback: send text only
             res = await c.post(url, json={
                 "messaging_product": "whatsapp",
                 "to": digits,
                 "type": "text",
                 "text": {"body": message},
-            }, headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-            })
+            }, headers=headers)
             return res.status_code == 200
     except Exception as e:
         logger.error(f"[invoice] WhatsApp Cloud API failed: {e}")
         return False
 
 
-async def send_invoice_whatsapp(client: dict, invoice_number: str, amount: float, drive_link: str = "") -> dict:
+async def send_invoice_whatsapp(client: dict, invoice_number: str, amount: float, drive_link: str = "", pdf_path: str = "") -> dict:
     """
     Send invoice via WhatsApp Cloud API (works on Railway, no local browser needed).
     Falls back to wa.me links if Cloud API not configured.
     """
     import os, asyncio
+    from pathlib import Path as _P
 
     links = build_whatsapp_links(client, invoice_number, amount, drive_link)
     sent_to = []
 
+    # Resolve PDF path
+    doc_path = ""
+    if pdf_path:
+        local = _P(__file__).resolve().parent.parent / "uploads" / "invoices" / _P(pdf_path).name
+        if local.exists():
+            doc_path = str(local)
+        elif _P(pdf_path).exists():
+            doc_path = pdf_path
+
     # Try Cloud API first (works on Railway 24/7)
     if os.getenv("WHATSAPP_TOKEN"):
-        # Send to client
+        # Send to client (with PDF)
         client_phone = client.get("phone", "")
         if client_phone:
-            ok = await _send_whatsapp_cloud(client_phone, links["message"])
+            ok = await _send_whatsapp_cloud(client_phone, links["message"], document_path=doc_path)
             if ok:
                 sent_to.append(f"Client ({client.get('name')}) — {client_phone}")
                 logger.info(f"[invoice] WhatsApp sent to client: {client.get('name')}")
 
-        # Send owner copy
+        # Send owner copy (with PDF)
         owner_msg = (
             f"📋 *Invoice Sent — Copy for you*\n\n"
             f"Client: *{client.get('name', '')}*\n"
@@ -422,7 +481,7 @@ async def send_invoice_whatsapp(client: dict, invoice_number: str, amount: float
             f"Phone: {client.get('phone', 'N/A')}"
             + (f"\n📎 Drive: {drive_link}" if drive_link else "")
         )
-        ok = await _send_whatsapp_cloud(OWNER_PHONE, owner_msg)
+        ok = await _send_whatsapp_cloud(OWNER_PHONE, owner_msg, document_path=doc_path)
         if ok:
             sent_to.append(f"You (owner copy) — {OWNER_PHONE}")
             logger.info(f"[invoice] WhatsApp owner copy sent")

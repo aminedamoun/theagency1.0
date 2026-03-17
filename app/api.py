@@ -1416,7 +1416,14 @@ async def whatsapp_webhook(request: Request):
             # Get agent reply
             from agents.brain import chat_agent, AGENTS
             agent = AGENTS.get(agent_key, AGENTS["sarah"])
-            reply = await chat_agent(text, agent_key, use_tools=True)
+            logger.info(f"[whatsapp] Routing to {agent['name']} ({agent_key})...")
+
+            try:
+                reply = await chat_agent(text, agent_key, use_tools=True)
+                logger.info(f"[whatsapp] Agent replied: {reply[:100]}")
+            except Exception as agent_err:
+                logger.error(f"[whatsapp] Agent error: {agent_err}")
+                reply = f"Sorry, I encountered an error: {str(agent_err)[:200]}"
 
             # Format and send reply back via Cloud API
             formatted = f"{agent['emoji']} *{agent['name']}* _({agent['role']})_\n{'─' * 25}\n{reply[:3500]}"
@@ -1426,7 +1433,7 @@ async def whatsapp_webhook(request: Request):
             url = f"https://graph.facebook.com/v22.0/{wa_phone_id}/messages"
 
             async with httpx.AsyncClient(timeout=30) as c:
-                await c.post(url, json={
+                wa_res = await c.post(url, json={
                     "messaging_product": "whatsapp",
                     "to": from_number,
                     "type": "text",
@@ -1435,10 +1442,12 @@ async def whatsapp_webhook(request: Request):
                     "Authorization": f"Bearer {token_val}",
                     "Content-Type": "application/json",
                 })
+                logger.info(f"[whatsapp] Send status: {wa_res.status_code} - {wa_res.text[:200]}")
 
             logger.info(f"[whatsapp] Replied to {from_number} via {agent['name']}")
 
     except Exception as e:
-        logger.error(f"[whatsapp] Webhook error: {e}")
+        import traceback
+        logger.error(f"[whatsapp] Webhook error: {e}\n{traceback.format_exc()}")
 
     return {"status": "ok"}

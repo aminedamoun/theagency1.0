@@ -365,39 +365,86 @@ def build_whatsapp_links(client: dict, invoice_number: str, amount: float, drive
     }
 
 
+async def _send_whatsapp_cloud(phone: str, message: str) -> bool:
+    """Send a WhatsApp message via Meta Cloud API."""
+    import os, httpx
+    token = os.getenv("WHATSAPP_TOKEN")
+    phone_id = os.getenv("WHATSAPP_PHONE_ID")
+    if not token or not phone_id:
+        return False
+    digits = _format_whatsapp_number(phone)
+    if not digits:
+        return False
+    url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
+    try:
+        async with httpx.AsyncClient(timeout=10) as c:
+            res = await c.post(url, json={
+                "messaging_product": "whatsapp",
+                "to": digits,
+                "type": "text",
+                "text": {"body": message},
+            }, headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            })
+            return res.status_code == 200
+    except Exception as e:
+        logger.error(f"[invoice] WhatsApp Cloud API failed: {e}")
+        return False
+
+
 async def send_invoice_whatsapp(client: dict, invoice_number: str, amount: float, drive_link: str = "") -> dict:
     """
-    Open WhatsApp pre-filled messages for client + owner copy.
-    Opens both links in the browser automatically.
-    Returns dict with links and status.
+    Send invoice via WhatsApp Cloud API (works on Railway, no local browser needed).
+    Falls back to wa.me links if Cloud API not configured.
     """
-    import webbrowser, asyncio
+    import os, asyncio
 
     links = build_whatsapp_links(client, invoice_number, amount, drive_link)
+    sent_to = []
 
-    opened = []
+    # Try Cloud API first (works on Railway 24/7)
+    if os.getenv("WHATSAPP_TOKEN"):
+        # Send to client
+        client_phone = client.get("phone", "")
+        if client_phone:
+            ok = await _send_whatsapp_cloud(client_phone, links["message"])
+            if ok:
+                sent_to.append(f"Client ({client.get('name')}) — {client_phone}")
+                logger.info(f"[invoice] WhatsApp sent to client: {client.get('name')}")
 
-    # Open client WhatsApp link
-    if links["client_url"] and client.get("phone"):
-        await asyncio.to_thread(webbrowser.open, links["client_url"])
-        opened.append(f"Client ({client.get('name')}) — {client.get('phone')}")
-        logger.info(f"[invoice] WhatsApp opened for client: {client.get('name')}")
-        await asyncio.sleep(1.5)  # small delay so both tabs open cleanly
-
-    # Always open owner copy
-    await asyncio.to_thread(webbrowser.open, links["owner_url"])
-    opened.append(f"You (owner copy) — {OWNER_PHONE}")
-    logger.info(f"[invoice] WhatsApp owner copy opened")
+        # Send owner copy
+        owner_msg = (
+            f"📋 *Invoice Sent — Copy for you*\n\n"
+            f"Client: *{client.get('name', '')}*\n"
+            f"Invoice #: {invoice_number}\n"
+            f"Amount: *AED {amount:,.2f}*\n"
+            f"Phone: {client.get('phone', 'N/A')}"
+            + (f"\n📎 Drive: {drive_link}" if drive_link else "")
+        )
+        ok = await _send_whatsapp_cloud(OWNER_PHONE, owner_msg)
+        if ok:
+            sent_to.append(f"You (owner copy) — {OWNER_PHONE}")
+            logger.info(f"[invoice] WhatsApp owner copy sent")
+    else:
+        # Fallback: open wa.me links in browser (local only)
+        import webbrowser
+        if links["client_url"] and client.get("phone"):
+            await asyncio.to_thread(webbrowser.open, links["client_url"])
+            sent_to.append(f"Client ({client.get('name')}) — {client.get('phone')}")
+            await asyncio.sleep(1.5)
+        await asyncio.to_thread(webbrowser.open, links["owner_url"])
+        sent_to.append(f"You (owner copy) — {OWNER_PHONE}")
 
     # Update sheet to Sent
     await _mark_invoice_sent(invoice_number)
 
     return {
-        "status":       "whatsapp_opened",
-        "opened_for":   opened,
+        "status":       "whatsapp_sent" if sent_to else "whatsapp_failed",
+        "opened_for":   sent_to,
         "client_url":   links["client_url"],
         "owner_url":    links["owner_url"],
-        "message":      f"WhatsApp opened for: {', '.join(opened)}. Just hit Send in each tab.",
+        "message":      f"WhatsApp sent to: {', '.join(sent_to)}." if sent_to else "WhatsApp send failed.",
     }
 
 

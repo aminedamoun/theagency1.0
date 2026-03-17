@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api")
 
 UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
 TEMP_DIR = UPLOADS_DIR / "_temp"
-TEMP_DIR.mkdir(exist_ok=True)
+TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------

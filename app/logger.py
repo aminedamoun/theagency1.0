@@ -8,7 +8,7 @@ from config import load_config
 def setup_logger(name: str = "amine-agent") -> logging.Logger:
     cfg = load_config()
     log_dir = Path(cfg["logging"]["log_dir"])
-    log_dir.mkdir(exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_file = log_dir / f"{timestamp}.log"

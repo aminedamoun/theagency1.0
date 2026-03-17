@@ -5,3 +5,10 @@ pyyaml
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
+fastapi
+uvicorn[standard]
+aiosqlite
+openai
+anthropic
+httpx
+reportlab

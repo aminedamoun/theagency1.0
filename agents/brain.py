@@ -1068,18 +1068,16 @@ async def _exec_tool_inner(name: str, args: dict) -> str:
             wa = await send_invoice_whatsapp(client, inv_num, total, drive_link)
             result["whatsapp"] = wa
 
-            # Push confirmation to WhatsApp group via bridge
+            # Push confirmation via WhatsApp Cloud API
             try:
-                import httpx as _httpx
+                from agents.notify import notify
                 confirm_msg = (
-                    f"✅ *Invoice {inv_num} Generated*\n"
                     f"👤 Client: {client['name']}\n"
                     f"💰 Amount: AED {total:,.0f}\n"
-                    f"📲 WhatsApp link ready to send to client"
+                    f"📲 Invoice PDF ready"
                     + (f"\n📎 Drive: {drive_link}" if drive_link else "")
                 )
-                async with _httpx.AsyncClient(timeout=3) as _hc:
-                    await _hc.post("http://localhost:3001/send", json={"message": confirm_msg})
+                asyncio.ensure_future(notify(f"Invoice {inv_num} Generated ✅", confirm_msg))
             except Exception:
                 pass
 

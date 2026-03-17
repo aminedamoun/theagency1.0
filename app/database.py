@@ -142,5 +142,11 @@ async def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
+    # Migrations — add columns if missing
+    try:
+        await db.execute("ALTER TABLE tasks ADD COLUMN source TEXT DEFAULT 'platform'")
+    except Exception:
+        pass  # Column already exists
+
     await db.commit()
     await db.close()

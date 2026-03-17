@@ -1413,17 +1413,45 @@ async def whatsapp_webhook(request: Request):
                     agent_key = key
                     break
 
-            # Get agent reply
+            # Save as task in the platform database
             from agents.brain import chat_agent, AGENTS
             agent = AGENTS.get(agent_key, AGENTS["sarah"])
             logger.info(f"[whatsapp] Routing to {agent['name']} ({agent_key})...")
 
+            try:
+                db = await get_db()
+                await db.execute(
+                    "INSERT INTO tasks (title, description, assigned_agent, priority, status, source) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    (text[:100], f"WhatsApp command from {from_number}: {text}",
+                     agent_key, "medium", "in_progress", "whatsapp"),
+                )
+                await db.commit()
+                await db.close()
+                logger.info(f"[whatsapp] Task saved to platform")
+            except Exception as db_err:
+                logger.warning(f"[whatsapp] Could not save task: {db_err}")
+
+            # Get agent reply
             try:
                 reply = await chat_agent(text, agent_key, use_tools=True)
                 logger.info(f"[whatsapp] Agent replied: {reply[:100]}")
             except Exception as agent_err:
                 logger.error(f"[whatsapp] Agent error: {agent_err}")
                 reply = f"Sorry, I encountered an error: {str(agent_err)[:200]}"
+
+            # Update task to completed
+            try:
+                db = await get_db()
+                await db.execute(
+                    "UPDATE tasks SET status='completed', completed_at=? "
+                    "WHERE source='whatsapp' AND title=? AND status='in_progress'",
+                    (datetime.now().isoformat(), text[:100]),
+                )
+                await db.commit()
+                await db.close()
+            except Exception:
+                pass
 
             # Format and send reply back via Cloud API
             formatted = f"{agent['emoji']} *{agent['name']}* _({agent['role']})_\n{'─' * 25}\n{reply[:3500]}"

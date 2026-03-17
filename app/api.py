@@ -1330,11 +1330,115 @@ async def whatsapp_agent_chat(req: AgentChatRequest):
 
 @router.post("/whatsapp/send")
 async def send_to_whatsapp(payload: dict):
-    """Send a message to WhatsApp group or a specific number via the bot bridge."""
+    """Send a WhatsApp message via Meta Cloud API."""
     import httpx
+    token = os.getenv("WHATSAPP_TOKEN")
+    phone_id = os.getenv("WHATSAPP_PHONE_ID")
+    if not token or not phone_id:
+        return {"ok": False, "error": "WhatsApp Cloud API not configured"}
     try:
-        async with httpx.AsyncClient(timeout=5) as c:
-            r = await c.post("http://localhost:3001/send", json=payload)
+        phone = payload.get("phone", os.getenv("WHATSAPP_OWNER_PHONE", ""))
+        message = payload.get("message", "")
+        url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.post(url, json={
+                "messaging_product": "whatsapp",
+                "to": phone,
+                "type": "text",
+                "text": {"body": message},
+            }, headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            })
             return {"ok": r.status_code == 200}
-    except Exception:
-        return {"ok": False, "error": "WhatsApp bot not running"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# WhatsApp Cloud API Webhook — receives inbound messages from Meta
+# ---------------------------------------------------------------------------
+
+WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "theagency-verify-2026")
+
+from fastapi import Request
+
+@router.api_route("/webhook/whatsapp", methods=["GET", "POST"])
+async def whatsapp_webhook(request: Request):
+    """Handle WhatsApp Cloud API webhooks — verification & incoming messages."""
+    import httpx
+    import logging
+    logger = logging.getLogger("amine-agent")
+
+    # GET = Meta verification challenge
+    if request.method == "GET":
+        params = request.query_params
+        mode = params.get("hub.mode")
+        token = params.get("hub.verify_token")
+        challenge = params.get("hub.challenge")
+        if mode == "subscribe" and token == WHATSAPP_VERIFY_TOKEN:
+            logger.info("[whatsapp] Webhook verified")
+            from fastapi.responses import PlainTextResponse
+            return PlainTextResponse(challenge)
+        return {"error": "Verification failed"}, 403
+
+    # POST = incoming message
+    body = await request.json()
+    logger.info(f"[whatsapp] Webhook received: {json.dumps(body)[:200]}")
+
+    try:
+        entry = body.get("entry", [{}])[0]
+        changes = entry.get("changes", [{}])[0]
+        value = changes.get("value", {})
+        messages = value.get("messages", [])
+
+        for msg in messages:
+            if msg.get("type") != "text":
+                continue
+
+            from_number = msg.get("from", "")
+            text = msg.get("text", {}).get("body", "").strip()
+            if not text:
+                continue
+
+            logger.info(f"[whatsapp] Message from {from_number}: {text[:80]}")
+
+            # Route to agent — detect agent name or default to Sarah
+            agent_key = "sarah"
+            lower = text.lower()
+            agent_names = {"marcus": "marcus", "zara": "zara", "kai": "kai",
+                          "elena": "elena", "alex": "alex", "sarah": "sarah"}
+            for name, key in agent_names.items():
+                if lower.startswith(name) or lower.startswith(f"@{name}"):
+                    agent_key = key
+                    break
+
+            # Get agent reply
+            from agents.brain import chat_agent, AGENTS
+            agent = AGENTS.get(agent_key, AGENTS["sarah"])
+            reply = await chat_agent(text, agent_key, use_tools=True)
+
+            # Format and send reply back via Cloud API
+            formatted = f"{agent['emoji']} *{agent['name']}* _({agent['role']})_\n{'─' * 25}\n{reply[:3500]}"
+
+            token_val = os.getenv("WHATSAPP_TOKEN")
+            wa_phone_id = os.getenv("WHATSAPP_PHONE_ID")
+            url = f"https://graph.facebook.com/v22.0/{wa_phone_id}/messages"
+
+            async with httpx.AsyncClient(timeout=30) as c:
+                await c.post(url, json={
+                    "messaging_product": "whatsapp",
+                    "to": from_number,
+                    "type": "text",
+                    "text": {"body": formatted},
+                }, headers={
+                    "Authorization": f"Bearer {token_val}",
+                    "Content-Type": "application/json",
+                })
+
+            logger.info(f"[whatsapp] Replied to {from_number} via {agent['name']}")
+
+    except Exception as e:
+        logger.error(f"[whatsapp] Webhook error: {e}")
+
+    return {"status": "ok"}

@@ -10,9 +10,10 @@ from pathlib import Path
 from datetime import datetime
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Request, Response, Cookie
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
+import hashlib, secrets
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -43,6 +44,103 @@ UPLOADS_DIR.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+# ── Authentication ────────────────────────────────────────────────────────────
+AUTH_EMAIL = os.getenv("AUTH_EMAIL", "info@dubaiprod.com")
+AUTH_PASSWORD = os.getenv("AUTH_PASSWORD", "agency2026")
+_active_sessions: set[str] = set()
+
+
+def _check_auth(request: Request) -> bool:
+    token = request.cookies.get("session_token")
+    return token in _active_sessions if token else False
+
+
+LOGIN_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Login — THE AGENCY 1.0</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#020509;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+body{display:flex;align-items:center;justify-content:center}
+.login-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;padding:48px 40px;width:380px;backdrop-filter:blur(20px)}
+.login-box h1{font-size:22px;font-weight:600;margin-bottom:6px;
+  background:linear-gradient(135deg,#c9a84c,#ffe08a);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-box p{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:28px}
+label{display:block;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+input{width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;color:#fff;font-size:14px;margin-bottom:18px;outline:none;transition:border 0.2s}
+input:focus{border-color:rgba(201,168,76,0.5)}
+button{width:100%;padding:13px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;
+  background:linear-gradient(135deg,#c9a84c,#b8943f);color:#020509;transition:opacity 0.2s}
+button:hover{opacity:0.9}
+.error{color:#ff6b6b;font-size:13px;margin-bottom:14px;display:none}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <h1>THE AGENCY 1.0</h1>
+  <p>Enter your credentials to access the platform</p>
+  <div class="error" id="err">Invalid email or password</div>
+  <form method="POST" action="/login">
+    <label>Email</label>
+    <input type="email" name="email" required placeholder="your@email.com" autocomplete="email">
+    <label>Password</label>
+    <input type="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+    <input type="hidden" name="next" value="{next_url}">
+    <button type="submit">Sign In</button>
+  </form>
+</div>
+</body></html>"""
+
+
+@app.get("/login")
+async def login_page(request: Request, next: str = "/spaces"):
+    if _check_auth(request):
+        return RedirectResponse(url=next)
+    return HTMLResponse(LOGIN_PAGE.replace("{next_url}", next))
+
+
+@app.post("/login")
+async def login_submit(request: Request):
+    form = await request.form()
+    email = form.get("email", "")
+    password = form.get("password", "")
+    next_url = form.get("next", "/spaces")
+
+    if email == AUTH_EMAIL and password == AUTH_PASSWORD:
+        token = secrets.token_hex(32)
+        _active_sessions.add(token)
+        response = RedirectResponse(url=next_url, status_code=302)
+        response.set_cookie("session_token", token, httponly=True, max_age=86400 * 7, samesite="lax")
+        logger.info(f"[auth] Login success: {email}")
+        return response
+
+    html = LOGIN_PAGE.replace("{next_url}", next_url).replace('display:none', 'display:block')
+    return HTMLResponse(html, status_code=401)
+
+
+@app.get("/logout")
+async def logout(request: Request):
+    token = request.cookies.get("session_token")
+    if token:
+        _active_sessions.discard(token)
+    response = RedirectResponse(url="/login")
+    response.delete_cookie("session_token")
+    return response
+
+
+def _protected_page(page_path: str):
+    async def handler(request: Request):
+        if not _check_auth(request):
+            return RedirectResponse(url=f"/login?next={request.url.path}")
+        return HTMLResponse((STATIC_DIR / page_path).read_text())
+    return handler
+
+
+# ── Public routes ─────────────────────────────────────────────────────────────
 
 @app.get("/")
 async def root():
@@ -56,64 +154,30 @@ async def intro():
     return HTMLResponse(page.read_text())
 
 
+# ── Protected routes (require login) ─────────────────────────────────────────
+
 @app.get("/spaces")
-async def spaces():
-    page = STATIC_DIR / "spaces.html"
-    return HTMLResponse(page.read_text())
+async def spaces(request: Request):
+    if not _check_auth(request):
+        return RedirectResponse(url="/login?next=/spaces")
+    return HTMLResponse((STATIC_DIR / "spaces.html").read_text())
 
 
 @app.get("/platform")
-async def platform():
-    index = STATIC_DIR / "index.html"
-    return HTMLResponse(index.read_text())
+async def platform(request: Request):
+    if not _check_auth(request):
+        return RedirectResponse(url="/login?next=/platform")
+    return HTMLResponse((STATIC_DIR / "index.html").read_text())
 
 
-@app.get("/space/leads")
-async def space_leads():
-    page = STATIC_DIR / "space-leads.html"
-    return HTMLResponse(page.read_text())
-
-
-@app.get("/space/content")
-async def space_content():
-    page = STATIC_DIR / "space-content.html"
-    return HTMLResponse(page.read_text())
-
-
-@app.get("/space/creative")
-async def space_creative():
-    page = STATIC_DIR / "space-creative.html"
-    return HTMLResponse(page.read_text())
-
-
-@app.get("/space/dashboard")
-async def space_dashboard():
-    page = STATIC_DIR / "space-dashboard.html"
-    return HTMLResponse(page.read_text())
-
-
-@app.get("/space/email")
-async def space_email():
-    page = STATIC_DIR / "space-email.html"
-    return HTMLResponse(page.read_text())
-
-
-@app.get("/space/creative-choice")
-async def space_creative_choice():
-    page = STATIC_DIR / "space-creative-choice.html"
-    return HTMLResponse(page.read_text())
-
-
-@app.get("/space/sheets")
-async def space_sheets():
-    page = STATIC_DIR / "space-sheets.html"
-    return HTMLResponse(page.read_text())
-
-
-@app.get("/space/video")
-async def space_video():
-    page = STATIC_DIR / "space-video.html"
-    return HTMLResponse(page.read_text())
+app.add_api_route("/space/leads", _protected_page("space-leads.html"), methods=["GET"])
+app.add_api_route("/space/content", _protected_page("space-content.html"), methods=["GET"])
+app.add_api_route("/space/creative", _protected_page("space-creative.html"), methods=["GET"])
+app.add_api_route("/space/dashboard", _protected_page("space-dashboard.html"), methods=["GET"])
+app.add_api_route("/space/email", _protected_page("space-email.html"), methods=["GET"])
+app.add_api_route("/space/creative-choice", _protected_page("space-creative-choice.html"), methods=["GET"])
+app.add_api_route("/space/sheets", _protected_page("space-sheets.html"), methods=["GET"])
+app.add_api_route("/space/video", _protected_page("space-video.html"), methods=["GET"])
 
 
 @app.post("/upload")

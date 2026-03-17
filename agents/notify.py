@@ -54,13 +54,30 @@ async def notify(title: str, message: str, priority: str = "default", tags: str 
 
 
 async def _send_whatsapp_group(title: str, message: str):
-    """Push notification to WhatsApp group via the bot bridge on port 3001."""
+    """Send WhatsApp message via Meta Cloud API (works 24/7, no local bot needed)."""
+    token = os.getenv("WHATSAPP_TOKEN")
+    phone_id = os.getenv("WHATSAPP_PHONE_ID")
+    owner_phone = os.getenv("WHATSAPP_OWNER_PHONE")
+
+    if not token or not phone_id or not owner_phone:
+        return  # WhatsApp Cloud API not configured
+
+    url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
+    text = f"🔔 *{title}*\n{message}"
+
     try:
-        text = f"🔔 *{title}*\n{message}"
-        async with httpx.AsyncClient(timeout=3) as c:
-            await c.post("http://localhost:3001/send", json={"message": text})
-    except Exception:
-        pass  # Bot not running — silently skip
+        async with httpx.AsyncClient(timeout=10) as c:
+            await c.post(url, json={
+                "messaging_product": "whatsapp",
+                "to": owner_phone,
+                "type": "text",
+                "text": {"body": text},
+            }, headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            })
+    except Exception as e:
+        logger.error(f"[notify] WhatsApp Cloud API failed: {e}")
 
 
 async def _send_ntfy(config: dict, title: str, message: str, priority: str, tags: str):

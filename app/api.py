@@ -1479,3 +1479,99 @@ async def whatsapp_webhook(request: Request):
         logger.error(f"[whatsapp] Webhook error: {e}\n{traceback.format_exc()}")
 
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# AI Image Generation API
+# ---------------------------------------------------------------------------
+
+class ImageGenRequest(BaseModel):
+    prompt: str
+    count: int = 1
+    size: str = "1024x1024"
+    style: str = "natural"
+
+
+@router.post("/generate-images")
+async def generate_images(req: ImageGenRequest):
+    """Generate 1-4 images using DALL-E 3."""
+    import openai, httpx
+    from pathlib import Path as _P
+
+    count = min(max(req.count, 1), 4)
+    oa = openai.AsyncOpenAI()
+    results = []
+
+    for i in range(count):
+        try:
+            response = await oa.images.generate(
+                model="dall-e-3",
+                prompt=req.prompt,
+                size=req.size,
+                style=req.style,
+                quality="hd",
+                n=1,
+            )
+            image_url = response.data[0].url
+            revised = response.data[0].revised_prompt
+
+            # Download and save
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"generated_{timestamp}_{i+1}.png"
+            save_path = _P(__file__).resolve().parent.parent / "uploads" / filename
+
+            async with httpx.AsyncClient(timeout=30) as http:
+                img_r = await http.get(image_url)
+                save_path.write_bytes(img_r.content)
+
+            results.append({
+                "filename": filename,
+                "url": f"/uploads/{filename}",
+                "revised_prompt": revised,
+            })
+        except Exception as e:
+            results.append({"error": str(e)})
+
+    return {"images": results, "count": len(results)}
+
+
+# ---------------------------------------------------------------------------
+# AI Video Generation API
+# ---------------------------------------------------------------------------
+
+class VideoGenRequest(BaseModel):
+    prompt: str
+    duration: int = 30
+
+
+@router.post("/generate-video")
+async def generate_video(req: VideoGenRequest):
+    """Generate a video using the agent pipeline."""
+    try:
+        from agents.brain import chat_agent
+        reply = await chat_agent(
+            f"Create a {req.duration}s video about: {req.prompt}",
+            "zara",
+            use_tools=True,
+        )
+        return {"status": "processing", "reply": reply}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@router.get("/gallery")
+async def get_gallery():
+    """Return all generated images and videos."""
+    from pathlib import Path as _P
+    uploads = _P(__file__).resolve().parent.parent / "uploads"
+    files = []
+    for f in sorted(uploads.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
+        if f.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp', '.mp4', '.mov'):
+            files.append({
+                "filename": f.name,
+                "url": f"/uploads/{f.name}",
+                "type": "video" if f.suffix.lower() in ('.mp4', '.mov') else "image",
+                "size": f.stat().st_size,
+                "created": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
+            })
+    return files[:50]

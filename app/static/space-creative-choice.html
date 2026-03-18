@@ -1,95 +1,356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>THE AGENCY — Creative Studio</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE AGENCY — AI Creative Studio</title>
+  <link rel="stylesheet" href="/static/aiwave-css/vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/aiwave-css/plugins/fontawesome-all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html,body{width:100%;height:100%;overflow:hidden;background:#080c18;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+    body{background:#020509;font-family:'Sora','Segoe UI',system-ui,sans-serif;color:#fff;overflow-x:hidden}
     #bg{position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:radial-gradient(ellipse 130% 55% at 50% -5%,rgba(155,89,182,0.2) 0%,transparent 60%),
-        radial-gradient(ellipse 45% 55% at 0% 55%,rgba(142,68,173,0.12) 0%,transparent 55%),
-        radial-gradient(ellipse 45% 50% at 100% 70%,rgba(240,120,64,0.08) 0%,transparent 55%),#080c18}
-    .shell{position:relative;z-index:10;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
-    header{position:absolute;top:0;left:0;right:0;padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
-    .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .logo-i{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#9b59b6,#8e44ad);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;color:#fff}
-    .logo-t{font-size:0.6rem;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.3)}
-    .nav{display:flex;gap:6px}
-    .nav a{padding:7px 16px;border-radius:50px;font-size:0.6rem;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);transition:all 0.2s}
-    .nav a:hover{border-color:rgba(155,89,182,0.4);color:#9b59b6}
+      background:radial-gradient(ellipse 130% 55% at 50% -5%,rgba(18,42,105,0.45) 0%,transparent 60%),
+        radial-gradient(ellipse 45% 55% at 0% 55%,rgba(28,18,80,0.28) 0%,transparent 55%),
+        radial-gradient(ellipse 45% 50% at 100% 70%,rgba(90,50,10,0.18) 0%,transparent 55%),#020509;}
+    #bg-canvas{position:fixed;inset:0;z-index:1;pointer-events:none}
 
-    .title{text-align:center;margin-bottom:40px}
-    .title h1{font-size:2rem;font-weight:900;margin-bottom:6px}
-    .title p{font-size:0.8rem;color:rgba(255,255,255,0.35)}
+    .shell{position:relative;z-index:10;min-height:100vh;display:flex;flex-direction:column}
 
-    .choices{display:flex;gap:24px}
-    .choice{
-      width:320px;padding:40px 30px;border-radius:20px;text-align:center;
-      background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.06);
-      cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;
-    }
-    .choice:hover{border-color:rgba(155,89,182,0.4);background:rgba(155,89,182,0.04);transform:translateY(-4px)}
-    .choice .glow{position:absolute;top:-60px;right:-40px;width:180px;height:180px;border-radius:50%;filter:blur(60px);opacity:0;transition:opacity 0.4s}
-    .choice:hover .glow{opacity:0.15}
-    .choice .icon{font-size:3.5rem;margin-bottom:16px}
-    .choice h2{font-size:1.2rem;font-weight:800;margin-bottom:6px}
-    .choice p{font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.5;margin-bottom:16px}
-    .choice .tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
-    .choice .tag{padding:3px 10px;border-radius:20px;font-size:0.52rem;font-weight:600;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.35)}
-    .choice:hover .tag{border-color:rgba(155,89,182,0.2);color:rgba(255,255,255,0.5)}
-    .choice .arrow{margin-top:16px;font-size:0.65rem;font-weight:700;color:rgba(155,89,182,0.5);text-transform:uppercase;letter-spacing:0.1em}
-    .choice:hover .arrow{color:#9b59b6}
+    /* Header */
+    .dash-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;
+      border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(6,10,20,0.7);backdrop-filter:blur(20px)}
+    .logo{display:flex;align-items:center;gap:11px;text-decoration:none}
+    .logo-mark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#c9a84c,#ffe08a);
+      display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#000}
+    .logo-name{font-size:11px;letter-spacing:0.42em;text-transform:uppercase;color:rgba(255,255,255,0.4)}
+    .h-nav{display:flex;gap:8px}
+    .hbtn{padding:8px 18px;border-radius:50px;font-size:11px;font-weight:600;letter-spacing:0.15em;
+      text-transform:uppercase;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer}
+    .hbtn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4)}
+    .hbtn-ghost:hover{border-color:rgba(201,168,76,0.4);color:#c9a84c}
+    .hbtn-gold{background:linear-gradient(135deg,#c9a84c,#e8c56a);color:#000}
+
+    /* Main */
+    .main-content{flex:1;padding:30px 40px;max-width:1200px;margin:0 auto;width:100%}
+
+    /* Glass card */
+    .gcard{position:relative;overflow:hidden;border-radius:14px;background:rgba(9,16,34,0.52);
+      backdrop-filter:blur(28px) saturate(160%);border:1px solid rgba(255,255,255,0.07);
+      border-top:1px solid rgba(255,255,255,0.13);border-left:1px solid rgba(255,255,255,0.1);
+      box-shadow:0 14px 40px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);
+      transition:transform 0.15s ease,box-shadow 0.25s ease}
+    .gcard:hover{border-color:rgba(201,168,76,0.15)}
+    .glow{position:absolute;top:-50px;right:-40px;width:180px;height:180px;border-radius:50%;
+      filter:blur(60px);opacity:0.12;pointer-events:none;transition:opacity 0.4s;background:#c9a84c}
+    .gcard:hover .glow{opacity:0.25}
+    .gpat{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0.022;
+      background-image:linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px);
+      background-size:28px 28px}
+    .gc-label{font-size:10px;letter-spacing:0.35em;text-transform:uppercase;color:#c9a84c;font-weight:600;margin-bottom:10px}
+
+    /* Tabs */
+    .tab-row{display:flex;gap:8px;margin-bottom:24px}
+    .tab-btn{padding:10px 24px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;
+      border:1px solid rgba(255,255,255,0.08);background:transparent;color:rgba(255,255,255,0.4)}
+    .tab-btn:hover{border-color:rgba(201,168,76,0.3);color:#c9a84c}
+    .tab-btn.active{background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.2);color:#c9a84c}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+
+    /* Prompt area */
+    .prompt-area{padding:24px}
+    .prompt-input{width:100%;padding:16px 20px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.08);
+      border-radius:12px;color:#fff;font-size:14px;outline:none;font-family:inherit;resize:vertical;min-height:80px;transition:border-color 0.2s}
+    .prompt-input:focus{border-color:rgba(201,168,76,0.3)}
+    .prompt-input::placeholder{color:rgba(255,255,255,0.2)}
+
+    /* Controls */
+    .controls{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+    .ctrl-label{font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em}
+    .ctrl-select{padding:8px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+      border-radius:8px;color:#fff;font-size:12px;font-family:inherit;outline:none;cursor:pointer}
+    .ctrl-select option{background:#1a1f2e;color:#fff}
+    .gen-btn{padding:12px 28px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:700;
+      background:linear-gradient(135deg,#c9a84c,#ffe08a);color:#000;transition:box-shadow 0.2s;margin-left:auto;
+      display:flex;align-items:center;gap:8px}
+    .gen-btn:hover{box-shadow:0 0 24px rgba(201,168,76,0.4)}
+    .gen-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+    /* Results grid */
+    .results-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px}
+    .results-grid.single{grid-template-columns:1fr}
+    .result-img{position:relative;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06);aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+    .result-img img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+    .result-img video{width:100%;height:100%;object-fit:cover;border-radius:12px}
+    .result-placeholder{color:rgba(255,255,255,0.15);font-size:40px}
+    .result-actions{position:absolute;bottom:10px;right:10px;display:flex;gap:6px;opacity:0;transition:opacity 0.2s}
+    .result-img:hover .result-actions{opacity:1}
+    .result-act{padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:600;
+      background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);color:#fff;transition:all 0.2s}
+    .result-act:hover{background:rgba(201,168,76,0.8);color:#000}
+
+    /* Loading spinner */
+    .spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(0,0,0,0.2);
+      border-top-color:#000;border-radius:50%;animation:spin 0.6s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-overlay{position:absolute;inset:0;background:rgba(2,5,9,0.8);display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:12px;z-index:10;border-radius:12px}
+    .loading-text{color:#c9a84c;font-size:13px;font-weight:500}
+    .gold-spinner{width:30px;height:30px;border:3px solid rgba(201,168,76,0.2);
+      border-top-color:#c9a84c;border-radius:50%;animation:spin 0.8s linear infinite}
+
+    /* Gallery */
+    .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+    .gallery-item{border-radius:10px;overflow:hidden;aspect-ratio:1;cursor:pointer;
+      border:1px solid rgba(255,255,255,0.06);transition:all 0.2s;position:relative}
+    .gallery-item:hover{border-color:rgba(201,168,76,0.3);transform:scale(1.02)}
+    .gallery-item img,.gallery-item video{width:100%;height:100%;object-fit:cover}
+    .gallery-item .badge{position:absolute;top:6px;right:6px;padding:2px 8px;border-radius:6px;
+      font-size:9px;font-weight:600;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);color:#c9a84c}
+
+    .fade-in{opacity:0;animation:fadeUp 0.5s ease forwards}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
   </style>
 </head>
 <body>
 <div id="bg"></div>
-<div class="shell">
-  <header>
-    <a class="logo" href="/spaces"><div class="logo-i">🎨</div><div class="logo-t">Creative Studio</div></a>
-    <nav class="nav">
-      <a href="/spaces">← Spaces</a>
-      <a href="/space/dashboard">Dashboard</a>
-    </nav>
-  </header>
+<canvas id="bg-canvas"></canvas>
 
-  <div class="title">
-    <h1>🎨 Creative Studio</h1>
-    <p>What do you want to create today?</p>
+<div class="shell">
+  <div class="dash-header">
+    <a class="logo" href="/spaces">
+      <div class="logo-mark">DP</div>
+      <div class="logo-name">AI Creative Studio</div>
+    </a>
+    <nav class="h-nav">
+      <a class="hbtn hbtn-ghost" href="/spaces">← Spaces</a>
+      <a class="hbtn hbtn-ghost" href="/space/dashboard">Dashboard</a>
+      <a class="hbtn hbtn-ghost" href="/space/creative">Canvas Editor</a>
+      <a class="hbtn hbtn-ghost" href="/space/video">Video Studio</a>
+    </nav>
   </div>
 
-  <div class="choices">
-    <div class="choice" onclick="location.href='/space/creative'">
-      <div class="glow" style="background:#9b59b6"></div>
-      <div class="icon">🖼️</div>
-      <h2>Post & Image Design</h2>
-      <p>Create social media posts, thumbnails, stories, and visual content with Fabric.js canvas editor + AI generation.</p>
-      <div class="tags">
-        <span class="tag">Canvas Editor</span>
-        <span class="tag">Templates</span>
-        <span class="tag">Stock Photos</span>
-        <span class="tag">AI Generate</span>
-        <span class="tag">Export PNG/JPG</span>
-      </div>
-      <div class="arrow">Open Designer →</div>
+  <div class="main-content">
+    <!-- Tabs -->
+    <div class="tab-row fade-in" style="animation-delay:0.05s">
+      <button class="tab-btn active" onclick="switchTab('image')"><i class="fa-light fa-image"></i> Image Generator</button>
+      <button class="tab-btn" onclick="switchTab('video')"><i class="fa-light fa-film"></i> Video Generator</button>
+      <button class="tab-btn" onclick="switchTab('gallery')"><i class="fa-light fa-grid-2"></i> Gallery</button>
     </div>
 
-    <div class="choice" onclick="location.href='/space/video'">
-      <div class="glow" style="background:#e67e22"></div>
-      <div class="icon">🎬</div>
-      <h2>Video Production</h2>
-      <p>Produce videos, reels, voiceovers, captions and motion graphics with Kling AI + ElevenLabs + Remotion.</p>
-      <div class="tags">
-        <span class="tag">AI Video</span>
-        <span class="tag">Voiceover</span>
-        <span class="tag">Captions</span>
-        <span class="tag">Remotion</span>
-        <span class="tag">Kling AI</span>
+    <!-- ═══ IMAGE GENERATOR ═══ -->
+    <div class="tab-content active" id="tab-image">
+      <div class="gcard fade-in" style="animation-delay:0.1s">
+        <div class="glow"></div><div class="gpat"></div>
+        <div class="prompt-area" style="position:relative;z-index:2">
+          <div class="gc-label">Image Generator — DALL-E 3</div>
+          <textarea class="prompt-input" id="imgPrompt" rows="3" placeholder="Describe the image you want to create... Be specific about style, colors, composition, mood."></textarea>
+          <div class="controls">
+            <span class="ctrl-label">Images:</span>
+            <select class="ctrl-select" id="imgCount">
+              <option value="1">1 Image</option>
+              <option value="2" selected>2 Images</option>
+              <option value="3">3 Images</option>
+              <option value="4">4 Images</option>
+            </select>
+            <span class="ctrl-label">Size:</span>
+            <select class="ctrl-select" id="imgSize">
+              <option value="1024x1024" selected>Square (1024×1024)</option>
+              <option value="1792x1024">Landscape (1792×1024)</option>
+              <option value="1024x1792">Portrait (1024×1792)</option>
+            </select>
+            <span class="ctrl-label">Style:</span>
+            <select class="ctrl-select" id="imgStyle">
+              <option value="natural" selected>Natural</option>
+              <option value="vivid">Vivid</option>
+            </select>
+            <button class="gen-btn" id="imgGenBtn" onclick="generateImages()">
+              <i class="fa-light fa-wand-magic-sparkles"></i> Generate
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="arrow">Open Video Studio →</div>
+
+      <!-- Results -->
+      <div id="imgResults" style="margin-top:16px"></div>
+    </div>
+
+    <!-- ═══ VIDEO GENERATOR ═══ -->
+    <div class="tab-content" id="tab-video">
+      <div class="gcard fade-in">
+        <div class="glow"></div><div class="gpat"></div>
+        <div class="prompt-area" style="position:relative;z-index:2">
+          <div class="gc-label">Video Generator — AI Pipeline</div>
+          <textarea class="prompt-input" id="vidPrompt" rows="3" placeholder="Describe the video you want... e.g., '30s reel about luxury real estate in Dubai with voiceover'"></textarea>
+          <div class="controls">
+            <span class="ctrl-label">Duration:</span>
+            <select class="ctrl-select" id="vidDuration">
+              <option value="15">15 seconds</option>
+              <option value="30" selected>30 seconds</option>
+              <option value="60">60 seconds</option>
+            </select>
+            <button class="gen-btn" id="vidGenBtn" onclick="generateVideo()">
+              <i class="fa-light fa-film"></i> Generate Video
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="vidResults" style="margin-top:16px"></div>
+    </div>
+
+    <!-- ═══ GALLERY ═══ -->
+    <div class="tab-content" id="tab-gallery">
+      <div class="gcard fade-in" style="padding:20px">
+        <div class="glow"></div><div class="gpat"></div>
+        <div style="position:relative;z-index:2">
+          <div class="gc-label">Generated Assets</div>
+          <div class="gallery-grid" id="galleryGrid">
+            <div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.2);padding:40px;font-size:14px">Loading gallery...</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+// ═══ PARTICLES ═══
+const cvs=document.getElementById('bg-canvas');const ctx=cvs.getContext('2d');
+cvs.width=innerWidth;cvs.height=innerHeight;
+const pts=Array.from({length:80},()=>({x:Math.random()*cvs.width,y:Math.random()*cvs.height,
+  r:Math.random()*1+0.3,vy:-(Math.random()*0.18+0.04),a:Math.random()*0.2+0.04}));
+(function draw(){ctx.clearRect(0,0,cvs.width,cvs.height);
+  pts.forEach(p=>{p.y+=p.vy;if(p.y<-4)p.y=cvs.height+4;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(201,168,76,${p.a})`;ctx.fill()});
+  requestAnimationFrame(draw)})();
+window.addEventListener('resize',()=>{cvs.width=innerWidth;cvs.height=innerHeight});
+
+// ═══ TABS ═══
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.closest('.tab-btn').classList.add('active');
+  if (tab === 'gallery') loadGallery();
+}
+
+// ═══ IMAGE GENERATION ═══
+async function generateImages() {
+  const prompt = document.getElementById('imgPrompt').value.trim();
+  if (!prompt) return;
+  const count = parseInt(document.getElementById('imgCount').value);
+  const size = document.getElementById('imgSize').value;
+  const style = document.getElementById('imgStyle').value;
+  const btn = document.getElementById('imgGenBtn');
+  const results = document.getElementById('imgResults');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+  // Show placeholder grid
+  const gridClass = count === 1 ? 'results-grid single' : 'results-grid';
+  results.innerHTML = `<div class="${gridClass}">${Array(count).fill().map(() =>
+    `<div class="result-img"><div class="loading-overlay"><div class="gold-spinner"></div><div class="loading-text">Creating with DALL-E 3...</div></div><div class="result-placeholder"><i class="fa-light fa-image"></i></div></div>`
+  ).join('')}</div>`;
+
+  try {
+    const res = await fetch('/api/generate-images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, count, size, style }),
+    });
+    const data = await res.json();
+
+    const gridEl = results.querySelector('.results-grid');
+    gridEl.innerHTML = data.images.map(img => {
+      if (img.error) return `<div class="result-img"><div style="padding:20px;color:#ff6b6b;font-size:12px;text-align:center">${img.error}</div></div>`;
+      return `<div class="result-img">
+        <img src="${img.url}" alt="Generated">
+        <div class="result-actions">
+          <a class="result-act" href="${img.url}" download><i class="fa-light fa-download"></i> Download</a>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    results.innerHTML = `<div class="gcard" style="padding:20px;text-align:center;color:#ff6b6b">Error: ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-light fa-wand-magic-sparkles"></i> Generate';
+}
+
+// ═══ VIDEO GENERATION ═══
+async function generateVideo() {
+  const prompt = document.getElementById('vidPrompt').value.trim();
+  if (!prompt) return;
+  const duration = parseInt(document.getElementById('vidDuration').value);
+  const btn = document.getElementById('vidGenBtn');
+  const results = document.getElementById('vidResults');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+  results.innerHTML = `<div class="gcard" style="padding:30px;text-align:center">
+    <div class="glow"></div><div class="gpat"></div>
+    <div style="position:relative;z-index:2">
+      <div class="gold-spinner" style="margin:0 auto 16px"></div>
+      <div style="color:#c9a84c;font-size:14px;font-weight:500">Generating video...</div>
+      <div style="color:rgba(255,255,255,0.3);font-size:12px;margin-top:6px">This may take 1-3 minutes. Creating scenes, voiceover, and compositing.</div>
+    </div>
+  </div>`;
+
+  try {
+    const res = await fetch('/api/generate-video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, duration }),
+    });
+    const data = await res.json();
+
+    results.innerHTML = `<div class="gcard" style="padding:24px">
+      <div class="glow"></div><div class="gpat"></div>
+      <div style="position:relative;z-index:2">
+        <div class="gc-label">${data.status === 'error' ? 'Error' : 'Video Result'}</div>
+        <div style="color:rgba(255,255,255,0.7);font-size:13px;line-height:1.7;white-space:pre-wrap">${data.reply || data.error || 'Processing complete'}</div>
+      </div>
+    </div>`;
+  } catch (e) {
+    results.innerHTML = `<div class="gcard" style="padding:20px;text-align:center;color:#ff6b6b">Error: ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-light fa-film"></i> Generate Video';
+}
+
+// ═══ GALLERY ═══
+async function loadGallery() {
+  const grid = document.getElementById('galleryGrid');
+  try {
+    const files = await fetch('/api/gallery').then(r => r.json());
+    if (!files.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.2);padding:40px;font-size:14px;font-style:italic">No assets yet — generate some images or videos!</div>';
+      return;
+    }
+    grid.innerHTML = files.map(f => {
+      if (f.type === 'video') {
+        return `<div class="gallery-item" onclick="window.open('${f.url}','_blank')">
+          <video src="${f.url}" muted></video>
+          <div class="badge"><i class="fa-solid fa-play"></i> Video</div>
+        </div>`;
+      }
+      return `<div class="gallery-item" onclick="window.open('${f.url}','_blank')">
+        <img src="${f.url}" alt="${f.filename}" loading="lazy">
+        <div class="badge">IMG</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.2);padding:40px">Failed to load gallery</div>';
+  }
+}
+</script>
 </body>
 </html>

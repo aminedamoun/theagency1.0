@@ -13,7 +13,6 @@
   <link rel="stylesheet" href="/static/aiwave-css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* Override AIWave purple with Agency gold */
     :root {
       --color-primary: #c9a84c !important;
       --color-primary-alt: #6b5a2e !important;
@@ -29,35 +28,61 @@
     a:hover { color: #c9a84c !important; }
     .subscription-box .inner .autor-info .author-badge { background: linear-gradient(135deg, #c9a84c, #ffe08a) !important; color: #000 !important; }
 
-    /* Chat message styles */
+    /* Chat styles */
     .chat-box.ai-speech { background-color: var(--color-blackest); }
     .chat-box .chat-content { flex: 1; }
     .chat-box .chat-content .title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .chat-box .chat-content .title .bot-badge { font-size: 11px; background: linear-gradient(135deg, #c9a84c, #ffe08a); color: #000; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 600; }
     .chat-box .chat-content p { color: var(--color-body); font-size: 14px; line-height: 1.7; margin-bottom: 0; }
-    .chat-box .chat-actions { display: flex; gap: 8px; margin-top: 12px; padding-left: 65px; }
-    .chat-box .chat-actions button { background: transparent; border: 1px solid var(--color-border); border-radius: 6px; color: var(--color-body); padding: 4px 10px; font-size: 12px; cursor: pointer; transition: 0.3s; }
-    .chat-box .chat-actions button:hover { border-color: #c9a84c; color: #c9a84c; }
 
-    /* Right panel session items */
+    /* Action buttons on bot messages */
+    .msg-actions { display: flex; align-items: center; gap: 6px; margin-top: 14px; padding-left: 65px; }
+    .msg-actions button { background: transparent; border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-body); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: 0.3s; }
+    .msg-actions button:hover { border-color: #c9a84c; color: #c9a84c; }
+    .msg-actions .regen-btn { width: auto; padding: 0 14px; gap: 6px; font-size: 12px; font-weight: 500; margin-left: auto; }
+
+    /* Inline images in chat */
+    .chat-images { display: grid; gap: 10px; margin-top: 14px; }
+    .chat-images.cols-1 { grid-template-columns: 1fr; max-width: 400px; }
+    .chat-images.cols-2 { grid-template-columns: 1fr 1fr; max-width: 600px; }
+    .chat-images.cols-4 { grid-template-columns: 1fr 1fr; max-width: 600px; }
+    .chat-img-wrap { position: relative; border-radius: 12px; overflow: hidden; }
+    .chat-img-wrap img { width: 100%; display: block; border-radius: 12px; }
+    .chat-img-wrap .img-select { position: absolute; top: 10px; left: 10px; width: 24px; height: 24px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.5); background: rgba(0,0,0,0.4); cursor: pointer; }
+    .chat-img-wrap .img-select.selected { background: #c9a84c; border-color: #c9a84c; }
+    .chat-img-wrap .img-download { position: absolute; top: 10px; right: 10px; padding: 6px 14px; border-radius: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); color: #fff; font-size: 12px; font-weight: 500; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; opacity: 0; transition: opacity 0.2s; }
+    .chat-img-wrap:hover .img-download { opacity: 1; }
+
+    /* Status steps */
+    .status-step { display: flex; align-items: center; gap: 10px; padding: 10px 0; padding-left: 65px; color: var(--color-body); font-size: 14px; }
+    .status-step .check { color: #c9a84c; }
+    .status-step .loading-dot { width: 12px; height: 12px; border-radius: 50%; background: #c9a84c; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+    /* Right panel */
     .right-side-bottom { padding: 20px 15px; overflow-y: auto; height: calc(100vh - 180px); }
-    .right-side-bottom .title-group { font-size: 14px; font-weight: 600; color: var(--color-heading); margin-bottom: 12px; margin-top: 20px; }
-    .right-side-bottom .title-group:first-child { margin-top: 0; }
-    .session-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: 0.3s; color: var(--color-body); font-size: 14px; display: block; text-decoration: none; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .right-side-bottom .session-group-title { font-size: 14px; font-weight: 600; color: var(--color-heading); margin-bottom: 10px; margin-top: 20px; }
+    .right-side-bottom .session-group-title:first-child { margin-top: 0; }
+    .session-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: 0.3s; color: var(--color-body); font-size: 14px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; margin-bottom: 2px; }
     .session-item:hover { background: var(--color-blackest); color: var(--color-heading); }
+    .session-item .dots { opacity: 0; transition: opacity 0.2s; cursor: pointer; }
+    .session-item:hover .dots { opacity: 1; }
 
-    /* Agent avatar in chat */
+    /* Search */
+    .search-box { position: relative; padding: 0 15px; margin-top: 14px; }
+    .search-box input { width: 100%; padding: 10px 14px 10px 36px; background: var(--color-blackest); border: 1px solid var(--color-border); border-radius: 10px; color: var(--color-heading); font-size: 13px; outline: none; }
+    .search-box i { position: absolute; left: 28px; top: 50%; transform: translateY(-50%); color: var(--color-body); font-size: 13px; }
+
+    /* Author avatar */
     .chat-box .inner .chat-section .author img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
-
-    /* Fix right panel width */
     .rbt-right-side-panel { width: var(--sidebar-width); }
 
-    /* Make chat input work in our context */
+    /* Chat input */
     #chatForm textarea { resize: none; color: var(--color-heading); }
     #chatForm textarea::placeholder { color: var(--color-body); }
     #chatForm .icon-send { cursor: pointer; }
     #chatForm .icon-send:hover { color: #c9a84c !important; }
 
-    /* Typing indicator */
     .typing-indicator { padding: 25px 24px; border-top: 1px solid var(--color-border); color: #c9a84c; font-size: 14px; font-style: italic; display: none; }
   </style>
 </head>
@@ -66,7 +91,7 @@
 <main class="page-wrapper rbt-dashboard-page">
   <div class="rbt-panel-wrapper">
 
-    <!-- ═══ HEADER ═══ -->
+    <!-- HEADER -->
     <header class="rbt-dashboard-header rainbow-header header-default header-left-align rbt-fluid-header">
       <div class="container-fluid position-relative">
         <div class="row align-items-center justify-content-between">
@@ -134,7 +159,7 @@
       </div>
     </header>
 
-    <!-- ═══ LEFT SIDEBAR ═══ -->
+    <!-- LEFT SIDEBAR -->
     <div class="rbt-left-panel popup-dashboardleft-section">
       <div class="rbt-default-sidebar">
         <div class="inner">
@@ -142,12 +167,12 @@
             <div class="rbt-default-sidebar-wrapper">
               <nav class="mainmenu-nav">
                 <ul class="dashboard-mainmenu rbt-default-sidebar-list">
-                  <li><a href="/space/dashboard" class="active"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a></li>
-                  <li><a href="/space/content"><i class="fa-solid fa-pen-nib"></i><span>Content Studio</span></a></li>
-                  <li><a href="/space/leads"><i class="fa-solid fa-magnifying-glass"></i><span>Leads & Research</span></a></li>
-                  <li><a href="/space/creative"><i class="fa-solid fa-palette"></i><span>Creative Studio</span></a></li>
-                  <li><a href="/space/video"><i class="fa-solid fa-film"></i><span>Video Studio</span></a></li>
-                  <li><a href="/space/email"><i class="fa-solid fa-envelope"></i><span>Email Center</span></a></li>
+                  <li><a href="/space/dashboard" class="active"><img src="/static/aiwave-images/generator-icon/text.png" alt=""><span>Dashboard</span></a></li>
+                  <li><a href="/space/content"><img src="/static/aiwave-images/generator-icon/document.png" alt=""><span>Content Studio</span></a></li>
+                  <li><a href="/space/leads"><img src="/static/aiwave-images/generator-icon/education.png" alt=""><span>Leads & Research</span></a></li>
+                  <li><a href="/space/creative"><img src="/static/aiwave-images/generator-icon/photo.png" alt=""><span>Creative Studio</span></a></li>
+                  <li><a href="/space/video"><img src="/static/aiwave-images/generator-icon/video-camera.png" alt=""><span>Video Studio</span></a></li>
+                  <li><a href="/space/email"><img src="/static/aiwave-images/generator-icon/email.png" alt=""><span>Email Center</span></a></li>
                 </ul>
               </nav>
               <div class="rbt-sm-separator"></div>
@@ -164,13 +189,13 @@
                       </ul>
                     </div>
                   </li>
-                  <li><a href="/space/creative-choice"><i class="fa-solid fa-wand-magic-sparkles"></i><span>AI Creative</span></a></li>
+                  <li><a href="/space/creative-choice"><img src="/static/aiwave-images/generator-icon/voice.png" alt=""><span>AI Creative</span></a></li>
                 </ul>
               </nav>
               <div class="rbt-sm-separator"></div>
               <nav class="mainmenu-nav">
                 <ul class="dashboard-mainmenu rbt-default-sidebar-list">
-                  <li><a href="/spaces"><i class="fa-solid fa-arrow-left"></i><span>Back to Spaces</span></a></li>
+                  <li><a href="/spaces"><i class="fa-sharp fa-regular fa-arrow-left"></i><span>Back to Spaces</span></a></li>
                 </ul>
               </nav>
             </div>
@@ -184,7 +209,7 @@
               </div>
               <div class="author-desc" style="flex:1;min-width:0">
                 <h6 style="margin-bottom:2px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dubai Prod</h6>
-                <p style="margin-bottom:0;font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">info@dubaiprod.com</p>
+                <p style="margin-bottom:0;font-size:12px;color:#888">info@dubaiprod.com</p>
               </div>
               <div class="author-badge">Pro</div>
             </a>
@@ -194,21 +219,22 @@
       </div>
     </div>
 
-    <!-- ═══ MAIN CONTENT ═══ -->
+    <!-- MAIN CONTENT -->
     <div class="rbt-main-content">
       <div class="rbt-daynamic-page-content">
         <div class="rbt-dashboard-content">
           <div class="content-page">
-
-            <!-- Chat Box Section -->
             <div class="chat-box-section">
+
+              <!-- Top bar -->
               <div class="chat-top-bar" style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--color-border)">
                 <div class="section-title" style="display:flex;align-items:center;gap:10px">
-                  <div class="icon"><img src="/static/img/avatar_sarah.png" alt="" style="width:35px;height:35px;border-radius:8px;object-fit:cover"></div>
-                  <h6 class="title" style="margin:0">Sarah Chen — Agency Director</h6>
+                  <div class="icon"><img src="/static/aiwave-images/icons/document-file.png" alt="" style="width:24px"></div>
+                  <h6 class="title" style="margin:0">New Conversation</h6>
                 </div>
               </div>
 
+              <!-- Chat messages -->
               <div class="chat-box-list" id="chatContainer" style="height:calc(100vh - 280px);overflow-y:auto">
 
                 <!-- Initial bot message -->
@@ -217,56 +243,68 @@
                     <div class="chat-section">
                       <div class="author"><img src="/static/img/avatar_sarah.png" alt="Sarah"></div>
                       <div class="chat-content">
-                        <h6 class="title">Sarah Chen <span style="font-size:11px;color:#c9a84c;font-weight:400;margin-left:6px">Agency Director</span></h6>
+                        <h6 class="title">Sarah Chen <span class="bot-badge">Agent</span></h6>
                         <p>Welcome back! I'm Sarah, your agency director. I manage tasks, delegate to the team, handle clients and invoices, and keep everything running. What do you need today?</p>
                       </div>
                     </div>
+                  </div>
+                  <div class="msg-actions">
+                    <button title="Like"><i class="fa-regular fa-thumbs-up"></i></button>
+                    <button title="Dislike"><i class="fa-regular fa-thumbs-down"></i></button>
+                    <button title="Share"><i class="fa-regular fa-share-from-square"></i></button>
+                    <button title="More"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <button class="regen-btn" title="Regenerate"><i class="fa-regular fa-arrows-rotate"></i> Regenerate</button>
                   </div>
                 </div>
 
               </div>
 
               <!-- Typing indicator -->
-              <div class="typing-indicator" id="typing">Sarah is thinking...</div>
+              <div class="typing-indicator" id="typing">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="status-step" style="padding-left:0"><div class="loading-dot"></div> Sarah is thinking...</div>
+                </div>
+              </div>
 
               <!-- Chat input bar -->
               <div class="rbt-static-bar" style="position:relative;max-width:100%">
                 <form id="chatForm" class="new-chat-form border-gradient" onsubmit="sendMsg();return false;">
-                  <textarea id="txtarea" rows="1" placeholder="Send a message to Sarah..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+                  <textarea id="txtarea" rows="1" placeholder="Send a message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
                   <div class="left-icons">
                     <div class="form-icon icon-gpt">
                       <img src="/static/img/avatar_sarah.png" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover">
                     </div>
                   </div>
                   <div class="right-icons">
-                    <button type="submit" class="form-icon icon-send" style="border:none"><i class="fa-sharp fa-solid fa-paper-plane-top"></i></button>
+                    <button type="button" class="form-icon icon-plus" title="Attach"><i class="fa-sharp fa-solid fa-plus"></i></button>
+                    <button type="submit" class="form-icon icon-send" style="border:none" title="Send"><i class="fa-sharp fa-solid fa-paper-plane-top"></i></button>
                   </div>
                 </form>
                 <p class="b3 small-text">The Agency 1.0 — Powered by AI agents. Ask anything.</p>
               </div>
             </div>
-
           </div>
         </div>
 
-        <!-- ═══ RIGHT PANEL ═══ -->
+        <!-- RIGHT PANEL -->
         <div class="rbt-right-side-panel popup-dashboardright-section">
           <div class="right-side-top" style="padding:20px 15px">
-            <a class="btn-default bg-solid-primary" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;cursor:pointer;text-decoration:none" href="/platform">
+            <a class="btn-default bg-solid-primary" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;cursor:pointer;text-decoration:none" onclick="startNewChat()">
               <span class="icon"><i class="fa-sharp fa-regular fa-circle-plus"></i></span>
-              <span>Full Platform</span>
+              <span>New Chat</span>
             </a>
-            <div style="margin-top:10px">
-              <input type="text" placeholder="Search tasks..." style="width:100%;padding:10px 14px;background:var(--color-blackest);border:1px solid var(--color-border);border-radius:10px;color:var(--color-heading);font-size:13px;outline:none" id="searchTasks">
+            <div class="search-box">
+              <i class="fa-regular fa-magnifying-glass"></i>
+              <input type="text" placeholder="Search Here..." id="searchSessions">
             </div>
           </div>
           <div class="right-side-bottom" id="rightPanelContent">
-            <div class="title-group">Your Team</div>
-            <div id="teamList"></div>
-            <div class="title-group">Recent Tasks</div>
-            <div id="taskList"><p style="color:var(--color-body);font-size:13px;padding:10px 14px">Loading...</p></div>
-            <div class="title-group">Stats</div>
-            <div id="statsList"></div>
+            <div class="session-group-title">Today</div>
+            <div id="sessionToday"></div>
+            <div class="session-group-title">Yesterday</div>
+            <div id="sessionYesterday"></div>
+            <div class="session-group-title">Previous 7 days</div>
+            <div id="sessionWeek"></div>
           </div>
         </div>
 
@@ -283,36 +321,14 @@
 <script src="/static/aiwave-js/main.js"></script>
 
 <script>
-// ═══ TEAM DATA ═══
-const TEAM = [
-  { name:'Sarah Chen', role:'Agency Director', avatar:'/static/img/avatar_sarah.png', emoji:'👩‍💼', agent:'sarah' },
-  { name:'Marcus Rivera', role:'Content Strategist', avatar:'/static/img/avatar_marcus.png', emoji:'✍️', agent:'marcus' },
-  { name:'Zara Okafor', role:'Creative Director', avatar:'/static/img/avatar_zara.png', emoji:'🎨', agent:'zara' },
-  { name:'Kai Tanaka', role:'Research Lead', avatar:'/static/img/avatar_kai.png', emoji:'🔍', agent:'kai' },
-  { name:'Elena Voronova', role:'Analytics Manager', avatar:'/static/img/avatar_elena.png', emoji:'📊', agent:'elena' },
-  { name:'Alex Kim', role:'Email & Invoices', avatar:'/static/img/avatar_alex.png', emoji:'📧', agent:'alex' },
-];
-
-// Render team in right panel
-const teamListEl = document.getElementById('teamList');
-TEAM.forEach(t => {
-  teamListEl.innerHTML += `<a class="session-item" style="display:flex;align-items:center;gap:10px" onclick="delegateTo('${t.agent}')">
-    <img src="${t.avatar}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">
-    <div><div style="font-size:13px;font-weight:500;color:var(--color-heading)">${t.name}</div><div style="font-size:11px;color:var(--color-body)">${t.role}</div></div>
-  </a>`;
-});
-
-function delegateTo(agent) {
-  const name = TEAM.find(t => t.agent === agent)?.name?.split(' ')[0] || agent;
-  document.getElementById('txtarea').value = `@${name} `;
-  document.getElementById('txtarea').focus();
-}
-
-// ═══ WEBSOCKET CHAT ═══
+// ═══ CHAT STATE ═══
 let ws = null;
+let chatHistory = JSON.parse(localStorage.getItem('agency_chat_history') || '[]');
+let sessions = JSON.parse(localStorage.getItem('agency_sessions') || '[]');
 const chatContainer = document.getElementById('chatContainer');
 const typingEl = document.getElementById('typing');
 
+// ═══ WEBSOCKET ═══
 function connectWS() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}/ws`);
@@ -324,28 +340,57 @@ function connectWS() {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     } else if (data.type === 'agent_reply' || data.type === 'reply') {
       typingEl.style.display = 'none';
-      addBotMsg(data.content || data.text || data.message);
+      const content = data.content || data.text || data.message || '';
+      addBotMsg(content);
+      saveToHistory('bot', content);
     } else if (data.type === 'error') {
       typingEl.style.display = 'none';
       addBotMsg('Error: ' + (data.content || data.text || data.message));
-    } else if (data.type === 'refresh') {
-      loadRightPanel();
     }
   };
   ws.onclose = () => setTimeout(connectWS, 2000);
 }
 connectWS();
 
+// ═══ ADD MESSAGES ═══
 function addBotMsg(text) {
+  // Check if response contains image paths
+  const imgMatch = text.match(/\/uploads\/generated_[^\s"')]+\.png/g);
+
+  let imagesHtml = '';
+  if (imgMatch && imgMatch.length > 0) {
+    const colClass = imgMatch.length === 1 ? 'cols-1' : imgMatch.length <= 2 ? 'cols-2' : 'cols-4';
+    imagesHtml = `<div class="chat-images ${colClass}">
+      ${imgMatch.map(url => `<div class="chat-img-wrap">
+        <img src="${url}" alt="Generated">
+        <div class="img-select" onclick="this.classList.toggle('selected')"></div>
+        <a class="img-download" href="${url}" download><i class="fa-regular fa-download"></i> Download</a>
+      </div>`).join('')}
+    </div>`;
+  }
+
   const html = `<div class="chat-box ai-speech">
     <div class="inner">
-      <div class="chat-section">
+      <div class="chat-section generate-section">
         <div class="author"><img src="/static/img/avatar_sarah.png" alt="Sarah"></div>
         <div class="chat-content">
-          <h6 class="title">Sarah Chen</h6>
-          <p>${escHtml(text)}</p>
+          <h6 class="title">Sarah Chen <span class="bot-badge">Agent</span></h6>
         </div>
       </div>
+      <div class="chat-section generate-details-section">
+        <div class="author" style="visibility:hidden"><img src="/static/img/avatar_sarah.png" alt=""></div>
+        <div class="chat-content">
+          <p>${escHtml(text)}</p>
+          ${imagesHtml}
+        </div>
+      </div>
+    </div>
+    <div class="msg-actions">
+      <button title="Like"><i class="fa-regular fa-thumbs-up"></i></button>
+      <button title="Dislike"><i class="fa-regular fa-thumbs-down"></i></button>
+      <button title="Share"><i class="fa-regular fa-share-from-square"></i></button>
+      <button title="More"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      <button class="regen-btn" onclick="regenerateMsg()" title="Regenerate"><i class="fa-regular fa-arrows-rotate"></i> Regenerate</button>
     </div>
   </div>`;
   chatContainer.insertAdjacentHTML('beforeend', html);
@@ -356,7 +401,9 @@ function addUserMsg(text) {
   const html = `<div class="chat-box human-speech">
     <div class="inner">
       <div class="chat-section">
-        <div class="author" style="background:var(--color-primary);color:#000;font-weight:700;font-size:14px">You</div>
+        <div class="author" style="background:var(--color-primary);color:#000;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center">
+          <img src="/static/img/avatar_sarah.png" alt="" style="border-radius:6px;width:100%;height:100%;object-fit:cover">
+        </div>
         <div class="chat-content">
           <h6 class="title">You</h6>
           <p>${escHtml(text)}</p>
@@ -368,14 +415,99 @@ function addUserMsg(text) {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
+// ═══ SEND MESSAGE ═══
 function sendMsg() {
   const textarea = document.getElementById('txtarea');
   const text = textarea.value.trim();
   if (!text || !ws || ws.readyState !== 1) return;
+
   addUserMsg(text);
+  saveToHistory('user', text);
+
+  // Show status steps
+  showStatusSteps();
+
   ws.send(JSON.stringify({ type: 'agent_chat', agent: 'sarah', content: text }));
   textarea.value = '';
   textarea.style.height = 'auto';
+}
+
+function showStatusSteps() {
+  const steps = `<div class="status-steps-container">
+    <div class="status-step"><span class="check"><i class="fa-solid fa-check"></i></span> Scanning the data...</div>
+    <div class="status-step"><div class="loading-dot"></div> Generating answers for you...</div>
+  </div>`;
+  chatContainer.insertAdjacentHTML('beforeend', steps);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  // Remove status steps when bot replies
+  const observer = new MutationObserver(() => {
+    const stepsEl = chatContainer.querySelector('.status-steps-container');
+    if (stepsEl && chatContainer.querySelector('.chat-box:last-child.ai-speech')) {
+      stepsEl.remove();
+      observer.disconnect();
+    }
+  });
+  observer.observe(chatContainer, { childList: true });
+}
+
+function regenerateMsg() {
+  if (chatHistory.length < 2) return;
+  const lastUserMsg = [...chatHistory].reverse().find(m => m.role === 'user');
+  if (lastUserMsg && ws && ws.readyState === 1) {
+    showStatusSteps();
+    ws.send(JSON.stringify({ type: 'agent_chat', agent: 'sarah', content: lastUserMsg.text }));
+  }
+}
+
+function startNewChat() {
+  // Save current session
+  if (chatHistory.length > 0) {
+    const title = chatHistory[0]?.text?.substring(0, 40) || 'New conversation';
+    sessions.unshift({ title, time: new Date().toISOString(), messages: chatHistory.length });
+    localStorage.setItem('agency_sessions', JSON.stringify(sessions.slice(0, 30)));
+  }
+  chatHistory = [];
+  localStorage.setItem('agency_chat_history', '[]');
+  // Keep only the initial bot message
+  chatContainer.innerHTML = chatContainer.querySelector('.chat-box').outerHTML;
+  renderSessions();
+}
+
+// ═══ SESSION HISTORY ═══
+function saveToHistory(role, text) {
+  chatHistory.push({ role, text, time: new Date().toISOString() });
+  localStorage.setItem('agency_chat_history', JSON.stringify(chatHistory));
+  renderSessions();
+}
+
+function renderSessions() {
+  const todayEl = document.getElementById('sessionToday');
+  const yesterdayEl = document.getElementById('sessionYesterday');
+  const weekEl = document.getElementById('sessionWeek');
+
+  const now = new Date();
+  const today = now.toDateString();
+  const yesterday = new Date(now - 86400000).toDateString();
+
+  const todayItems = [], yesterdayItems = [], weekItems = [];
+
+  // Current chat as first item
+  if (chatHistory.length > 0) {
+    const title = chatHistory.find(m => m.role === 'user')?.text?.substring(0, 35) || 'Current conversation';
+    todayItems.push(title);
+  }
+
+  sessions.forEach(s => {
+    const d = new Date(s.time).toDateString();
+    if (d === today) todayItems.push(s.title);
+    else if (d === yesterday) yesterdayItems.push(s.title);
+    else weekItems.push(s.title);
+  });
+
+  todayEl.innerHTML = todayItems.map(t => `<div class="session-item"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(t)}</span><span class="dots">···</span></div>`).join('') || '<div style="padding:8px 14px;color:var(--color-body);font-size:13px">No conversations yet</div>';
+  yesterdayEl.innerHTML = yesterdayItems.map(t => `<div class="session-item"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(t)}</span><span class="dots">···</span></div>`).join('') || '';
+  weekEl.innerHTML = weekItems.map(t => `<div class="session-item"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(t)}</span><span class="dots">···</span></div>`).join('') || '';
 }
 
 function escHtml(s) {
@@ -384,59 +516,8 @@ function escHtml(s) {
   return d.innerHTML.replace(/\n/g, '<br>');
 }
 
-// ═══ RIGHT PANEL DATA ═══
-async function loadRightPanel() {
-  try {
-    const [tasks, clients, content] = await Promise.all([
-      fetch('/api/tasks').then(r => r.json()).catch(() => []),
-      fetch('/api/clients').then(r => r.json()).catch(() => []),
-      fetch('/api/content').then(r => r.json()).catch(() => []),
-    ]);
-
-    // Tasks
-    const taskListEl = document.getElementById('taskList');
-    if (tasks.length === 0) {
-      taskListEl.innerHTML = '<p style="color:var(--color-body);font-size:13px;padding:10px 14px">No tasks yet</p>';
-    } else {
-      taskListEl.innerHTML = tasks.slice(0, 15).map(t => {
-        const icon = t.status === 'completed' ? '✅' : t.status === 'in_progress' ? '🔄' : '⏳';
-        return `<div class="session-item" style="display:flex;align-items:center;gap:8px">
-          <span>${icon}</span>
-          <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${escHtml(t.title || 'Task')}</span>
-        </div>`;
-      }).join('');
-    }
-
-    // Stats
-    const statsEl = document.getElementById('statsList');
-    const completed = tasks.filter(t => t.status === 'completed').length;
-    const inProgress = tasks.filter(t => t.status === 'in_progress').length;
-    const pending = tasks.filter(t => t.status === 'pending').length;
-    statsEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px">
-        <div style="background:var(--color-blackest);border-radius:10px;padding:14px;text-align:center">
-          <div style="font-size:24px;font-weight:800;color:#c9a84c">${tasks.length}</div>
-          <div style="font-size:11px;color:var(--color-body);text-transform:uppercase">Tasks</div>
-        </div>
-        <div style="background:var(--color-blackest);border-radius:10px;padding:14px;text-align:center">
-          <div style="font-size:24px;font-weight:800;color:#c9a84c">${clients.length}</div>
-          <div style="font-size:11px;color:var(--color-body);text-transform:uppercase">Clients</div>
-        </div>
-        <div style="background:var(--color-blackest);border-radius:10px;padding:14px;text-align:center">
-          <div style="font-size:24px;font-weight:800;color:#c9a84c">${content.length}</div>
-          <div style="font-size:11px;color:var(--color-body);text-transform:uppercase">Content</div>
-        </div>
-        <div style="background:var(--color-blackest);border-radius:10px;padding:14px;text-align:center">
-          <div style="font-size:24px;font-weight:800;color:#c9a84c">6</div>
-          <div style="font-size:11px;color:var(--color-body);text-transform:uppercase">Agents</div>
-        </div>
-      </div>
-    `;
-  } catch (e) { console.error('Failed to load panel data', e); }
-}
-
-loadRightPanel();
-setInterval(loadRightPanel, 30000);
+// Init
+renderSessions();
 </script>
 
 </body>

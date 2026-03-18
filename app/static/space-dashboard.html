@@ -3,197 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-style-mode" content="1">
   <title>THE AGENCY 1.0 — Dashboard</title>
   <link rel="stylesheet" href="/static/aiwave-css/vendor/bootstrap.min.css">
   <link rel="stylesheet" href="/static/aiwave-css/plugins/fontawesome-all.min.css">
-  <link rel="stylesheet" href="/static/aiwave-css/plugins/animation.css">
   <link rel="stylesheet" href="/static/aiwave-css/plugins/feather-2.css">
+  <link rel="stylesheet" href="/static/aiwave-css/plugins/animation.css">
   <link rel="stylesheet" href="/static/aiwave-css/plugins/sal.css">
   <link rel="stylesheet" href="/static/aiwave-css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* Override AIWave purple with Agency gold */
     :root {
-      --color-primary: #c9a84c;
-      --color-primary-alt: #6b5a2e;
-      --color-secondary: #ffe08a;
-      --color-primary-gradient-start: #c9a84c;
-      --color-primary-gradient-end: #ffe08a;
-      --color-bg-1: #020509;
-      --color-dark: #0a0e18;
-      --color-darker: rgba(6,6,6,0.7);
-      --color-blackest: #060a14;
-      --color-lessdark: #111827;
-      --color-border: rgba(201,168,76,0.08);
-      --color-gray: #1a1f2e;
+      --color-primary: #c9a84c !important;
+      --color-primary-alt: #6b5a2e !important;
+      --color-secondary: #ffe08a !important;
+      --color-primary-gradient-start: #c9a84c !important;
+      --color-primary-gradient-end: #ffe08a !important;
     }
-    body { background: #020509 !important; }
-    .rbt-panel-wrapper { background: #020509; }
-    .rbt-dashboard-header { background: rgba(6,10,20,0.95) !important; border-bottom: 1px solid rgba(201,168,76,0.08) !important; }
-    .rbt-left-panel, .rbt-default-sidebar { background: rgba(6,10,20,0.98) !important; border-right: 1px solid rgba(201,168,76,0.06) !important; }
-    .rbt-main-content { background: #020509 !important; }
+    .bg-solid-primary { background: linear-gradient(135deg, #c9a84c, #ffe08a) !important; color: #000 !important; }
+    .btn-default.bg-solid-primary { background: linear-gradient(135deg, #c9a84c, #ffe08a) !important; color: #000 !important; }
+    .rbt-default-sidebar-list li a:hover, .rbt-default-sidebar-list li a.active { color: #c9a84c !important; }
+    .rbt-default-sidebar-list li a:hover i, .rbt-default-sidebar-list li a.active i { color: #c9a84c !important; }
+    .genarator-card:hover { background: #c9a84c !important; border-color: #c9a84c !important; }
+    a:hover { color: #c9a84c !important; }
+    .subscription-box .inner .autor-info .author-badge { background: linear-gradient(135deg, #c9a84c, #ffe08a) !important; color: #000 !important; }
 
-    /* Gold accent overrides */
-    .btn-default.bg-solid-primary, .bg-solid-primary { background: linear-gradient(135deg, #c9a84c, #ffe08a) !important; color: #000 !important; }
-    .btn-default { border-color: rgba(201,168,76,0.3) !important; color: #c9a84c !important; }
-    .btn-default:hover { background: rgba(201,168,76,0.1) !important; border-color: #c9a84c !important; }
-    a:hover, a:focus { color: #c9a84c !important; }
-    .dashboard-mainmenu li a:hover, .dashboard-mainmenu li a.active { color: #c9a84c !important; background: rgba(201,168,76,0.06) !important; }
-    .dashboard-mainmenu li a.active::before { background: #c9a84c !important; }
+    /* Chat message styles */
+    .chat-box.ai-speech { background-color: var(--color-blackest); }
+    .chat-box .chat-content { flex: 1; }
+    .chat-box .chat-content .title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .chat-box .chat-content p { color: var(--color-body); font-size: 14px; line-height: 1.7; margin-bottom: 0; }
+    .chat-box .chat-actions { display: flex; gap: 8px; margin-top: 12px; padding-left: 65px; }
+    .chat-box .chat-actions button { background: transparent; border: 1px solid var(--color-border); border-radius: 6px; color: var(--color-body); padding: 4px 10px; font-size: 12px; cursor: pointer; transition: 0.3s; }
+    .chat-box .chat-actions button:hover { border-color: #c9a84c; color: #c9a84c; }
 
-    /* Sidebar nav items */
-    .dashboard-mainmenu li a { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 8px; color: rgba(255,255,255,0.55); font-size: 14px; transition: all 0.2s; position: relative; }
-    .dashboard-mainmenu li a i { font-size: 16px; width: 20px; text-align: center; }
-    .dashboard-mainmenu li a .nav-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
-    .dashboard-mainmenu li a:hover { color: #c9a84c !important; }
-    .dashboard-mainmenu li a.active { color: #c9a84c !important; background: rgba(201,168,76,0.08) !important; }
-    .rbt-sm-separator { border-color: rgba(201,168,76,0.06) !important; }
+    /* Right panel session items */
+    .right-side-bottom { padding: 20px 15px; overflow-y: auto; height: calc(100vh - 180px); }
+    .right-side-bottom .title-group { font-size: 14px; font-weight: 600; color: var(--color-heading); margin-bottom: 12px; margin-top: 20px; }
+    .right-side-bottom .title-group:first-child { margin-top: 0; }
+    .session-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: 0.3s; color: var(--color-body); font-size: 14px; display: block; text-decoration: none; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-item:hover { background: var(--color-blackest); color: var(--color-heading); }
 
-    /* Logo */
-    .agency-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .agency-logo-mark { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #c9a84c, #ffe08a); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; color: #000; }
-    .agency-logo-text { font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(255,255,255,0.4); font-weight: 600; }
+    /* Agent avatar in chat */
+    .chat-box .inner .chat-section .author img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
 
-    /* Dashboard content */
-    .dash-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; height: calc(100vh - 80px); padding: 20px 24px; }
-    .dash-left { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-right: 8px; }
-    .dash-left::-webkit-scrollbar { width: 4px; }
-    .dash-left::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.15); border-radius: 4px; }
+    /* Fix right panel width */
+    .rbt-right-side-panel { width: var(--sidebar-width); }
 
-    /* Cards */
-    .d-card { background: rgba(9,16,34,0.6); border: 1px solid rgba(201,168,76,0.06); border-radius: 14px; padding: 20px; backdrop-filter: blur(20px); transition: all 0.25s; }
-    .d-card:hover { border-color: rgba(201,168,76,0.15); }
-    .d-card-title { font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(201,168,76,0.5); font-weight: 700; margin-bottom: 14px; }
+    /* Make chat input work in our context */
+    #chatForm textarea { resize: none; color: var(--color-heading); }
+    #chatForm textarea::placeholder { color: var(--color-body); }
+    #chatForm .icon-send { cursor: pointer; }
+    #chatForm .icon-send:hover { color: #c9a84c !important; }
 
-    /* Stats */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .stat-box { background: rgba(9,16,34,0.5); border: 1px solid rgba(201,168,76,0.06); border-radius: 12px; padding: 18px 14px; text-align: center; transition: all 0.25s; }
-    .stat-box:hover { border-color: rgba(201,168,76,0.2); transform: translateY(-2px); }
-    .stat-val { font-size: 28px; font-weight: 800; color: #c9a84c; line-height: 1; }
-    .stat-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 6px; }
-
-    /* Agent hero */
-    .agent-hero { display: flex; align-items: center; gap: 16px; }
-    .agent-hero-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #c9a84c; object-fit: cover; flex-shrink: 0; }
-    .agent-hero-name { font-size: 18px; font-weight: 700; }
-    .agent-hero-role { font-size: 12px; color: #c9a84c; text-transform: uppercase; letter-spacing: 0.1em; }
-    .agent-hero-desc { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; line-height: 1.5; }
-
-    /* Pipeline */
-    .pipeline-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-    .pipe-box { background: rgba(9,16,34,0.5); border: 1px solid rgba(201,168,76,0.06); border-radius: 10px; padding: 14px 10px; text-align: center; position: relative; transition: all 0.25s; }
-    .pipe-box:hover { border-color: rgba(201,168,76,0.2); background: rgba(201,168,76,0.04); }
-    .pipe-box .num { font-size: 22px; font-weight: 800; color: #c9a84c; }
-    .pipe-box .label { font-size: 10px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
-    .pipe-box::after { content: '\f054'; font-family: 'Font Awesome 6 Pro'; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); color: rgba(201,168,76,0.15); font-size: 10px; }
-    .pipe-box:last-child::after { display: none; }
-
-    /* Team grid */
-    .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .team-card { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(9,16,34,0.5); border: 1px solid rgba(201,168,76,0.06); border-radius: 10px; cursor: pointer; transition: all 0.25s; }
-    .team-card:hover { border-color: rgba(201,168,76,0.2); transform: translateY(-1px); }
-    .team-card img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .team-name { font-size: 13px; font-weight: 600; }
-    .team-role { font-size: 11px; color: rgba(255,255,255,0.35); }
-    .team-status { font-size: 10px; color: #2ecc71; margin-top: 2px; }
-
-    /* Activity */
-    .activity-list { max-height: 280px; overflow-y: auto; }
-    .activity-list::-webkit-scrollbar { width: 3px; }
-    .activity-list::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.15); border-radius: 3px; }
-    .act-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 13px; }
-    .act-row:last-child { border-bottom: none; }
-    .act-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .act-text { flex: 1; color: rgba(255,255,255,0.55); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .act-badge { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; flex-shrink: 0; }
-    .act-time { color: rgba(255,255,255,0.2); font-size: 11px; flex-shrink: 0; }
-    .act-actions { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
-    .act-row:hover .act-actions { opacity: 1; }
-    .act-btn { padding: 3px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 10px; transition: all 0.15s; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); }
-    .act-btn:hover { background: rgba(201,168,76,0.1); color: #c9a84c; }
-
-    /* Chat panel */
-    .chat-panel { display: flex; flex-direction: column; background: rgba(9,16,34,0.6); border: 1px solid rgba(201,168,76,0.06); border-radius: 14px; overflow: hidden; height: calc(100vh - 80px); }
-    .chat-head { padding: 16px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(201,168,76,0.06); flex-shrink: 0; }
-    .chat-head img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #c9a84c; object-fit: cover; }
-    .chat-head-name { font-size: 15px; font-weight: 700; }
-    .chat-head-status { font-size: 11px; color: #c9a84c; }
-    .chat-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-    .chat-msgs::-webkit-scrollbar { width: 3px; }
-    .chat-msgs::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.15); border-radius: 3px; }
-    .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.6; }
-    .msg-ai { align-self: flex-start; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.1); color: rgba(255,255,255,0.85); }
-    .msg-user { align-self: flex-end; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); }
-    .typing-ind { padding: 10px 16px; font-size: 13px; color: rgba(201,168,76,0.5); font-style: italic; display: none; }
-    .chat-input { padding: 12px 16px; border-top: 1px solid rgba(201,168,76,0.06); display: flex; gap: 10px; flex-shrink: 0; }
-    .chat-input input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(201,168,76,0.08); border-radius: 10px; padding: 12px 16px; color: #fff; font-size: 14px; outline: none; font-family: 'Sora', sans-serif; transition: border-color 0.2s; }
-    .chat-input input:focus { border-color: rgba(201,168,76,0.3); }
-    .chat-input input::placeholder { color: rgba(255,255,255,0.2); }
-    .chat-send { width: 44px; height: 44px; border-radius: 10px; border: none; cursor: pointer; background: linear-gradient(135deg, #c9a84c, #ffe08a); color: #000; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: box-shadow 0.2s; }
-    .chat-send:hover { box-shadow: 0 0 20px rgba(201,168,76,0.3); }
-
-    /* User box in sidebar */
-    .sidebar-user { display: flex; align-items: center; gap: 12px; padding: 16px; border-top: 1px solid rgba(201,168,76,0.06); }
-    .sidebar-user img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #c9a84c; object-fit: cover; }
-    .sidebar-user-name { font-size: 14px; font-weight: 600; }
-    .sidebar-user-email { font-size: 11px; color: rgba(255,255,255,0.35); }
-
-    /* Header user */
-    .header-user { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: background 0.2s; }
-    .header-user:hover { background: rgba(201,168,76,0.06); }
-    .header-user img { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #c9a84c; object-fit: cover; }
-
-    /* Responsive */
-    @media (max-width: 1200px) {
-      .dash-grid { grid-template-columns: 1fr; }
-      .chat-panel { height: 400px; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .team-grid { grid-template-columns: repeat(2, 1fr); }
-      .pipeline-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-    @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .team-grid { grid-template-columns: 1fr; }
-      .pipeline-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    .empty-state { display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.2); font-size: 14px; font-style: italic; padding: 30px; }
+    /* Typing indicator */
+    .typing-indicator { padding: 25px 24px; border-top: 1px solid var(--color-border); color: #c9a84c; font-size: 14px; font-style: italic; display: none; }
   </style>
 </head>
 <body>
+
 <main class="page-wrapper rbt-dashboard-page">
   <div class="rbt-panel-wrapper">
 
-    <!-- Header -->
+    <!-- ═══ HEADER ═══ -->
     <header class="rbt-dashboard-header rainbow-header header-default header-left-align rbt-fluid-header">
       <div class="container-fluid position-relative">
         <div class="row align-items-center justify-content-between">
           <div class="col-lg-3 col-md-6 col-6">
-            <div class="header-left d-flex" style="gap:12px;align-items:center">
-              <button class="bg-solid-primary popup-dashboardleft-btn" style="border:none;border-radius:8px;padding:8px 10px"><i class="fa-sharp fa-regular fa-sidebar"></i></button>
-              <a class="agency-logo" href="/spaces">
-                <div class="agency-logo-mark">DP</div>
-                <div class="agency-logo-text">The Agency 1.0</div>
-              </a>
+            <div class="header-left d-flex">
+              <div class="expand-btn-grp">
+                <button class="bg-solid-primary popup-dashboardleft-btn" style="border:none;border-radius:8px;padding:10px 12px;cursor:pointer"><i class="fa-sharp fa-regular fa-sidebar"></i></button>
+              </div>
+              <div class="logo" style="margin-left:12px">
+                <a href="/spaces" style="display:flex;align-items:center;gap:10px">
+                  <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#c9a84c,#ffe08a);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#000">DP</div>
+                  <span style="font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.4);font-weight:600">The Agency 1.0</span>
+                </a>
+              </div>
             </div>
           </div>
           <div class="col-lg-6 d-none d-lg-block text-center">
-            <nav style="display:flex;gap:6px;justify-content:center">
-              <a href="/spaces" class="btn-default btn-small round" style="font-size:12px">Spaces</a>
-              <a href="/platform" class="btn-default btn-small round" style="font-size:12px">Full Platform</a>
-              <a href="/space/content" class="btn-default btn-small round" style="font-size:12px">Content</a>
-              <a href="/space/leads" class="btn-default btn-small round" style="font-size:12px">Leads</a>
+            <nav class="mainmenu-nav d-none d-lg-inline-block text-center">
+              <ul class="mainmenu" style="display:flex;gap:0;margin:0;padding:0;list-style:none;border:0;background:none">
+                <li><a href="/spaces">Spaces</a></li>
+                <li><a href="/space/content">Content</a></li>
+                <li><a href="/space/leads">Leads</a></li>
+                <li><a href="/space/creative">Creative</a></li>
+                <li><a href="/space/video">Video</a></li>
+              </ul>
             </nav>
           </div>
           <div class="col-lg-3 col-md-6 col-6">
             <div class="header-right" style="display:flex;align-items:center;justify-content:flex-end;gap:10px">
-              <a href="/logout" class="btn-default btn-small round" style="font-size:11px;padding:6px 14px"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+              <div class="mobile-menu-bar ml--10 d-block d-lg-none">
+                <div class="hamberger"><button class="hamberger-button" style="background:none;border:none;color:var(--color-heading);font-size:20px;cursor:pointer"><i class="fa-sharp fa-regular fa-bars"></i></button></div>
+              </div>
+              <div class="rbt-admin-panel account-access rbt-user-wrapper right-align-dropdown">
+                <div class="rbt-admin-card grid-style">
+                  <a class="d-flex align-items-center" href="#" style="gap:8px">
+                    <div class="inner d-flex align-items-center">
+                      <div class="img-box"><img src="/static/img/avatar_sarah.png" alt="Admin" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #c9a84c"></div>
+                      <div class="content" style="margin-left:8px">
+                        <span class="title">Dubai Prod</span>
+                        <p style="font-size:11px;margin:0">info@dubaiprod.com</p>
+                      </div>
+                    </div>
+                    <div class="icon"><i class="fa-sharp fa-solid fa-chevron-down"></i></div>
+                  </a>
+                </div>
+                <div class="rbt-user-menu-list-wrapper">
+                  <div class="inner">
+                    <ul class="user-list-wrapper user-nav">
+                      <li><a href="/spaces"><i class="fa-sharp fa-regular fa-grid-2"></i><span>Spaces</span></a></li>
+                      <li><a href="/platform"><i class="fa-sharp fa-regular fa-comments"></i><span>Full Platform</span></a></li>
+                    </ul>
+                    <hr class="mt--10 mb--10">
+                    <ul class="user-list-wrapper">
+                      <li><a href="/logout"><i class="fa-sharp fa-solid fa-right-from-bracket"></i><span>Logout</span></a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="expand-btn-grp">
+                <button class="bg-solid-primary popup-dashboardright-btn" style="border:none;border-radius:8px;padding:10px 12px;cursor:pointer"><i class="fa-sharp fa-regular fa-sidebar-flip"></i></button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Sidebar -->
+    <!-- ═══ LEFT SIDEBAR ═══ -->
     <div class="rbt-left-panel popup-dashboardleft-section">
       <div class="rbt-default-sidebar">
         <div class="inner">
@@ -207,13 +148,22 @@
                   <li><a href="/space/creative"><i class="fa-solid fa-palette"></i><span>Creative Studio</span></a></li>
                   <li><a href="/space/video"><i class="fa-solid fa-film"></i><span>Video Studio</span></a></li>
                   <li><a href="/space/email"><i class="fa-solid fa-envelope"></i><span>Email Center</span></a></li>
-                  <li><a href="/space/sheets"><i class="fa-solid fa-table"></i><span>Google Sheets</span></a></li>
                 </ul>
               </nav>
               <div class="rbt-sm-separator"></div>
               <nav class="mainmenu-nav">
                 <ul class="dashboard-mainmenu rbt-default-sidebar-list">
-                  <li><a href="/platform"><i class="fa-solid fa-comments"></i><span>Talk to Sarah</span></a></li>
+                  <li class="has-submenu">
+                    <a class="collapse-btn collapsed" data-bs-toggle="collapse" href="#settingsMenu" role="button" aria-expanded="false" aria-controls="settingsMenu">
+                      <i class="fa-sharp fa-solid fa-circle-plus"></i><span>Settings</span>
+                    </a>
+                    <div class="collapse" id="settingsMenu">
+                      <ul class="submenu rbt-default-sidebar-list">
+                        <li><a href="/space/sheets"><i class="fa-sharp fa-regular fa-table"></i><span>Google Sheets</span></a></li>
+                        <li><a href="/platform"><i class="fa-sharp fa-regular fa-comments"></i><span>Full Platform</span></a></li>
+                      </ul>
+                    </div>
+                  </li>
                   <li><a href="/space/creative-choice"><i class="fa-solid fa-wand-magic-sparkles"></i><span>AI Creative</span></a></li>
                 </ul>
               </nav>
@@ -226,100 +176,100 @@
             </div>
           </div>
         </div>
-        <div class="sidebar-user">
-          <img src="/static/img/avatar_sarah.png" alt="">
-          <div>
-            <div class="sidebar-user-name">Dubai Prod</div>
-            <div class="sidebar-user-email">info@dubaiprod.com</div>
+        <div class="subscription-box">
+          <div class="inner">
+            <a href="/platform" class="autor-info" style="display:flex;align-items:center;gap:12px">
+              <div class="author-img active" style="width:48px;height:48px;min-width:48px;border-radius:50%;overflow:hidden">
+                <img src="/static/img/avatar_sarah.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+              </div>
+              <div class="author-desc" style="flex:1;min-width:0">
+                <h6 style="margin-bottom:2px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Dubai Prod</h6>
+                <p style="margin-bottom:0;font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">info@dubaiprod.com</p>
+              </div>
+              <div class="author-badge">Pro</div>
+            </a>
           </div>
         </div>
+        <p class="subscription-copyright copyright-text text-center b3 small-text">&copy; 2026 Dubai Prod.</p>
       </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- ═══ MAIN CONTENT ═══ -->
     <div class="rbt-main-content">
       <div class="rbt-daynamic-page-content">
-        <div class="dash-grid">
+        <div class="rbt-dashboard-content">
+          <div class="content-page">
 
-          <!-- Left Column -->
-          <div class="dash-left">
-
-            <!-- Agent Hero -->
-            <div class="d-card">
-              <div class="agent-hero">
-                <img class="agent-hero-avatar" src="/static/img/avatar_sarah.png" alt="Sarah">
-                <div>
-                  <div class="agent-hero-name">Sarah Chen</div>
-                  <div class="agent-hero-role">Agency Director</div>
-                  <div class="agent-hero-desc">I oversee everything — tasks, team, clients, invoices, strategy. Ask me anything or delegate any task.</div>
+            <!-- Chat Box Section -->
+            <div class="chat-box-section">
+              <div class="chat-top-bar" style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--color-border)">
+                <div class="section-title" style="display:flex;align-items:center;gap:10px">
+                  <div class="icon"><img src="/static/img/avatar_sarah.png" alt="" style="width:35px;height:35px;border-radius:8px;object-fit:cover"></div>
+                  <h6 class="title" style="margin:0">Sarah Chen — Agency Director</h6>
                 </div>
               </div>
-            </div>
 
-            <!-- Stats -->
-            <div class="d-card">
-              <div class="d-card-title">Overview</div>
-              <div class="stats-grid">
-                <div class="stat-box"><div class="stat-val" id="stat-tasks">0</div><div class="stat-label">Tasks</div></div>
-                <div class="stat-box"><div class="stat-val" id="stat-clients">0</div><div class="stat-label">Clients</div></div>
-                <div class="stat-box"><div class="stat-val" id="stat-content">0</div><div class="stat-label">Content</div></div>
-                <div class="stat-box"><div class="stat-val" id="stat-agents">6</div><div class="stat-label">Agents</div></div>
-              </div>
-            </div>
+              <div class="chat-box-list" id="chatContainer" style="height:calc(100vh - 280px);overflow-y:auto">
 
-            <!-- Pipeline -->
-            <div class="d-card">
-              <div class="d-card-title">Task Pipeline</div>
-              <div class="pipeline-grid" id="pipeline">
-                <div class="pipe-box"><div class="num" id="pipe-backlog">0</div><div class="label">Backlog</div></div>
-                <div class="pipe-box"><div class="num" id="pipe-todo">0</div><div class="label">To Do</div></div>
-                <div class="pipe-box"><div class="num" id="pipe-progress">0</div><div class="label">In Progress</div></div>
-                <div class="pipe-box"><div class="num" id="pipe-review">0</div><div class="label">Review</div></div>
-                <div class="pipe-box"><div class="num" id="pipe-done">0</div><div class="label">Done</div></div>
-              </div>
-            </div>
-
-            <!-- Team -->
-            <div class="d-card">
-              <div class="d-card-title">Your Team</div>
-              <div class="team-grid" id="team-grid"></div>
-            </div>
-
-            <!-- Activity -->
-            <div class="d-card" style="flex:1;min-height:200px">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                <div class="d-card-title" style="margin-bottom:0">Recent Activity</div>
-                <div style="display:flex;gap:6px">
-                  <button onclick="loadActivity()" class="act-btn"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
-                  <button onclick="archiveAll()" class="act-btn"><i class="fa-solid fa-box-archive"></i> Archive All</button>
+                <!-- Initial bot message -->
+                <div class="chat-box ai-speech">
+                  <div class="inner">
+                    <div class="chat-section">
+                      <div class="author"><img src="/static/img/avatar_sarah.png" alt="Sarah"></div>
+                      <div class="chat-content">
+                        <h6 class="title">Sarah Chen <span style="font-size:11px;color:#c9a84c;font-weight:400;margin-left:6px">Agency Director</span></h6>
+                        <p>Welcome back! I'm Sarah, your agency director. I manage tasks, delegate to the team, handle clients and invoices, and keep everything running. What do you need today?</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="activity-list" id="activity-list">
-                <div class="empty-state">Loading...</div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Right Column: Chat -->
-          <div class="chat-panel">
-            <div class="chat-head">
-              <img src="/static/img/avatar_sarah.png" alt="Sarah">
-              <div>
-                <div class="chat-head-name">Sarah Chen</div>
-                <div class="chat-head-status">Online — Agency Director</div>
+              </div>
+
+              <!-- Typing indicator -->
+              <div class="typing-indicator" id="typing">Sarah is thinking...</div>
+
+              <!-- Chat input bar -->
+              <div class="rbt-static-bar" style="position:relative;max-width:100%">
+                <form id="chatForm" class="new-chat-form border-gradient" onsubmit="sendMsg();return false;">
+                  <textarea id="txtarea" rows="1" placeholder="Send a message to Sarah..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+                  <div class="left-icons">
+                    <div class="form-icon icon-gpt">
+                      <img src="/static/img/avatar_sarah.png" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover">
+                    </div>
+                  </div>
+                  <div class="right-icons">
+                    <button type="submit" class="form-icon icon-send" style="border:none"><i class="fa-sharp fa-solid fa-paper-plane-top"></i></button>
+                  </div>
+                </form>
+                <p class="b3 small-text">The Agency 1.0 — Powered by AI agents. Ask anything.</p>
               </div>
             </div>
-            <div class="chat-msgs" id="chatMsgs">
-              <div class="msg msg-ai">Welcome back! I'm Sarah, your agency director. I manage tasks, delegate to the team, handle clients and invoices, and keep everything running. What do you need today?</div>
-            </div>
-            <div class="typing-ind" id="typing">Sarah is thinking...</div>
-            <div class="chat-input">
-              <input type="text" id="chatInput" placeholder="Ask Sarah anything..." onkeydown="if(event.key==='Enter')sendMsg()">
-              <button class="chat-send" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-          </div>
 
+          </div>
         </div>
+
+        <!-- ═══ RIGHT PANEL ═══ -->
+        <div class="rbt-right-side-panel popup-dashboardright-section">
+          <div class="right-side-top" style="padding:20px 15px">
+            <a class="btn-default bg-solid-primary" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;cursor:pointer;text-decoration:none" href="/platform">
+              <span class="icon"><i class="fa-sharp fa-regular fa-circle-plus"></i></span>
+              <span>Full Platform</span>
+            </a>
+            <div style="margin-top:10px">
+              <input type="text" placeholder="Search tasks..." style="width:100%;padding:10px 14px;background:var(--color-blackest);border:1px solid var(--color-border);border-radius:10px;color:var(--color-heading);font-size:13px;outline:none" id="searchTasks">
+            </div>
+          </div>
+          <div class="right-side-bottom" id="rightPanelContent">
+            <div class="title-group">Your Team</div>
+            <div id="teamList"></div>
+            <div class="title-group">Recent Tasks</div>
+            <div id="taskList"><p style="color:var(--color-body);font-size:13px;padding:10px 14px">Loading...</p></div>
+            <div class="title-group">Stats</div>
+            <div id="statsList"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -333,33 +283,35 @@
 <script src="/static/aiwave-js/main.js"></script>
 
 <script>
-// ═══ TEAM ═══
+// ═══ TEAM DATA ═══
 const TEAM = [
-  { name:'Sarah Chen', role:'Agency Director', avatar:'/static/img/avatar_sarah.png', color:'#c9a84c', agent:'sarah' },
-  { name:'Marcus Rivera', role:'Content Strategist', avatar:'/static/img/avatar_marcus.png', color:'#3498db', agent:'marcus' },
-  { name:'Zara Okafor', role:'Creative Director', avatar:'/static/img/avatar_zara.png', color:'#9b59b6', agent:'zara' },
-  { name:'Kai Tanaka', role:'Research Lead', avatar:'/static/img/avatar_kai.png', color:'#1abc9c', agent:'kai' },
-  { name:'Elena Voronova', role:'Analytics Manager', avatar:'/static/img/avatar_elena.png', color:'#e67e22', agent:'elena' },
-  { name:'Alex Kim', role:'Email & Invoices', avatar:'/static/img/avatar_alex.png', color:'#2ecc71', agent:'alex' },
+  { name:'Sarah Chen', role:'Agency Director', avatar:'/static/img/avatar_sarah.png', emoji:'👩‍💼', agent:'sarah' },
+  { name:'Marcus Rivera', role:'Content Strategist', avatar:'/static/img/avatar_marcus.png', emoji:'✍️', agent:'marcus' },
+  { name:'Zara Okafor', role:'Creative Director', avatar:'/static/img/avatar_zara.png', emoji:'🎨', agent:'zara' },
+  { name:'Kai Tanaka', role:'Research Lead', avatar:'/static/img/avatar_kai.png', emoji:'🔍', agent:'kai' },
+  { name:'Elena Voronova', role:'Analytics Manager', avatar:'/static/img/avatar_elena.png', emoji:'📊', agent:'elena' },
+  { name:'Alex Kim', role:'Email & Invoices', avatar:'/static/img/avatar_alex.png', emoji:'📧', agent:'alex' },
 ];
-const teamGrid = document.getElementById('team-grid');
+
+// Render team in right panel
+const teamListEl = document.getElementById('teamList');
 TEAM.forEach(t => {
-  teamGrid.innerHTML += `
-    <div class="team-card" onclick="sendQuick('Delegate a task to ${t.name.split(' ')[0]}')">
-      <img src="${t.avatar}" style="border:2px solid ${t.color}" alt="${t.name}">
-      <div>
-        <div class="team-name">${t.name}</div>
-        <div class="team-role">${t.role}</div>
-        <div class="team-status"><i class="fa-solid fa-circle" style="font-size:6px;color:#2ecc71"></i> Available</div>
-      </div>
-    </div>`;
+  teamListEl.innerHTML += `<a class="session-item" style="display:flex;align-items:center;gap:10px" onclick="delegateTo('${t.agent}')">
+    <img src="${t.avatar}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">
+    <div><div style="font-size:13px;font-weight:500;color:var(--color-heading)">${t.name}</div><div style="font-size:11px;color:var(--color-body)">${t.role}</div></div>
+  </a>`;
 });
 
+function delegateTo(agent) {
+  const name = TEAM.find(t => t.agent === agent)?.name?.split(' ')[0] || agent;
+  document.getElementById('txtarea').value = `@${name} `;
+  document.getElementById('txtarea').focus();
+}
+
 // ═══ WEBSOCKET CHAT ═══
-const chatInput = document.getElementById('chatInput');
-const chatMsgs = document.getElementById('chatMsgs');
-const typingEl = document.getElementById('typing');
 let ws = null;
+const chatContainer = document.getElementById('chatContainer');
+const typingEl = document.getElementById('typing');
 
 function connectWS() {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -367,139 +319,125 @@ function connectWS() {
   ws.onopen = () => console.log('WS connected');
   ws.onmessage = (e) => {
     const data = JSON.parse(e.data);
-    if (data.type === 'agent_typing') { typingEl.style.display = 'block'; chatMsgs.scrollTop = chatMsgs.scrollHeight; }
-    else if (data.type === 'agent_reply') { typingEl.style.display = 'none'; addMsg(data.content || data.text || data.message, 'ai'); }
-    else if (data.type === 'error') { typingEl.style.display = 'none'; addMsg('Error: ' + (data.content || data.text || data.message), 'ai'); }
-    else if (data.type === 'refresh') { loadActivity(); }
+    if (data.type === 'agent_typing') {
+      typingEl.style.display = 'block';
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    } else if (data.type === 'agent_reply' || data.type === 'reply') {
+      typingEl.style.display = 'none';
+      addBotMsg(data.content || data.text || data.message);
+    } else if (data.type === 'error') {
+      typingEl.style.display = 'none';
+      addBotMsg('Error: ' + (data.content || data.text || data.message));
+    } else if (data.type === 'refresh') {
+      loadRightPanel();
+    }
   };
   ws.onclose = () => setTimeout(connectWS, 2000);
 }
 connectWS();
 
-function addMsg(text, who) {
-  const div = document.createElement('div');
-  div.className = `msg msg-${who}`;
-  div.textContent = text;
-  chatMsgs.appendChild(div);
-  chatMsgs.scrollTop = chatMsgs.scrollHeight;
+function addBotMsg(text) {
+  const html = `<div class="chat-box ai-speech">
+    <div class="inner">
+      <div class="chat-section">
+        <div class="author"><img src="/static/img/avatar_sarah.png" alt="Sarah"></div>
+        <div class="chat-content">
+          <h6 class="title">Sarah Chen</h6>
+          <p>${escHtml(text)}</p>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  chatContainer.insertAdjacentHTML('beforeend', html);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function addUserMsg(text) {
+  const html = `<div class="chat-box human-speech">
+    <div class="inner">
+      <div class="chat-section">
+        <div class="author" style="background:var(--color-primary);color:#000;font-weight:700;font-size:14px">You</div>
+        <div class="chat-content">
+          <h6 class="title">You</h6>
+          <p>${escHtml(text)}</p>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  chatContainer.insertAdjacentHTML('beforeend', html);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 function sendMsg() {
-  const text = chatInput.value.trim();
+  const textarea = document.getElementById('txtarea');
+  const text = textarea.value.trim();
   if (!text || !ws || ws.readyState !== 1) return;
-  addMsg(text, 'user');
+  addUserMsg(text);
   ws.send(JSON.stringify({ type: 'agent_chat', agent: 'sarah', content: text }));
-  chatInput.value = '';
+  textarea.value = '';
+  textarea.style.height = 'auto';
 }
 
-function sendQuick(text) { chatInput.value = text; sendMsg(); }
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML.replace(/\n/g, '<br>');
+}
 
-// ═══ ACTIVITY ═══
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-async function loadActivity() {
-  const el = document.getElementById('activity-list');
+// ═══ RIGHT PANEL DATA ═══
+async function loadRightPanel() {
   try {
-    const [tasksR, contentR, projectsR, clientsR] = await Promise.all([
+    const [tasks, clients, content] = await Promise.all([
       fetch('/api/tasks').then(r => r.json()).catch(() => []),
-      fetch('/api/content').then(r => r.json()).catch(() => []),
-      fetch('/api/projects').then(r => r.json()).catch(() => []),
       fetch('/api/clients').then(r => r.json()).catch(() => []),
+      fetch('/api/content').then(r => r.json()).catch(() => []),
     ]);
 
-    // Update stats
-    document.getElementById('stat-tasks').textContent = tasksR.length;
-    document.getElementById('stat-clients').textContent = clientsR.length;
-    document.getElementById('stat-content').textContent = contentR.length;
+    // Tasks
+    const taskListEl = document.getElementById('taskList');
+    if (tasks.length === 0) {
+      taskListEl.innerHTML = '<p style="color:var(--color-body);font-size:13px;padding:10px 14px">No tasks yet</p>';
+    } else {
+      taskListEl.innerHTML = tasks.slice(0, 15).map(t => {
+        const icon = t.status === 'completed' ? '✅' : t.status === 'in_progress' ? '🔄' : '⏳';
+        return `<div class="session-item" style="display:flex;align-items:center;gap:8px">
+          <span>${icon}</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${escHtml(t.title || 'Task')}</span>
+        </div>`;
+      }).join('');
+    }
 
-    // Pipeline
-    const sc = { pending: 0, in_progress: 0, completed: 0 };
-    tasksR.forEach(t => {
-      if (t.status === 'completed') sc.completed++;
-      else if (t.status === 'in_progress') sc.in_progress++;
-      else sc.pending++;
-    });
-    document.getElementById('pipe-backlog').textContent = sc.pending;
-    document.getElementById('pipe-progress').textContent = sc.in_progress;
-    document.getElementById('pipe-done').textContent = sc.completed;
-
-    // Build activity items
-    const items = [];
-    const agents = { sarah: '/static/img/avatar_sarah.png', marcus: '/static/img/avatar_marcus.png', kai: '/static/img/avatar_kai.png', zara: '/static/img/avatar_zara.png', elena: '/static/img/avatar_elena.png', alex: '/static/img/avatar_alex.png' };
-
-    tasksR.forEach(t => {
-      const colors = { completed: '#2ecc71', in_progress: '#3498db', pending: '#f1c40f' };
-      items.push({ type: 'task', id: t.id, text: t.title || 'Task', status: t.status || 'pending', color: colors[t.status] || '#f1c40f', avatar: agents[t.assigned_agent] || agents.sarah, time: t.created_at || '' });
-    });
-
-    contentR.slice(0, 10).forEach(c => {
-      const colors = { draft: '#f1c40f', scheduled: '#3498db', published: '#2ecc71', designed: '#9b59b6' };
-      items.push({ type: 'content', id: c.id, text: (c.caption || '').substring(0, 50) || c.platform + ' ' + c.content_type, status: c.status || 'draft', color: colors[c.status] || '#f1c40f', avatar: agents.marcus, time: c.created_at || '' });
-    });
-
-    projectsR.slice(0, 5).forEach(p => {
-      items.push({ type: 'project', id: p.id, text: p.name || 'Research', status: p.lead_count > 0 ? 'done' : 'active', color: p.lead_count > 0 ? '#2ecc71' : '#3498db', avatar: agents.kai, time: p.created_at || '' });
-    });
-
-    items.sort((a, b) => (b.time || '').localeCompare(a.time || ''));
-
-    if (!items.length) { el.innerHTML = '<div class="empty-state">No activity yet — start by asking Sarah a task!</div>'; return; }
-
-    el.innerHTML = items.slice(0, 25).map(it => {
-      const timeAgo = it.time ? formatTimeAgo(it.time) : '';
-      return `<div class="act-row">
-        <img src="${it.avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">
-        <div class="act-dot" style="background:${it.color}"></div>
-        <div class="act-text">${esc(it.text)}</div>
-        <span class="act-badge" style="background:${it.color}15;color:${it.color};border:1px solid ${it.color}20">${it.status}</span>
-        <div class="act-time">${timeAgo}</div>
-        <div class="act-actions">
-          <button class="act-btn" onclick="archiveItem('${it.type}',${it.id})" title="Archive"><i class="fa-solid fa-box-archive"></i></button>
-          <button class="act-btn" onclick="deleteItem('${it.type}',${it.id})" title="Delete"><i class="fa-solid fa-trash"></i></button>
+    // Stats
+    const statsEl = document.getElementById('statsList');
+    const completed = tasks.filter(t => t.status === 'completed').length;
+    const inProgress = tasks.filter(t => t.status === 'in_progress').length;
+    const pending = tasks.filter(t => t.status === 'pending').length;
+    statsEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px">
+        <div style="background:var(--color-blackest);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:24px;font-weight:800;color:#c9a84c">${tasks.length}</div>
+          <div style="font-size:11px;color:var(--color-body);text-transform:uppercase">Tasks</div>
         </div>
-      </div>`;
-    }).join('');
-
-  } catch (e) { el.innerHTML = '<div class="empty-state">Failed to load activity</div>'; }
+        <div style="background:var(--color-blackest);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:24px;font-weight:800;color:#c9a84c">${clients.length}</div>
+          <div style="font-size:11px;color:var(--color-body);text-transform:uppercase">Clients</div>
+        </div>
+        <div style="background:var(--color-blackest);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:24px;font-weight:800;color:#c9a84c">${content.length}</div>
+          <div style="font-size:11px;color:var(--color-body);text-transform:uppercase">Content</div>
+        </div>
+        <div style="background:var(--color-blackest);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:24px;font-weight:800;color:#c9a84c">6</div>
+          <div style="font-size:11px;color:var(--color-body);text-transform:uppercase">Agents</div>
+        </div>
+      </div>
+    `;
+  } catch (e) { console.error('Failed to load panel data', e); }
 }
 
-function formatTimeAgo(dateStr) {
-  const d = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(d / 60000);
-  if (m < 1) return 'now';
-  if (m < 60) return m + 'm';
-  const h = Math.floor(m / 60);
-  if (h < 24) return h + 'h';
-  return Math.floor(h / 24) + 'd';
-}
-
-async function archiveItem(type, id) {
-  if (type === 'task') await fetch(`/api/tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'completed' }) }).catch(() => {});
-  else if (type === 'content') await fetch(`/api/content/${id}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'published' }) }).catch(() => {});
-  else if (type === 'project') await fetch(`/api/projects/${id}`, { method: 'DELETE' }).catch(() => {});
-  loadActivity();
-}
-
-async function deleteItem(type, id) {
-  if (!confirm('Delete this item?')) return;
-  if (type === 'task') await fetch(`/api/tasks/${id}`, { method: 'DELETE' }).catch(() => {});
-  else if (type === 'project') await fetch(`/api/projects/${id}`, { method: 'DELETE' }).catch(() => {});
-  loadActivity();
-}
-
-async function archiveAll() {
-  if (!confirm('Archive all completed items?')) return;
-  try {
-    const tasks = await fetch('/api/tasks').then(r => r.json());
-    for (const t of tasks.filter(t => t.status === 'completed'))
-      await fetch(`/api/tasks/${t.id}`, { method: 'DELETE' }).catch(() => {});
-  } catch (e) {}
-  loadActivity();
-}
-
-// Load on startup
-loadActivity();
-setInterval(loadActivity, 30000);
+loadRightPanel();
+setInterval(loadRightPanel, 30000);
 </script>
+
 </body>
 </html>

@@ -336,9 +336,10 @@
             <span style="font-size:13px;font-weight:700;color:#c9a44c;margin-right:8px">✉️ Email Builder</span>
             <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
               <button onclick="ebAdd('header')" class="eb-add-btn">+ Header</button>
-              <button onclick="ebAdd('logo')" class="eb-add-btn">+ Logo</button>
-              <button onclick="ebAdd('service')" class="eb-add-btn">+ Service</button>
-              <button onclick="ebAdd('clients')" class="eb-add-btn">+ Clients</button>
+              <button onclick="ebAdd('message')" class="eb-add-btn">+ Message</button>
+              <button onclick="ebAdd('whatwedo')" class="eb-add-btn">+ What We Do</button>
+              <button onclick="ebAdd('trust')" class="eb-add-btn">+ Why Trust Us</button>
+              <button onclick="ebAdd('casestudy')" class="eb-add-btn">+ Case Studies</button>
               <button onclick="ebAdd('cta')" class="eb-add-btn">+ CTA</button>
               <button onclick="ebAdd('text')" class="eb-add-btn">+ Text</button>
               <button onclick="ebAdd('image')" class="eb-add-btn">+ Image</button>
@@ -349,8 +350,9 @@
             <button onclick="ebCopyHTML()" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📋 Copy</button>
             <select id="ebLoadSelect" onchange="if(this.value){ebLoadTemplate(this.value);this.value=''}" style="padding:6px 10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:5px;cursor:pointer;font-size:11px">
               <option value="">📂 Load Template...</option>
+              <option value="full_en">🇬🇧 Full Template (EN)</option>
+              <option value="full_si">🇸🇮 Full Template (SI)</option>
               <option value="outreach">🎯 Cold Outreach</option>
-              <option value="services">💼 Full Services</option>
               <option value="minimal">✨ Minimal</option>
             </select>
             <button onclick="ebSaveTemplate()" style="padding:6px 12px;background:#c9a44c;border:none;color:#0c0c12;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap">💾 Save</button>
@@ -367,8 +369,9 @@
               <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
                 <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Quick Start</div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button onclick="ebLoadTemplate('outreach')" class="eb-tpl-btn">🎯 Cold Outreach</button>
-                  <button onclick="ebLoadTemplate('services')" class="eb-tpl-btn">💼 Full Services</button>
+                  <button onclick="ebLoadTemplate('full_en')" class="eb-tpl-btn">🇬🇧 Full (EN)</button>
+                  <button onclick="ebLoadTemplate('full_si')" class="eb-tpl-btn">🇸🇮 Full (SI)</button>
+                  <button onclick="ebLoadTemplate('outreach')" class="eb-tpl-btn">🎯 Outreach</button>
                   <button onclick="ebLoadTemplate('minimal')" class="eb-tpl-btn">✨ Minimal</button>
                 </div>
                 <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin:14px 0 8px">Saved Templates</div>
@@ -414,26 +417,43 @@
 let ebSections = [];
 
 const EB_SERVICES_CATALOG = [
-  { name:'Social Media Management', desc:'Strategy, scripting, production, editing, and publishing — handled by our in-house team.', tags:'Content Strategy, Growth, Analytics' },
-  { name:'Video Production', desc:'From concept to final cut — corporate films, events, product launches, reels.', tags:'Cinematic, Events, Reels' },
-  { name:'Website & Web Development', desc:'Fast, conversion-focused sites designed to turn visitors into paying clients.', tags:'UI/UX, Conversion, SEO-ready' },
-  { name:'Branding & Identity', desc:'Complete visual identities that communicate authority, trust, and ambition.', tags:'Logo, Brand Guidelines, Messaging' },
-  { name:'SEO & Paid Ads', desc:'Data-driven SEO and precision ad campaigns built for ROI — every dirham accounted for.', tags:'Google Ads, Meta Ads, SEO' },
-  { name:'3D & CGI', desc:'Photorealistic 3D visuals and CGI that make your brand impossible to ignore.', tags:'Product Renders, Animation, CGI' },
-  { name:'Photography', desc:'Professional product, lifestyle, and event photography with studio-quality results.', tags:'Product Shots, Events, Lifestyle' },
-  { name:'Email Marketing', desc:'Targeted campaigns, automation sequences, and newsletters that convert.', tags:'Campaigns, Automation, Analytics' },
+  { name:'Website', desc:'Modern, professional websites built with both image and function in mind — designed to convert visitors into clients.', cta:'Get Your Website Report →' },
+  { name:'Social Media', desc:'Strategy, scripting, content production, editing, and publishing — handled end-to-end by our team.', cta:'Get Your Website Report →' },
+  { name:'Branding', desc:'Complete elevation of your brand and online optimisation — from visual identity to messaging that resonates.', cta:'Elevate my Brand →' },
+  { name:'Custom Solutions', desc:'Every project is built on personalisation. Let\'s find the best digital approach specifically for your business.', cta:'Let\'s Talk →' },
+  { name:'Video Production', desc:'From concept to final cut — corporate films, events, product launches, reels.', cta:'See Our Work →' },
+  { name:'SEO & Paid Ads', desc:'Data-driven SEO and precision ad campaigns built for ROI — every dirham accounted for.', cta:'Get SEO Audit →' },
+  { name:'3D & CGI', desc:'Photorealistic 3D visuals and CGI that make your brand impossible to ignore.', cta:'View Portfolio →' },
+  { name:'Photography', desc:'Professional product, lifestyle, and event photography with studio-quality results.', cta:'See Gallery →' },
 ];
 
 const EB_DEFAULTS = {
-  header: { type:'header', clientName:'{{First Name}}', message:'We came across your brand and noticed real opportunity to elevate your digital presence.', imageUrl:'', senderName:'Amine Damoun', senderTitle:'COO · Dubai Prod' },
-  logo: { type:'logo', imageUrl:'', companyName:'DUBAI PROD', tagline:'Global Standards · Local Results' },
-  service: { type:'service', name:'Social Media Management', desc:'Strategy, scripting, production, editing, and publishing — handled by our in-house team.', tags:'Content Strategy, Growth, Analytics', ctaLabel:'WhatsApp', ctaUrl:'https://wa.me/971543313587', ctaType:'whatsapp' },
-  clients: { type:'clients', title:'Brands We\'ve Elevated', items:'Hyundai, Red Bull, Luznar, Emirates NBD' },
-  cta: { type:'cta', heading:'Let\'s Discuss Your Brand', subtext:'Reply to this email — no commitment, just useful observations.', buttonText:'Reply to This Email', buttonUrl:'mailto:info@dubaiprod.com' },
+  header: { type:'header', subtitle:'We noticed a few areas where your digital presence could be strengthened.', imageUrl:'' },
+  message: { type:'message', clientName:'[First Name]', body:'We came across your brand online and noticed a few specific areas where your digital presence could be working harder for you.\nThis isn\'t a broadcast — it\'s a direct observation, and we thought it was worth sharing.' },
+  whatwedo: { type:'whatwedo', title:'WHAT WE DO FOR YOU', services:[
+    { name:'Website', desc:'Modern, professional websites built with both image and function in mind — designed to convert visitors into clients.', cta:'Get Your Website Report →' },
+    { name:'Social Media', desc:'Strategy, scripting, content production, editing, and publishing — handled end-to-end by our team.', cta:'Get Your Website Report →' },
+    { name:'Branding', desc:'Complete elevation of your brand and online optimisation — from visual identity to messaging that resonates.', cta:'Elevate my Brand →' },
+    { name:'Custom Solutions', desc:'Every project is built on personalisation. Let\'s find the best digital approach specifically for your business.', cta:'Let\'s Talk →' }
+  ]},
+  trust: { type:'trust', heading:'Global Standards.', headingOrange:'Local Results.', stats:[
+    {val:'200+',label:'CLIENTS'},{val:'250M+',label:'VIEWS GENERATED'},{val:'3+',label:'CONTINENTS'},{val:'15+',label:'YEARS EXPERIENCE'}
+  ], bullets:[
+    'Dubai-based, globally experienced — we\'ve worked with brands across GCC, Europe, and the USA.',
+    'Full-service under one roof — PR, video, social, SEO, web development, 3D & CGI.',
+    'Results-first approach — every campaign is built around measurable outcomes.',
+    'Tailored for your market — we adapt global brand standards to fit your specific audience.'
+  ]},
+  casestudy: { type:'casestudy', items:[
+    { name:'Hyundai', desc:'Multimedia production and event coverage for a globally recognized automotive brand — delivering content at the quality level the brand demands.', tags:'Multimedia, Event Coverage', imageUrl:'' },
+    { name:'Luznar', desc:'Digital presence and online consistency for one of the region\'s leading PCBA solution providers — building authority in a technical B2B space.', tags:'Digital Presence, B2B', imageUrl:'' },
+    { name:'Red Bull', desc:'Visual identity and multimedia support connected to one of the world\'s most recognizable brands — maintaining premium standards across all touchpoints.', tags:'Visual Identity, Multimedia', imageUrl:'' }
+  ]},
+  cta: { type:'cta', pretext:'READY TO MOVE?', heading:'Let\'s Discuss', headingOrange:'Your Brand', subtext:'Reply to this email and we\'ll share a few tailored ideas for your digital presence — no commitment, no sales pitch, just useful observations.', buttonText:'REPLY TO THIS EMAIL', buttonUrl:'mailto:info@dubaiprod.com', sublink:'Or reach us directly at info@dubaiprod.com' },
   text: { type:'text', content:'Custom text paragraph goes here. You can write anything.' },
   image: { type:'image', src:'', alt:'Image', width:'100%' },
   divider: { type:'divider' },
-  footer: { type:'footer', companyName:'Dubai Prod', address:'Digital Production Agency · Dubai, UAE', email:'info@dubaiprod.com', phone:'+971 54 331 3587', website:'dubaiprod.com', unsubscribe:true }
+  footer: { type:'footer', companyName:'Dubai Prod', email:'info@dubaiprod.com', phone:'+971 54 333 3587 (WhatsApp)', phone2:'+386 40 797 340', website:'dubaiprod.com', instagram:'dubaiprod', linkedin:'dubaiprod', facebook:'dubaiprod', youtube:'dubaiprod' }
 };
 
 function ebAdd(type) {
@@ -535,48 +555,63 @@ function ebRender() {
     switch(s.type) {
       case 'header':
         fields = `<span class="eb-type-badge">📬 Header</span>
-          <label>Client Name</label><input value="${esc(s.clientName)}" oninput="ebUpdate(${i},'clientName',this.value)"/>
-          <label>Personal Message</label><textarea oninput="ebUpdate(${i},'message',this.value)">${esc(s.message)}</textarea>
-          <label>Client/Photo Image</label>
+          <label>Subtitle text</label><textarea oninput="ebUpdate(${i},'subtitle',this.value)">${esc(s.subtitle)}</textarea>
+          <label>Background Image (optional)</label>
           <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.imageUrl)}" oninput="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'imageUrl')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
-          ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="max-width:80px;max-height:50px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}
-          <label>Sender Name</label><input value="${esc(s.senderName)}" oninput="ebUpdate(${i},'senderName',this.value)"/>
-          <label>Sender Title</label><input value="${esc(s.senderTitle)}" oninput="ebUpdate(${i},'senderTitle',this.value)"/>`;
+          ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="max-width:80px;max-height:50px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}`;
         break;
-      case 'logo':
-        fields = `<span class="eb-type-badge">🏢 Logo Bar</span>
-          <label>Logo Image</label>
-          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.imageUrl)}" oninput="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'imageUrl')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
-          ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="max-width:80px;max-height:50px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}
-          <label>Company Name</label><input value="${esc(s.companyName)}" oninput="ebUpdate(${i},'companyName',this.value)"/>
-          <label>Tagline</label><input value="${esc(s.tagline)}" oninput="ebUpdate(${i},'tagline',this.value)"/>`;
+      case 'message':
+        fields = `<span class="eb-type-badge">💬 Message</span>
+          <label>Recipient Name</label><input value="${esc(s.clientName)}" oninput="ebUpdate(${i},'clientName',this.value)"/>
+          <label>Message Body</label><textarea rows="4" oninput="ebUpdate(${i},'body',this.value)">${esc(s.body)}</textarea>`;
         break;
-      case 'service':
-        fields = `<span class="eb-type-badge">⚡ Service</span>
-          <label>Pick from catalog</label>${ebPickService(i)}
-          <label>Service Name</label><input value="${esc(s.name)}" oninput="ebUpdate(${i},'name',this.value)"/>
-          <label>Description</label><textarea oninput="ebUpdate(${i},'desc',this.value)">${esc(s.desc)}</textarea>
-          <label>Tags (comma separated)</label><input value="${esc(s.tags)}" oninput="ebUpdate(${i},'tags',this.value)"/>
-          <label>CTA Type</label><select onchange="ebUpdate(${i},'ctaType',this.value)">
-            <option value="whatsapp" ${s.ctaType==='whatsapp'?'selected':''}>WhatsApp</option>
-            <option value="instagram" ${s.ctaType==='instagram'?'selected':''}>Instagram</option>
-            <option value="website" ${s.ctaType==='website'?'selected':''}>Website</option>
-            <option value="email" ${s.ctaType==='email'?'selected':''}>Email</option>
-          </select>
-          <label>CTA Link</label><input value="${esc(s.ctaUrl)}" oninput="ebUpdate(${i},'ctaUrl',this.value)"/>
-          <label>CTA Button Text</label><input value="${esc(s.ctaLabel)}" oninput="ebUpdate(${i},'ctaLabel',this.value)"/>`;
+      case 'whatwedo':
+        fields = `<span class="eb-type-badge">⚡ What We Do</span>
+          <label>Section Title</label><input value="${esc(s.title)}" oninput="ebUpdate(${i},'title',this.value)"/>`;
+        (s.services||[]).forEach((svc,j) => {
+          const catOpts = EB_SERVICES_CATALOG.map((c,ci)=>`<option value="${ci}" ${svc.name===c.name?'selected':''}>${c.name}</option>`).join('');
+          fields += `<div style="margin-top:10px;padding:10px;background:rgba(0,0,0,0.2);border-radius:6px;border:1px solid rgba(255,255,255,0.06)">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:11px;font-weight:700;color:#c9a44c">Service ${j+1}</span>
+            <select onchange="ebApplyWhatWeDo(${i},${j},this.value)" style="flex:1;padding:4px 8px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:#c9a44c;font-size:11px;cursor:pointer"><option value="">Pick...</option>${catOpts}<option value="custom">✏️ Custom</option></select>
+            <button onclick="ebRemoveWhatWeDoSvc(${i},${j})" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:13px">✕</button></div>
+            <input value="${esc(svc.name)}" oninput="ebUpdateSvc(${i},${j},'name',this.value)" placeholder="Service name" style="margin-bottom:4px"/>
+            <textarea oninput="ebUpdateSvc(${i},${j},'desc',this.value)" placeholder="Description" style="min-height:40px">${esc(svc.desc)}</textarea>
+            <input value="${esc(svc.cta)}" oninput="ebUpdateSvc(${i},${j},'cta',this.value)" placeholder="CTA text" style="margin-top:4px"/>
+          </div>`;
+        });
+        fields += `<button onclick="ebAddWhatWeDoSvc(${i})" style="margin-top:8px;padding:6px 14px;background:rgba(201,164,76,0.1);border:1px dashed rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;width:100%">+ Add Service</button>`;
         break;
-      case 'clients':
-        fields = `<span class="eb-type-badge">🏆 Clients</span>
-          <label>Section Title</label><input value="${esc(s.title)}" oninput="ebUpdate(${i},'title',this.value)"/>
-          <label>Client Names (comma separated)</label><textarea oninput="ebUpdate(${i},'items',this.value)">${esc(s.items)}</textarea>`;
+      case 'trust':
+        fields = `<span class="eb-type-badge">🏆 Why Trust Us (static)</span>
+          <label>Heading</label><input value="${esc(s.heading)}" oninput="ebUpdate(${i},'heading',this.value)"/>
+          <label>Orange Heading</label><input value="${esc(s.headingOrange)}" oninput="ebUpdate(${i},'headingOrange',this.value)"/>
+          <div style="font-size:10px;color:#666;margin-top:6px">Stats and bullets are pre-filled. Edit in code if needed.</div>`;
+        break;
+      case 'casestudy':
+        fields = `<span class="eb-type-badge">📸 Case Studies</span>`;
+        (s.items||[]).forEach((cs,j) => {
+          fields += `<div style="margin-top:10px;padding:10px;background:rgba(0,0,0,0.2);border-radius:6px;border:1px solid rgba(255,255,255,0.06)">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:11px;font-weight:700;color:#c9a44c">${esc(cs.name)}</span>
+            <button onclick="ebRemoveCaseStudy(${i},${j})" style="margin-left:auto;background:none;border:none;color:#e74c3c;cursor:pointer;font-size:13px">✕</button></div>
+            <input value="${esc(cs.name)}" oninput="ebUpdateCS(${i},${j},'name',this.value)" placeholder="Brand name" style="margin-bottom:4px"/>
+            <textarea oninput="ebUpdateCS(${i},${j},'desc',this.value)" placeholder="Description" style="min-height:40px">${esc(cs.desc)}</textarea>
+            <input value="${esc(cs.tags)}" oninput="ebUpdateCS(${i},${j},'tags',this.value)" placeholder="Tags (comma separated)" style="margin-top:4px"/>
+            <label>Image</label>
+            <div style="display:flex;gap:6px;align-items:center"><input value="${esc(cs.imageUrl)}" oninput="ebUpdateCS(${i},${j},'imageUrl',this.value)" placeholder="https://..." style="flex:1"/><button onclick="ebUploadCSImage(${i},${j})" style="padding:4px 10px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:4px;cursor:pointer;font-size:10px">📁</button></div>
+            ${cs.imageUrl?`<img src="${esc(cs.imageUrl)}" style="max-width:60px;max-height:40px;border-radius:3px;margin-top:4px"/>`:''}
+          </div>`;
+        });
+        fields += `<button onclick="ebAddCaseStudy(${i})" style="margin-top:8px;padding:6px 14px;background:rgba(201,164,76,0.1);border:1px dashed rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;width:100%">+ Add Case Study</button>`;
         break;
       case 'cta':
         fields = `<span class="eb-type-badge">🎯 CTA Block</span>
+          <label>Pre-text (small)</label><input value="${esc(s.pretext||'')}" oninput="ebUpdate(${i},'pretext',this.value)"/>
           <label>Heading</label><input value="${esc(s.heading)}" oninput="ebUpdate(${i},'heading',this.value)"/>
+          <label>Orange Part</label><input value="${esc(s.headingOrange||'')}" oninput="ebUpdate(${i},'headingOrange',this.value)"/>
           <label>Subtext</label><textarea oninput="ebUpdate(${i},'subtext',this.value)">${esc(s.subtext)}</textarea>
           <label>Button Text</label><input value="${esc(s.buttonText)}" oninput="ebUpdate(${i},'buttonText',this.value)"/>
-          <label>Button URL</label><input value="${esc(s.buttonUrl)}" oninput="ebUpdate(${i},'buttonUrl',this.value)"/>`;
+          <label>Button URL</label><input value="${esc(s.buttonUrl)}" oninput="ebUpdate(${i},'buttonUrl',this.value)"/>
+          <label>Sub-link text</label><input value="${esc(s.sublink||'')}" oninput="ebUpdate(${i},'sublink',this.value)"/>`;
         break;
       case 'text':
         fields = `<span class="eb-type-badge">📝 Text</span>
@@ -594,11 +629,12 @@ function ebRender() {
         break;
       case 'footer':
         fields = `<span class="eb-type-badge">📌 Footer</span>
-          <label>Company Name</label><input value="${esc(s.companyName)}" oninput="ebUpdate(${i},'companyName',this.value)"/>
-          <label>Address/Info</label><input value="${esc(s.address)}" oninput="ebUpdate(${i},'address',this.value)"/>
           <label>Email</label><input value="${esc(s.email)}" oninput="ebUpdate(${i},'email',this.value)"/>
-          <label>Phone</label><input value="${esc(s.phone)}" oninput="ebUpdate(${i},'phone',this.value)"/>
-          <label>Website</label><input value="${esc(s.website)}" oninput="ebUpdate(${i},'website',this.value)"/>`;
+          <label>Phone (WhatsApp)</label><input value="${esc(s.phone)}" oninput="ebUpdate(${i},'phone',this.value)"/>
+          <label>Phone 2</label><input value="${esc(s.phone2||'')}" oninput="ebUpdate(${i},'phone2',this.value)"/>
+          <label>Website</label><input value="${esc(s.website)}" oninput="ebUpdate(${i},'website',this.value)"/>
+          <label>Instagram handle</label><input value="${esc(s.instagram||'')}" oninput="ebUpdate(${i},'instagram',this.value)"/>
+          <label>LinkedIn</label><input value="${esc(s.linkedin||'')}" oninput="ebUpdate(${i},'linkedin',this.value)"/>`;
         break;
     }
     return `<div class="eb-section">${controls}${fields}</div>`;
@@ -606,90 +642,150 @@ function ebRender() {
   ebUpdatePreview();
 }
 
+// Helper functions for nested section editing
+function ebUpdateSvc(i,j,key,val){ ebSections[i].services[j][key]=val; ebUpdatePreviewDebounced(); }
+function ebApplyWhatWeDo(i,j,val){ if(val===''||val==='custom')return; const s=EB_SERVICES_CATALOG[parseInt(val)]; if(!s)return; Object.assign(ebSections[i].services[j],s); ebRender(); }
+function ebAddWhatWeDoSvc(i){ ebSections[i].services.push({name:'New Service',desc:'Description here.',cta:'Learn More →'}); ebRender(); }
+function ebRemoveWhatWeDoSvc(i,j){ ebSections[i].services.splice(j,1); ebRender(); }
+function ebUpdateCS(i,j,key,val){ ebSections[i].items[j][key]=val; ebUpdatePreviewDebounced(); }
+function ebAddCaseStudy(i){ ebSections[i].items.push({name:'Brand Name',desc:'Description.',tags:'Tag1, Tag2',imageUrl:''}); ebRender(); }
+function ebRemoveCaseStudy(i,j){ ebSections[i].items.splice(j,1); ebRender(); }
+function ebUploadCSImage(secIdx,csIdx){
+  const input=document.createElement('input'); input.type='file'; input.accept='image/*';
+  input.onchange=async(e)=>{const file=e.target.files[0];if(!file)return;const fd=new FormData();fd.append('file',file);
+    try{const res=await fetch('/upload',{method:'POST',body:fd});const d=await res.json();if(d.url){ebSections[secIdx].items[csIdx].imageUrl=d.url;ebRender();}}
+    catch(err){const r=new FileReader();r.onload=()=>{ebSections[secIdx].items[csIdx].imageUrl=r.result;ebRender();};r.readAsDataURL(file);}};
+  input.click();
+}
+
 function ebBuildHTML() {
-  const css = `*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--orange:#E8900A;--dark:#16140E;--ink:#18160F;--ink-mid:#3A3830;--ink-light:#7A7568;--rule:#E4E0D8;--bg:#F5F4F1;--white:#FFF;--orange-bg:#FEF3E2;--orange-dim:rgba(232,144,10,0.13)}body{background:#E8E5DF;font-family:'DM Sans',Arial,sans-serif;color:var(--ink)}.wrap{max-width:640px;margin:0 auto;background:var(--bg)}`;
+  const O = '#E8900A'; // orange
+  const css = `*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{background:#1a1a1a;font-family:'Montserrat',Arial,sans-serif;color:#fff;-webkit-font-smoothing:antialiased}.wrap{max-width:640px;margin:0 auto;background:#1a1a1a}`;
 
   let html = '';
-  let svcNum = 0;
 
   ebSections.forEach(s => {
     switch(s.type) {
       case 'header':
-        html += `<div style="background:#16140E;padding:8px 32px;display:flex;justify-content:space-between;align-items:center"><div style="font-family:'Bebas Neue',Arial,sans-serif;font-size:16px;letter-spacing:4px;color:#fff">DUBAI<span style="color:#E8900A">PROD</span></div><div style="font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">Digital Agency</div></div>`;
-        html += `<div style="background:#fff;display:grid;grid-template-columns:${s.imageUrl?'1fr 220px':'1fr'};min-height:280px;border-bottom:3px solid #E8900A;overflow:hidden">`;
-        html += `<div style="padding:36px 32px 32px;display:flex;flex-direction:column;justify-content:space-between">`;
-        html += `<div><div style="font-family:'Bebas Neue',Arial,sans-serif;font-size:42px;letter-spacing:5px;color:#18160F">DUBAI<span style="color:#E8900A">PROD</span></div><div style="font-size:9px;font-weight:500;letter-spacing:3.5px;text-transform:uppercase;color:#7A7568;margin-top:5px">Global Standards · Local Results</div></div>`;
-        html += `<div style="margin-top:28px"><div style="display:inline-flex;align-items:center;gap:7px;background:#FEF3E2;border:1px solid rgba(232,144,10,0.25);padding:5px 12px;border-radius:20px;margin-bottom:14px"><span style="width:5px;height:5px;border-radius:50%;background:#E8900A;display:inline-block"></span><span style="font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:#E8900A">Personal Observation</span></div><h1 style="font-family:'Playfair Display',Georgia,serif;font-size:30px;font-weight:700;line-height:1.15;color:#18160F">We Noticed<br><em style="color:#E8900A">Room for</em><br>Improvement.</h1></div>`;
-        html += `<div style="margin-top:auto;padding-top:20px;border-top:1px solid #E4E0D8"><div style="font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#E8900A;margin-bottom:4px">Message from</div><div style="font-size:16px;font-weight:700;color:#18160F">${esc(s.senderName)}</div><div style="font-size:11.5px;color:#7A7568;margin-top:2px">${esc(s.senderTitle)}</div></div>`;
-        html += `</div>`;
-        if(s.imageUrl) {
-          html += `<div style="position:relative;background:#1E1C15;overflow:hidden"><img src="${esc(s.imageUrl)}" style="width:100%;height:100%;object-fit:cover"/></div>`;
-        }
-        html += `</div>`;
-        html += `<div style="padding:28px 32px;background:#fff;border-bottom:1px solid #E4E0D8"><div style="border-left:3px solid #E8900A;padding:18px 20px;background:#F5F4F1;border-radius:0 6px 6px 0"><div style="font-size:15px;font-weight:600;color:#18160F;margin-bottom:8px">Hi ${esc(s.clientName)},</div><p style="font-size:13.5px;line-height:1.8;color:#3A3830">${esc(s.message)}</p></div></div>`;
-        break;
-
-      case 'logo':
-        html += `<div style="background:#16140E;padding:20px 32px;text-align:center">`;
-        if(s.imageUrl) { html += `<img src="${esc(s.imageUrl)}" style="max-width:180px;height:auto;margin-bottom:6px"/><br>`; }
-        else { html += `<div style="font-family:'Bebas Neue',Arial,sans-serif;font-size:28px;letter-spacing:5px;color:#fff">${esc(s.companyName).replace('PROD','<span style=color:#E8900A>PROD</span>')}</div>`; }
-        html += `<div style="font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.4)">${esc(s.tagline)}</div></div>`;
-        break;
-
-      case 'service':
-        svcNum++;
-        const ctaIcons = {whatsapp:'💬',instagram:'📸',website:'🌐',email:'✉️'};
-        html += `<div style="margin:0 32px 10px;background:#fff;border:1px solid #E4E0D8;border-radius:6px;display:grid;grid-template-columns:52px 1fr auto;align-items:center;overflow:hidden">`;
-        html += `<div style="background:rgba(232,144,10,0.13);width:52px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Arial,sans-serif;font-size:20px;color:#E8900A;letter-spacing:1px;border-right:1px solid #EDE9E3">${String(svcNum).padStart(2,'0')}</div>`;
-        html += `<div style="padding:16px 18px"><div style="font-size:14px;font-weight:700;color:#18160F;margin-bottom:3px">${esc(s.name)}</div><div style="font-size:12px;color:#3A3830;line-height:1.65">${esc(s.desc)}</div>`;
-        if(s.tags) { html += `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${s.tags.split(',').map(t=>`<span style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#E8900A;background:#FEF3E2;border:1px solid rgba(232,144,10,0.2);padding:2px 7px;border-radius:3px">${t.trim()}</span>`).join('')}</div>`; }
-        html += `</div>`;
-        html += `<div style="padding-right:18px"><a href="${esc(s.ctaUrl)}" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(232,144,10,0.1);border:1px solid rgba(232,144,10,0.25);border-radius:20px;text-decoration:none;font-size:11px;font-weight:600;color:#E8900A">${ctaIcons[s.ctaType]||'→'} ${esc(s.ctaLabel)}</a></div>`;
+        // Dark hero — "We Noticed Room for improvement"
+        html += `<div style="background:#1a1a1a;padding:48px 32px 36px">`;
+        html += `<h1 style="font-family:'Montserrat',Arial,sans-serif;font-size:38px;font-weight:800;line-height:1.15;color:#fff;margin-bottom:20px">We Noticed<br><span style="color:${O};font-style:italic;font-weight:700">Room for</span><br>improvement.</h1>`;
+        html += `<p style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;border-left:3px solid ${O};padding-left:14px">${esc(s.subtitle)}</p>`;
         html += `</div>`;
         break;
 
-      case 'clients':
-        html += `<div style="padding:36px 32px 4px;display:flex;align-items:center;gap:14px"><div><div style="font-size:9px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:#E8900A;margin-bottom:2px">Case Studies</div><div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:#18160F">${esc(s.title)}</div></div><div style="flex:1;height:1px;background:#E4E0D8"></div></div>`;
-        html += `<div style="padding:16px 32px 28px;display:flex;flex-direction:column;gap:10px">`;
-        s.items.split(',').forEach(c => {
-          const name = c.trim();
-          const abbr = name.substring(0,3).toUpperCase();
-          html += `<div style="background:#fff;border:1px solid #E4E0D8;border-radius:6px;padding:18px 20px;display:grid;grid-template-columns:52px 1fr 20px;gap:14px;align-items:center"><div style="width:52px;height:52px;background:#F5F4F1;border:1px solid #E4E0D8;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Arial,sans-serif;font-size:13px;color:#7A7568">${abbr}</div><div><div style="font-family:'Playfair Display',Georgia,serif;font-size:16px;font-weight:600;color:#18160F">${esc(name)}</div></div><div style="color:#E4E0D8;font-size:20px">›</div></div>`;
+      case 'message':
+        html += `<div style="background:#1a1a1a;padding:28px 32px">`;
+        html += `<p style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.8">Hi ${esc(s.clientName)},<br>${esc(s.body).replace(/\n/g,'<br>')}</p>`;
+        html += `</div>`;
+        break;
+
+      case 'whatwedo':
+        // Section header with lines
+        html += `<div style="background:#1a1a1a;padding:36px 32px 8px">`;
+        html += `<div style="display:flex;align-items:center;gap:14px;margin-bottom:24px"><div style="flex:1;height:1px;background:rgba(255,255,255,0.12)"></div><span style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:${O}">${esc(s.title)}</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.12)"></div></div>`;
+        // 2x2 grid of service cards
+        html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">`;
+        (s.services||[]).forEach(svc => {
+          html += `<div style="background:#242424;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:22px 18px;display:flex;flex-direction:column">`;
+          html += `<div style="font-size:16px;font-weight:700;color:${O};margin-bottom:8px">${esc(svc.name)}</div>`;
+          html += `<div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.65;flex:1">${esc(svc.desc)}</div>`;
+          html += `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)"><a href="#" style="font-size:11px;font-weight:600;color:${O};text-decoration:none;display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(232,144,10,0.3);padding:6px 12px;border-radius:20px">${esc(svc.cta)}</a></div>`;
+          html += `</div>`;
+        });
+        html += `</div></div>`;
+        break;
+
+      case 'trust':
+        // "Why Businesses Trust Dubai Prod" divider
+        html += `<div style="background:#1a1a1a;padding:40px 32px 10px">`;
+        html += `<div style="display:flex;align-items:center;gap:14px;margin-bottom:28px"><div style="flex:1;height:1px;background:rgba(255,255,255,0.12)"></div><span style="font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.35)">Why Businesses Trust Dubai Prod</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.12)"></div></div>`;
+        // Big heading
+        html += `<h2 style="font-size:34px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px">${esc(s.heading)}</h2>`;
+        html += `<h2 style="font-size:34px;font-weight:800;color:${O};text-align:center;margin-bottom:28px">${esc(s.headingOrange)}</h2>`;
+        // Stats row
+        html += `<div style="display:flex;justify-content:space-between;text-align:center;margin-bottom:24px;padding:18px 0;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08)">`;
+        (s.stats||[]).forEach((st,idx) => {
+          html += `<div style="flex:1;${idx>0?'border-left:1px solid rgba(255,255,255,0.08);':''}"><div style="font-size:26px;font-weight:800;color:${O}">${esc(st.val)}</div><div style="font-size:9px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,0.35);margin-top:4px">${esc(st.label)}</div></div>`;
+        });
+        html += `</div>`;
+        // Description + bullets
+        html += `<p style="font-size:12.5px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:20px">We have worked with 200+ clients and generated 250M+ views across projects. With our base in Dubai and international experience, we bring the standards of global brands into solutions tailored for your market.</p>`;
+        (s.bullets||[]).forEach(b => {
+          html += `<div style="display:flex;gap:10px;margin-bottom:10px;font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6"><span style="color:${O};font-size:10px;margin-top:3px">●</span><span><strong style="color:#fff">${esc(b.split('—')[0].trim())}</strong>${b.includes('—')?' — '+esc(b.split('—').slice(1).join('—').trim()):''}</span></div>`;
+        });
+        html += `</div>`;
+        break;
+
+      case 'casestudy':
+        html += `<div style="background:#1a1a1a;padding:32px 32px 8px">`;
+        html += `<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px"><div style="flex:1;height:1px;background:rgba(255,255,255,0.12)"></div><span style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:${O}">CASE STUDIES</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.12)"></div></div>`;
+        (s.items||[]).forEach(cs => {
+          html += `<div style="background:#242424;border:1px solid rgba(255,255,255,0.08);border-radius:8px;margin-bottom:14px;overflow:hidden;display:flex;min-height:140px">`;
+          if(cs.imageUrl) {
+            html += `<div style="width:140px;flex-shrink:0;background:#333"><img src="${esc(cs.imageUrl)}" style="width:100%;height:100%;object-fit:cover"/></div>`;
+          }
+          html += `<div style="padding:20px;flex:1;display:flex;flex-direction:column">`;
+          html += `<div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px">${esc(cs.name)}</div>`;
+          html += `<div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.65;flex:1">${esc(cs.desc)}</div>`;
+          if(cs.tags) {
+            html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${cs.tags.split(',').map(t=>`<span style="font-size:9px;font-weight:600;letter-spacing:1px;color:${O};background:rgba(232,144,10,0.12);border:1px solid rgba(232,144,10,0.25);padding:4px 10px;border-radius:4px">${t.trim()}</span>`).join('')}</div>`;
+          }
+          html += `<div style="color:${O};font-size:22px;position:absolute;right:16px;top:50%;margin-top:-11px">›</div>`;
+          html += `</div></div>`;
         });
         html += `</div>`;
         break;
 
       case 'cta':
-        html += `<div style="background:#fff;padding:52px 32px;text-align:center;border-top:1px solid #E4E0D8"><h2 style="font-family:'Playfair Display',Georgia,serif;font-size:36px;font-weight:700;color:#18160F;margin-bottom:10px">${esc(s.heading).replace(/\n/g,'<br>')}</h2><p style="font-size:14px;color:#3A3830;line-height:1.75;max-width:380px;margin:0 auto 30px">${esc(s.subtext)}</p><a href="${esc(s.buttonUrl)}" style="display:inline-block;background:#E8900A;color:#fff;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:16px 44px;border-radius:3px;box-shadow:0 6px 24px rgba(232,144,10,0.28)">${esc(s.buttonText)}</a></div>`;
+        html += `<div style="background:#1a1a1a;padding:48px 32px;text-align:center">`;
+        html += `<div style="display:flex;align-items:center;gap:14px;margin-bottom:24px"><div style="flex:1;height:1px;background:rgba(255,255,255,0.12)"></div><span style="font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:${O}">${esc(s.pretext||'')}</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.12)"></div></div>`;
+        html += `<h2 style="font-size:36px;font-weight:800;color:#fff;margin-bottom:0;line-height:1.2">${esc(s.heading)}</h2>`;
+        if(s.headingOrange) html += `<h2 style="font-size:36px;font-weight:800;color:${O};margin-bottom:16px;line-height:1.2">${esc(s.headingOrange)}</h2>`;
+        html += `<p style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7;max-width:420px;margin:0 auto 28px">${esc(s.subtext)}</p>`;
+        html += `<a href="${esc(s.buttonUrl)}" style="display:inline-block;background:${O};color:#fff;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:16px 48px;border-radius:4px">${esc(s.buttonText)}</a>`;
+        if(s.sublink) html += `<p style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:16px">${esc(s.sublink)}</p>`;
+        html += `</div>`;
         break;
 
       case 'text':
-        html += `<div style="padding:20px 32px;font-size:14px;line-height:1.75;color:#3A3830;background:#fff">${esc(s.content)}</div>`;
+        html += `<div style="padding:20px 32px;font-size:13px;line-height:1.75;color:rgba(255,255,255,0.6);background:#1a1a1a">${esc(s.content).replace(/\n/g,'<br>')}</div>`;
         break;
 
       case 'image':
-        if(s.src) html += `<div style="text-align:center;background:#fff;padding:10px 32px"><img src="${esc(s.src)}" alt="${esc(s.alt)}" style="max-width:100%;height:auto;display:block;margin:0 auto"/></div>`;
+        if(s.src) html += `<div style="text-align:center;background:#1a1a1a;padding:10px 32px"><img src="${esc(s.src)}" alt="${esc(s.alt)}" style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:6px"/></div>`;
         break;
 
       case 'divider':
-        html += `<div style="padding:8px 32px;background:#F5F4F1"><hr style="border:none;height:1px;background:#E4E0D8"/></div>`;
+        html += `<div style="padding:8px 32px;background:#1a1a1a"><hr style="border:none;height:1px;background:rgba(255,255,255,0.08)"/></div>`;
         break;
 
       case 'footer':
-        html += `<div style="background:#F5F4F1;padding:28px 32px 20px;border-top:1px solid #E4E0D8">`;
-        html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #E4E0D8"><div style="font-family:'Bebas Neue',Arial,sans-serif;font-size:20px;letter-spacing:3px;color:#18160F">${esc(s.companyName).replace('Prod','<span style=color:#E8900A>Prod</span>')}</div><div style="width:1px;height:22px;background:#E4E0D8"></div><div style="font-size:11px;color:#7A7568">${esc(s.address)}</div></div>`;
-        html += `<div style="font-size:12px;color:#7A7568;line-height:2">`;
-        if(s.email) html += `✉ <a href="mailto:${esc(s.email)}" style="color:#7A7568;text-decoration:none">${esc(s.email)}</a><br>`;
-        if(s.phone) html += `📱 ${esc(s.phone)}<br>`;
-        if(s.website) html += `🌐 <a href="https://${esc(s.website)}" style="color:#7A7568;text-decoration:none">${esc(s.website)}</a><br>`;
+        html += `<div style="background:#1a1a1a;padding:28px 32px 20px;border-top:1px solid rgba(255,255,255,0.08)">`;
+        html += `<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div><span style="font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:${O}">GET IN TOUCH</span><div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div></div>`;
+        // Two columns: Direct Contact | Follow Us
+        html += `<div style="display:flex;gap:20px;margin-bottom:20px">`;
+        // Left col
+        html += `<div style="flex:1"><div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:10px;letter-spacing:1px">Direct Contact ──</div>`;
+        if(s.email) html += `<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="color:${O}">✉</span> ${esc(s.email)}</div>`;
+        if(s.phone) html += `<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="color:${O}">📱</span> ${esc(s.phone)}</div>`;
+        if(s.phone2) html += `<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="color:${O}">📞</span> ${esc(s.phone2)}</div>`;
+        if(s.website) html += `<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="color:${O}">🌐</span> ${esc(s.website)}</div>`;
         html += `</div>`;
-        html += `<div style="border-top:1px solid #E4E0D8;padding-top:14px;margin-top:16px;text-align:center;font-size:11px;color:#7A7568;line-height:1.8">© ${new Date().getFullYear()} ${esc(s.companyName)}. All rights reserved.<br><a href="#" style="color:#7A7568;text-decoration:underline">Unsubscribe</a> · <a href="#" style="color:#7A7568;text-decoration:underline">Privacy Policy</a></div>`;
+        // Right col - socials
+        html += `<div style="flex:1"><div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:10px;letter-spacing:1px">FOLLOW US ──</div>`;
+        const socials = [{k:'instagram',icon:'📸',label:'Instagram'},{k:'linkedin',icon:'💼',label:'Linkedin'},{k:'facebook',icon:'📘',label:'Facebook'},{k:'youtube',icon:'▶️',label:'Youtube'}];
+        html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">`;
+        socials.forEach(sc => {
+          if(s[sc.k]) html += `<div style="font-size:11px;padding:6px 10px;background:rgba(232,144,10,0.08);border:1px solid rgba(232,144,10,0.2);border-radius:4px;color:${O};font-weight:600;display:flex;align-items:center;gap:5px">${sc.icon} ${sc.label}</div>`;
+        });
+        html += `</div></div></div>`;
         html += `</div>`;
         break;
     }
   });
 
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/><style>${css}</style></head><body><div class="wrap">${html}</div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet"/><style>${css}</style></head><body><div class="wrap">${html}</div></body></html>`;
 }
 
 function ebPreview() {
@@ -720,18 +816,45 @@ async function ebSendTest() {
 function ebLoadTemplate(name) {
   if(ebSections.length>0 && !confirm('Replace current sections?')) return;
   ebSections = [];
-  if(name==='outreach') {
-    ebAdd('header'); ebAdd('service'); ebAdd('service'); ebAdd('service');
-    ebSections[1].name='Social Media Management'; ebSections[1].desc='Strategy, scripting, production, editing, and publishing — all in-house.'; ebSections[1].tags='Content Strategy, Growth, Analytics';
-    ebSections[2].name='Video Production'; ebSections[2].desc='From concept to final cut — corporate films, events, product launches, reels.'; ebSections[2].tags='Cinematic, Events, Reels'; ebSections[2].ctaLabel='Instagram'; ebSections[2].ctaType='instagram'; ebSections[2].ctaUrl='https://instagram.com/dubaiprod';
-    ebSections[3].name='Website & Web Development'; ebSections[3].desc='Fast, conversion-focused sites designed to turn visitors into paying clients.'; ebSections[3].tags='UI/UX, Conversion, SEO-ready'; ebSections[3].ctaLabel='Website'; ebSections[3].ctaType='website'; ebSections[3].ctaUrl='https://dubaiprod.com';
-    ebAdd('cta'); ebAdd('footer');
-  } else if(name==='services') {
-    ebAdd('header'); ebAdd('logo');
-    ['Social Media Management','Video Production','Website & Web Development','Branding & Identity','SEO & Paid Ads','3D & CGI'].forEach(sn=>{ebAdd('service');ebSections[ebSections.length-1].name=sn;});
-    ebAdd('clients'); ebAdd('cta'); ebAdd('footer');
+  if(name==='full_en') {
+    ebAdd('header'); ebAdd('message'); ebAdd('whatwedo'); ebAdd('trust'); ebAdd('casestudy'); ebAdd('cta'); ebAdd('footer');
+  } else if(name==='full_si') {
+    // Slovenian version
+    ebAdd('header');
+    ebSections[0].subtitle = 'Opazili smo nekaj področij, kjer bi vaša digitalna prisotnost lahko bila močnejša.';
+    ebAdd('message');
+    ebSections[1].clientName = '[Ime]';
+    ebSections[1].body = 'Pregledali smo vašo blagovno znamko na spletu in opazili nekaj konkretnih področij, kjer bi vaša digitalna prisotnost lahko delovala bolje za vas.\nTo ni množično sporočilo — gre za neposredno opažanje, za katerega smo menili, da je vredno deliti.';
+    ebAdd('whatwedo');
+    ebSections[2].title = 'KAJ DELAMO ZA VAS';
+    ebSections[2].services = [
+      { name:'Spletna stran', desc:'Moderne, profesionalne spletne strani, zgrajene z mislijo na podobo in funkcionalnost — zasnovane za pretvorbo obiskovalcev v stranke.', cta:'Pridobite poročilo →' },
+      { name:'Družbena omrežja', desc:'Strategija, scenariji, produkcija vsebin, urejanje in objavljanje — vse od začetka do konca v naši ekipi.', cta:'Pridobite poročilo →' },
+      { name:'Blagovna znamka', desc:'Celovita nadgradnja vaše blagovne znamke in spletna optimizacija — od vizualne identitete do sporočil, ki odmevajo.', cta:'Nadgradite znamko →' },
+      { name:'Po meri', desc:'Vsak projekt temelji na personalizaciji. Poiščimo najboljši digitalni pristop, specifično za vaše podjetje.', cta:'Pogovorimo se →' }
+    ];
+    ebAdd('trust');
+    ebSections[3].heading = 'Globalni standardi.';
+    ebSections[3].headingOrange = 'Lokalni rezultati.';
+    ebSections[3].bullets = [
+      'S sedežem v Dubaju, z globalnimi izkušnjami — sodelovali smo z blagovnimi znamkami po GCC, Evropi in ZDA.',
+      'Vse storitve pod eno streho — PR, video, družbena omrežja, SEO, spletni razvoj, 3D & CGI.',
+      'Pristop, usmerjen v rezultate — vsaka kampanja je zgrajena okoli merljivih rezultatov.',
+      'Prilagojeno vašemu trgu — globalne standarde prilagodimo vašemu specifičnemu občinstvu.'
+    ];
+    ebAdd('casestudy');
+    ebAdd('cta');
+    ebSections[5].pretext = 'PRIPRAVLJENI NA KORAK NAPREJ?';
+    ebSections[5].heading = 'Pogovorimo se o';
+    ebSections[5].headingOrange = 'vaši blagovni znamki';
+    ebSections[5].subtext = 'Odgovorite na ta email in delili vam bomo nekaj prilagojenih idej za vašo digitalno prisotnost — brez obveznosti, brez prodajnega pritiska, samo uporabna opažanja.';
+    ebSections[5].buttonText = 'ODGOVORITE NA TA EMAIL';
+    ebSections[5].sublink = 'Ali pa nas kontaktirajte direktno na info@dubaiprod.com';
+    ebAdd('footer');
+  } else if(name==='outreach') {
+    ebAdd('header'); ebAdd('message'); ebAdd('whatwedo'); ebAdd('cta'); ebAdd('footer');
   } else if(name==='minimal') {
-    ebAdd('header'); ebAdd('service'); ebAdd('cta'); ebAdd('footer');
+    ebAdd('header'); ebAdd('message'); ebAdd('cta'); ebAdd('footer');
   }
   ebRender();
 }

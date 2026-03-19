@@ -169,34 +169,103 @@ async def find_companies(query: str, location: str = "", count: int = 20) -> lis
         logger.warning(f"[find] No results for '{q} {loc}'")
         return []
 
-    # Scrape all pages in parallel for contact info
+    # Scrape all pages in parallel — check homepage + contact page for emails
+    _bad_emails = {'example', 'test', 'noreply', 'sentry', 'cloudflare',
+                   'wixpress', 'googleapis', 'schema.org', 'w3.org',
+                   'your-email', 'email@', 'name@', 'user@', 'support@wix',
+                   'wordpress', 'developer', 'webmaster', 'localhost'}
+
+    def _extract_emails(text):
+        emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text)
+        return [e for e in emails if not any(x in e.lower() for x in _bad_emails)]
+
+    def _extract_phones(text):
+        phones = re.findall(r'(?:\+\d{1,3}[\s.-]?)?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}', text)
+        return [p.strip() for p in phones if 8 <= len(p.strip()) <= 20]
+
     async def extract(r):
+        url = r['url']
+        company = r['title'].split(' - ')[0].split(' | ')[0].split(' — ')[0].strip()[:60]
+        emails = []
+        phones = []
+
         try:
-            page = await scrape_page(r['url'], 3000)
-            emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', page)
-            emails = [e for e in emails if not any(x in e.lower() for x in
-                      ['example', 'test', 'noreply', 'sentry', 'cloudflare',
-                       'wixpress', 'googleapis', 'schema.org', 'w3.org',
-                       'your-email', 'email@', 'name@', 'user@'])]
-            phones = re.findall(r'(?:\+\d{1,3}[\s.-]?)?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}', page)
-            phones = [p.strip() for p in phones if 8 <= len(p.strip()) <= 20]
-            return {
-                "company": r['title'].split(' - ')[0].split(' | ')[0].split(' — ')[0].strip()[:60],
-                "website": r['url'],
-                "email": emails[0] if emails else "",
-                "phone": phones[0] if phones else "",
-                "description": r.get('snippet', '')[:200],
-            }
+            # 1. Scrape homepage
+            page = await scrape_page(url, 5000)
+            emails = _extract_emails(page)
+            phones = _extract_phones(page)
+
+            # 2. If no email found, scrape contact/about pages
+            if not emails:
+                base = re.match(r'(https?://[^/]+)', url)
+                if base:
+                    base_url = base.group(1)
+                    contact_paths = [
+                        '/contact', '/contact-us', '/kontakt', '/about',
+                        '/about-us', '/impressum', '/o-nas', '/kontakti',
+                    ]
+                    # Also try to find contact link in page
+                    contact_links = re.findall(
+                        r'href=["\']([^"\']*(?:contact|kontakt|about|impressum|o-nas)[^"\']*)["\']',
+                        page, re.IGNORECASE
+                    )
+                    for link in contact_links[:2]:
+                        if link.startswith('/'):
+                            contact_paths.insert(0, link)
+                        elif link.startswith('http'):
+                            contact_paths.insert(0, link)
+
+                    # Scrape up to 3 contact pages in parallel
+                    async def try_page(path):
+                        u = path if path.startswith('http') else base_url + path
+                        return await scrape_page(u, 3000)
+
+                    pages = await asyncio.gather(
+                        *[try_page(p) for p in contact_paths[:3]],
+                        return_exceptions=True
+                    )
+                    for pg in pages:
+                        if isinstance(pg, str) and not pg.startswith("Error"):
+                            emails += _extract_emails(pg)
+                            phones += _extract_phones(pg)
+                        if emails:
+                            break
+
+            # 3. If STILL no email, guess common patterns from domain
+            if not emails:
+                domain_match = re.search(r'https?://(?:www\.)?([^/]+)', url)
+                if domain_match:
+                    domain = domain_match.group(1)
+                    # Only guess for non-generic domains
+                    if '.' in domain and len(domain) < 40:
+                        emails = [f"info@{domain}"]
+
         except Exception:
-            return {
-                "company": r['title'].split(' - ')[0].split(' | ')[0].strip()[:60],
-                "website": r['url'], "email": "", "phone": "",
-                "description": r.get('snippet', '')[:200],
-            }
+            pass
+
+        return {
+            "company": company,
+            "website": url,
+            "email": emails[0] if emails else "",
+            "phone": phones[0] if phones else "",
+            "description": r.get('snippet', '')[:200],
+        }
 
     companies = await asyncio.gather(*[extract(r) for r in all_results[:target * 2]])
-    companies = [c for c in companies if c.get("company")]  # Remove empties
-    logger.info(f"[find] Found {len(companies)} companies for '{q} {loc}' (requested {count})")
+    companies = [c for c in companies if c.get("company")]
+
+    # Sort: companies with real email first, then guessed, then none
+    def _email_score(c):
+        e = c.get("email", "")
+        if not e:
+            return 2
+        if e.startswith("info@") and e.split("@")[1] in c.get("website", ""):
+            return 1  # guessed
+        return 0  # found on page
+
+    companies.sort(key=_email_score)
+    logger.info(f"[find] Found {len(companies)} companies for '{q} {loc}' "
+                f"({sum(1 for c in companies if c['email'])} with email, requested {count})")
     return companies[:target]
 
 

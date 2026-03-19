@@ -178,6 +178,7 @@ app.add_api_route("/space/email", _protected_page("space-email.html"), methods=[
 app.add_api_route("/space/creative-choice", _protected_page("space-creative-choice.html"), methods=["GET"])
 app.add_api_route("/space/sheets", _protected_page("space-sheets.html"), methods=["GET"])
 app.add_api_route("/space/video", _protected_page("space-video.html"), methods=["GET"])
+app.add_api_route("/space/campaigns", _protected_page("space-campaigns.html"), methods=["GET"])
 
 
 @app.post("/upload")

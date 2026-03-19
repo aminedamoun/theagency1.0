@@ -1559,6 +1559,172 @@ async def generate_video(req: VideoGenRequest):
         return {"status": "error", "error": str(e)}
 
 
+# ---------------------------------------------------------------------------
+# Email Campaign Builder API
+# ---------------------------------------------------------------------------
+
+class EmailCampaignIn(BaseModel):
+    campaign_name: str = "Untitled Campaign"
+    subject: str = ""
+    preview_text: str = ""
+    sender_name: str = "Dubai Prod"
+    sender_email: str = "info@dubaiprod.com"
+    template_json: str = "[]"
+    rendered_html: str = ""
+    target_segment: str = ""
+    selected_leads: str = "[]"
+    status: str = "draft"
+    scheduled_at: str | None = None
+
+
+class SendTestReq(BaseModel):
+    email: str
+
+
+class SendCampaignReq(BaseModel):
+    lead_emails: list[str]
+
+
+@router.get("/campaigns")
+async def list_campaigns():
+    db = await get_db()
+    rows = await db.execute_fetchall("SELECT * FROM email_campaigns ORDER BY updated_at DESC")
+    await db.close()
+    return [dict(r) for r in rows]
+
+
+@router.post("/campaigns")
+async def create_campaign(data: EmailCampaignIn):
+    db = await get_db()
+    cursor = await db.execute(
+        "INSERT INTO email_campaigns (campaign_name, subject, preview_text, sender_name, sender_email, "
+        "template_json, rendered_html, target_segment, selected_leads, status, scheduled_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (data.campaign_name, data.subject, data.preview_text, data.sender_name, data.sender_email,
+         data.template_json, data.rendered_html, data.target_segment, data.selected_leads,
+         data.status, data.scheduled_at),
+    )
+    await db.commit()
+    cid = cursor.lastrowid
+    await db.close()
+    return {"id": cid, "status": "created"}
+
+
+@router.get("/campaigns/{campaign_id}")
+async def get_campaign(campaign_id: int):
+    db = await get_db()
+    rows = await db.execute_fetchall("SELECT * FROM email_campaigns WHERE id=?", (campaign_id,))
+    await db.close()
+    if not rows:
+        return {"error": "Not found"}
+    return dict(rows[0])
+
+
+@router.put("/campaigns/{campaign_id}")
+async def update_campaign(campaign_id: int, data: EmailCampaignIn):
+    db = await get_db()
+    await db.execute(
+        "UPDATE email_campaigns SET campaign_name=?, subject=?, preview_text=?, sender_name=?, sender_email=?, "
+        "template_json=?, rendered_html=?, target_segment=?, selected_leads=?, status=?, scheduled_at=?, "
+        "updated_at=CURRENT_TIMESTAMP WHERE id=?",
+        (data.campaign_name, data.subject, data.preview_text, data.sender_name, data.sender_email,
+         data.template_json, data.rendered_html, data.target_segment, data.selected_leads,
+         data.status, data.scheduled_at, campaign_id),
+    )
+    await db.commit()
+    await db.close()
+    return {"id": campaign_id, "status": "updated"}
+
+
+@router.delete("/campaigns/{campaign_id}")
+async def delete_campaign(campaign_id: int):
+    db = await get_db()
+    await db.execute("DELETE FROM email_campaigns WHERE id=?", (campaign_id,))
+    await db.commit()
+    await db.close()
+    return {"status": "deleted"}
+
+
+@router.post("/campaigns/{campaign_id}/send-test")
+async def send_test_campaign(campaign_id: int, data: SendTestReq):
+    db = await get_db()
+    rows = await db.execute_fetchall("SELECT * FROM email_campaigns WHERE id=?", (campaign_id,))
+    await db.close()
+    if not rows:
+        return {"error": "Campaign not found"}
+    campaign = dict(rows[0])
+    html_body = campaign.get("rendered_html", "")
+    subject = campaign.get("subject", "Test Email")
+    if not html_body:
+        return {"error": "No rendered HTML — save the campaign first"}
+    try:
+        from email_agent.sender import send_email
+        sent = await asyncio.to_thread(
+            send_email,
+            to=data.email,
+            subject=f"[TEST] {subject}",
+            body=html_body,
+            confirm_callback=lambda _: True,
+        )
+        if sent:
+            return {"status": "sent", "to": data.email}
+        return {"status": "failed", "error": "send_email returned False"}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+@router.post("/campaigns/{campaign_id}/send")
+async def send_campaign(campaign_id: int, data: SendCampaignReq):
+    db = await get_db()
+    rows = await db.execute_fetchall("SELECT * FROM email_campaigns WHERE id=?", (campaign_id,))
+    if not rows:
+        await db.close()
+        return {"error": "Campaign not found"}
+    campaign = dict(rows[0])
+    html_body = campaign.get("rendered_html", "")
+    subject = campaign.get("subject", "")
+    if not html_body:
+        await db.close()
+        return {"error": "No rendered HTML — save the campaign first"}
+    sent_count = 0
+    errors = []
+    from email_agent.sender import send_email
+    for email_addr in data.lead_emails:
+        try:
+            sent = await asyncio.to_thread(
+                send_email,
+                to=email_addr,
+                subject=subject,
+                body=html_body,
+                confirm_callback=lambda _: True,
+            )
+            if sent:
+                sent_count += 1
+        except Exception as e:
+            errors.append({"email": email_addr, "error": str(e)})
+    # Update campaign status
+    await db.execute(
+        "UPDATE email_campaigns SET status='sent', sent_count=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+        (sent_count, campaign_id),
+    )
+    await db.commit()
+    await db.close()
+    return {"status": "sent", "sent_count": sent_count, "errors": errors}
+
+
+@router.get("/all-leads")
+async def get_all_leads():
+    """Get all leads across all projects (for campaign targeting)."""
+    db = await get_db()
+    rows = await db.execute_fetchall(
+        "SELECT l.*, rp.name as project_name FROM leads l "
+        "LEFT JOIN research_projects rp ON l.project_id = rp.id "
+        "WHERE l.email != '' ORDER BY l.created_at DESC"
+    )
+    await db.close()
+    return [dict(r) for r in rows]
+
+
 @router.get("/gallery")
 async def get_gallery():
     """Return all generated images and videos."""

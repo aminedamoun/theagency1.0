@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>THE AGENCY — Email Campaign Builder</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0c0c12;font-family:'Segoe UI',system-ui,sans-serif;color:#e0e0e0}
+
+.app{display:flex;height:100vh;flex-direction:column}
+
+/* Top bar */
+.topbar{height:48px;display:flex;align-items:center;padding:0 16px;background:#111118;border-bottom:1px solid rgba(201,164,76,0.12);flex-shrink:0;gap:8px}
+.tb-logo{display:flex;align-items:center;gap:8px;text-decoration:none;margin-right:8px}
+.tb-logo-i{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#c9a44c,#a6882f);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#0c0c12;font-weight:800}
+.tb-logo span{font-size:0.55rem;letter-spacing:0.25em;text-transform:uppercase;color:rgba(201,164,76,0.6)}
+.tb-sep{width:1px;height:20px;background:rgba(255,255,255,0.06)}
+.tb-fill{flex:1}
+.tb-input{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:6px 12px;color:#e0e0e0;font-size:0.72rem;outline:none;transition:border 0.2s}
+.tb-input:focus{border-color:rgba(201,164,76,0.4)}
+.tb-input.name{width:180px;font-weight:600}
+.tb-input.subject{width:240px}
+.tb-btn{padding:6px 14px;border-radius:6px;font-size:0.62rem;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);transition:all 0.15s;display:flex;align-items:center;gap:5px}
+.tb-btn:hover{background:rgba(201,164,76,0.12);color:#c9a44c}
+.tb-btn.gold{background:linear-gradient(135deg,#c9a44c,#a6882f);color:#0c0c12}
+.tb-btn.gold:hover{opacity:0.9}
+.tb-btn.green{background:rgba(46,204,113,0.12);color:#2ecc71;border:1px solid rgba(46,204,113,0.15)}
+.tb-btn.green:hover{background:rgba(46,204,113,0.2)}
+.tb-btn.red{background:rgba(231,76,60,0.12);color:#e74c3c}
+.tb-back{color:rgba(201,164,76,0.6);text-decoration:none;font-size:0.65rem;display:flex;align-items:center;gap:5px}
+.tb-back:hover{color:#c9a44c}
+
+/* Main layout */
+.main{flex:1;display:flex;min-height:0;overflow:hidden}
+
+/* Left Panel - Block Palette */
+.left-panel{width:250px;background:#1a1a2e;border-right:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.panel-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,0.06)}
+.panel-tab{flex:1;padding:10px 0;text-align:center;font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.35);cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.06em}
+.panel-tab:hover{color:rgba(255,255,255,0.6)}
+.panel-tab.active{color:#c9a44c;border-bottom:2px solid #c9a44c}
+.panel-body{flex:1;overflow-y:auto;padding:12px}
+.panel-body::-webkit-scrollbar{width:4px}
+.panel-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+.panel-section{display:none}
+.panel-section.active{display:block}
+
+.block-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);cursor:grab;margin-bottom:6px;transition:all 0.15s;user-select:none}
+.block-item:hover{background:rgba(201,164,76,0.08);border-color:rgba(201,164,76,0.2)}
+.block-item:active{cursor:grabbing}
+.block-item .bi-icon{width:32px;height:32px;border-radius:6px;background:rgba(201,164,76,0.1);display:flex;align-items:center;justify-content:center;color:#c9a44c;font-size:0.75rem;flex-shrink:0}
+.block-item .bi-text{font-size:0.68rem;font-weight:600;color:rgba(255,255,255,0.7)}
+.block-item .bi-desc{font-size:0.52rem;color:rgba(255,255,255,0.3);margin-top:2px}
+
+/* Templates */
+.template-card{padding:14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);cursor:pointer;margin-bottom:8px;transition:all 0.15s}
+.template-card:hover{background:rgba(201,164,76,0.08);border-color:rgba(201,164,76,0.2)}
+.template-card .tc-name{font-size:0.72rem;font-weight:700;color:#e0e0e0;margin-bottom:4px}
+.template-card .tc-desc{font-size:0.55rem;color:rgba(255,255,255,0.35);line-height:1.4}
+.template-card .tc-icon{color:#c9a44c;margin-right:6px}
+
+/* Center Panel - Canvas */
+.center-panel{flex:1;display:flex;flex-direction:column;background:#0c0c12;overflow:hidden;min-width:0}
+.canvas-header{padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.04);flex-shrink:0}
+.canvas-header .ch-label{font-size:0.55rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.08em}
+.canvas-wrap{flex:1;overflow-y:auto;display:flex;justify-content:center;padding:24px 16px}
+.canvas-wrap::-webkit-scrollbar{width:6px}
+.canvas-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+
+.email-canvas{width:600px;min-height:400px;background:#ffffff;border-radius:4px;box-shadow:0 4px 30px rgba(0,0,0,0.4);position:relative}
+.canvas-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;color:#999;text-align:center}
+.canvas-empty i{font-size:2.5rem;color:#c9a44c;margin-bottom:16px;opacity:0.4}
+.canvas-empty h3{font-size:0.9rem;color:#666;margin-bottom:8px}
+.canvas-empty p{font-size:0.7rem;color:#999}
+
+.canvas-block{position:relative;cursor:pointer;transition:outline 0.15s}
+.canvas-block:hover{outline:2px solid rgba(201,164,76,0.4);outline-offset:-2px}
+.canvas-block.selected{outline:2px solid #c9a44c;outline-offset:-2px;box-shadow:0 0 12px rgba(201,164,76,0.2)}
+.canvas-block .block-controls{position:absolute;top:4px;right:4px;display:none;gap:3px;z-index:10}
+.canvas-block:hover .block-controls,.canvas-block.selected .block-controls{display:flex}
+.block-ctrl-btn{width:24px;height:24px;border-radius:4px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.55rem;transition:all 0.15s}
+.block-ctrl-btn.move{background:rgba(52,152,219,0.9);color:#fff}
+.block-ctrl-btn.del{background:rgba(231,76,60,0.9);color:#fff}
+.block-ctrl-btn:hover{transform:scale(1.1)}
+
+.drop-zone{height:4px;transition:all 0.2s;margin:0}
+.drop-zone.drag-over{height:40px;background:rgba(201,164,76,0.15);border:2px dashed rgba(201,164,76,0.4);border-radius:4px;margin:4px 0}
+
+/* Right Panel */
+.right-panel{width:300px;background:#1a1a2e;border-left:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.rp-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.7rem;font-weight:700;color:#c9a44c;display:flex;align-items:center;justify-content:space-between}
+.rp-body{flex:1;overflow-y:auto;padding:14px 16px}
+.rp-body::-webkit-scrollbar{width:4px}
+.rp-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+
+.prop-group{margin-bottom:14px}
+.prop-label{font-size:0.58rem;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.prop-input{width:100%;padding:8px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#e0e0e0;font-size:0.7rem;outline:none;transition:border 0.2s}
+.prop-input:focus{border-color:rgba(201,164,76,0.4)}
+textarea.prop-input{min-height:80px;resize:vertical;font-family:inherit}
+select.prop-input{cursor:pointer}
+.prop-row{display:flex;gap:8px;align-items:center}
+.prop-row .prop-input{flex:1}
+.prop-color{width:32px;height:32px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;padding:0;background:none}
+.prop-color::-webkit-color-swatch-wrapper{padding:2px}
+.prop-color::-webkit-color-swatch{border:none;border-radius:4px}
+.prop-btn-row{display:flex;gap:6px;flex-wrap:wrap}
+.prop-toggle{padding:5px 10px;border-radius:5px;font-size:0.58rem;font-weight:600;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.15s}
+.prop-toggle:hover{border-color:rgba(201,164,76,0.3);color:rgba(255,255,255,0.6)}
+.prop-toggle.active{background:rgba(201,164,76,0.15);border-color:rgba(201,164,76,0.3);color:#c9a44c}
+
+/* Campaign list in right panel */
+.camp-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);cursor:pointer;margin-bottom:6px;transition:all 0.12s}
+.camp-item:hover{background:rgba(201,164,76,0.06);border-color:rgba(201,164,76,0.15)}
+.camp-info{flex:1;min-width:0}
+.camp-name{font-size:0.7rem;font-weight:600;color:#e0e0e0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.camp-meta{font-size:0.52rem;color:rgba(255,255,255,0.3);margin-top:2px}
+.camp-badge{padding:2px 8px;border-radius:10px;font-size:0.48rem;font-weight:700;flex-shrink:0}
+.camp-badge.draft{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4)}
+.camp-badge.sent{background:rgba(46,204,113,0.12);color:#2ecc71}
+.camp-badge.scheduled{background:rgba(52,152,219,0.12);color:#3498db}
+.camp-actions{display:flex;gap:3px;flex-shrink:0}
+.camp-act-btn{width:24px;height:24px;border-radius:4px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.5rem;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);transition:all 0.15s}
+.camp-act-btn:hover{background:rgba(201,164,76,0.15);color:#c9a44c}
+.camp-act-btn.del:hover{background:rgba(231,76,60,0.15);color:#e74c3c}
+
+/* Modals */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:#1a1a2e;border:1px solid rgba(255,255,255,0.08);border-radius:12px;max-width:90vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06)}
+.modal-header h3{font-size:0.85rem;font-weight:700;color:#c9a44c}
+.modal-close{width:28px;height:28px;border-radius:6px;border:none;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.7rem}
+.modal-close:hover{background:rgba(231,76,60,0.15);color:#e74c3c}
+.modal-body{flex:1;overflow-y:auto;padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.06);display:flex;justify-content:flex-end;gap:8px}
+
+/* Preview modal */
+.preview-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.preview-tab{padding:8px 16px;font-size:0.65rem;font-weight:600;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+.preview-tab:hover{color:rgba(255,255,255,0.7)}
+.preview-tab.active{color:#c9a44c;border-bottom-color:#c9a44c}
+.preview-frame{background:#f4f4f4;border-radius:8px;overflow:hidden;margin:0 auto}
+.preview-frame.desktop{width:600px}
+.preview-frame.mobile{width:320px}
+.preview-frame iframe{width:100%;border:none;min-height:500px}
+.preview-code{background:#0c0c12;border-radius:8px;padding:16px;max-height:500px;overflow:auto}
+.preview-code pre{font-size:0.65rem;color:#8bc34a;white-space:pre-wrap;word-break:break-all;font-family:'Fira Code',monospace;line-height:1.5}
+.copy-btn{position:absolute;top:12px;right:12px;padding:6px 12px;border-radius:6px;border:none;background:rgba(201,164,76,0.2);color:#c9a44c;font-size:0.58rem;cursor:pointer}
+.copy-btn:hover{background:rgba(201,164,76,0.3)}
+
+/* Send modal */
+.lead-list{max-height:300px;overflow-y:auto;margin:12px 0}
+.lead-list::-webkit-scrollbar{width:4px}
+.lead-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
+.lead-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;transition:background 0.12s;cursor:pointer}
+.lead-row:hover{background:rgba(255,255,255,0.03)}
+.lead-row input[type="checkbox"]{accent-color:#c9a44c}
+.lead-row .lr-name{font-size:0.7rem;font-weight:600;flex:1}
+.lead-row .lr-email{font-size:0.62rem;color:rgba(255,255,255,0.4)}
+.select-all-row{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:6px;display:flex;align-items:center;gap:8px;font-size:0.65rem;font-weight:600;color:#c9a44c;cursor:pointer}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:8px;font-size:0.7rem;font-weight:600;z-index:2000;transform:translateY(100px);opacity:0;transition:all 0.3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:rgba(46,204,113,0.9);color:#fff}
+.toast.error{background:rgba(231,76,60,0.9);color:#fff}
+.toast.info{background:rgba(52,152,219,0.9);color:#fff}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <a href="/space/email" class="tb-back"><i class="fas fa-arrow-left"></i> Email</a>
+    <div class="tb-sep"></div>
+    <a href="/spaces" class="tb-logo">
+      <div class="tb-logo-i">A</div>
+      <span>Campaign Builder</span>
+    </a>
+    <div class="tb-sep"></div>
+    <input class="tb-input name" id="campName" placeholder="Campaign Name" value="Untitled Campaign">
+    <input class="tb-input subject" id="campSubject" placeholder="Subject Line">
+    <div class="tb-fill"></div>
+    <button class="tb-btn" onclick="saveDraft()"><i class="fas fa-save"></i> Save</button>
+    <button class="tb-btn" onclick="openPreview()"><i class="fas fa-eye"></i> Preview</button>
+    <button class="tb-btn" onclick="openTestSend()"><i class="fas fa-paper-plane"></i> Test</button>
+    <button class="tb-btn green" onclick="openSendModal()"><i class="fas fa-rocket"></i> Send</button>
+  </div>
+
+  <div class="main">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="panel-tabs">
+        <div class="panel-tab active" onclick="switchPanelTab('blocks',this)">Blocks</div>
+        <div class="panel-tab" onclick="switchPanelTab('templates',this)">Templates</div>
+      </div>
+      <div class="panel-body">
+        <div class="panel-section active" id="sec-blocks">
+          <div class="block-item" draggable="true" data-type="logo" ondragstart="dragBlock(event,'logo')">
+            <div class="bi-icon"><i class="fas fa-crown"></i></div>
+            <div><div class="bi-text">Logo</div><div class="bi-desc">Brand logo with link</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="hero" ondragstart="dragBlock(event,'hero')">
+            <div class="bi-icon"><i class="fas fa-image"></i></div>
+            <div><div class="bi-text">Hero Banner</div><div class="bi-desc">Full-width image + overlay</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="heading" ondragstart="dragBlock(event,'heading')">
+            <div class="bi-icon"><i class="fas fa-heading"></i></div>
+            <div><div class="bi-text">Heading</div><div class="bi-desc">H1/H2/H3 title</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="text" ondragstart="dragBlock(event,'text')">
+            <div class="bi-icon"><i class="fas fa-align-left"></i></div>
+            <div><div class="bi-text">Text Block</div><div class="bi-desc">Paragraph content</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="button" ondragstart="dragBlock(event,'button')">
+            <div class="bi-icon"><i class="fas fa-square"></i></div>
+            <div><div class="bi-text">Button</div><div class="bi-desc">CTA button with link</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="image" ondragstart="dragBlock(event,'image')">
+            <div class="bi-icon"><i class="far fa-image"></i></div>
+            <div><div class="bi-text">Image</div><div class="bi-desc">Single image</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="divider" ondragstart="dragBlock(event,'divider')">
+            <div class="bi-icon"><i class="fas fa-minus"></i></div>
+            <div><div class="bi-text">Divider</div><div class="bi-desc">Horizontal line</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="spacer" ondragstart="dragBlock(event,'spacer')">
+            <div class="bi-icon"><i class="fas fa-arrows-alt-v"></i></div>
+            <div><div class="bi-text">Spacer</div><div class="bi-desc">Empty space</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="two_columns" ondragstart="dragBlock(event,'two_columns')">
+            <div class="bi-icon"><i class="fas fa-columns"></i></div>
+            <div><div class="bi-text">Two Columns</div><div class="bi-desc">Side-by-side layout</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="social" ondragstart="dragBlock(event,'social')">
+            <div class="bi-icon"><i class="fas fa-share-alt"></i></div>
+            <div><div class="bi-text">Social Links</div><div class="bi-desc">Social media icons</div></div>
+          </div>
+          <div class="block-item" draggable="true" data-type="footer" ondragstart="dragBlock(event,'footer')">
+            <div class="bi-icon"><i class="fas fa-shoe-prints"></i></div>
+            <div><div class="bi-text">Footer</div><div class="bi-desc">Company info + unsubscribe</div></div>
+          </div>
+        </div>
+        <div class="panel-section" id="sec-templates">
+          <div class="template-card" onclick="loadTemplate('newsletter')">
+            <div class="tc-name"><i class="fas fa-newspaper tc-icon"></i>Newsletter</div>
+            <div class="tc-desc">Logo, hero, heading, text blocks, CTA button, footer</div>
+          </div>
+          <div class="template-card" onclick="loadTemplate('event')">
+            <div class="tc-name"><i class="fas fa-calendar-star tc-icon"></i>Event Invitation</div>
+            <div class="tc-desc">Hero banner, event details, date/time, RSVP button</div>
+          </div>
+          <div class="template-card" onclick="loadTemplate('property')">
+            <div class="tc-name"><i class="fas fa-building tc-icon"></i>Property Launch</div>
+            <div class="tc-desc">Property hero, features columns, price, CTA</div>
+          </div>
+          <div class="template-card" onclick="loadTemplate('promo')">
+            <div class="tc-name"><i class="fas fa-tags tc-icon"></i>Promotional</div>
+            <div class="tc-desc">Big heading, promo image, discount, CTA</div>
+          </div>
+          <div class="template-card" onclick="loadTemplate('market')">
+            <div class="tc-name"><i class="fas fa-chart-line tc-icon"></i>Market Update</div>
+            <div class="tc-desc">Stats columns, analysis text, CTA</div>
+          </div>
+          <div class="template-card" onclick="loadTemplate('webinar')">
+            <div class="tc-name"><i class="fas fa-video tc-icon"></i>Webinar Invite</div>
+            <div class="tc-desc">Speaker image, title, date/time, register button</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Panel - Canvas -->
+    <div class="center-panel">
+      <div class="canvas-header">
+        <span class="ch-label">Email Preview (600px)</span>
+      </div>
+      <div class="canvas-wrap">
+        <div class="email-canvas" id="emailCanvas"
+             ondragover="canvasDragOver(event)" ondrop="canvasDrop(event)" ondragleave="canvasDragLeave(event)">
+          <div class="canvas-empty" id="canvasEmpty">
+            <i class="fas fa-envelope-open-text"></i>
+            <h3>Start building your email</h3>
+            <p>Drag blocks from the left panel or choose a template</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="rp-header">
+        <span id="rpTitle">Campaigns</span>
+        <button class="tb-btn" onclick="newCampaign()" style="padding:4px 10px;font-size:0.55rem"><i class="fas fa-plus"></i> New</button>
+      </div>
+      <div class="rp-body" id="rpBody">
+        <div id="campaignList"></div>
+        <div id="blockSettings" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal" style="width:750px">
+    <div class="modal-header">
+      <h3>Email Preview</h3>
+      <button class="modal-close" onclick="closeModal('previewModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-tabs">
+        <div class="preview-tab active" onclick="switchPreview('desktop',this)">Desktop</div>
+        <div class="preview-tab" onclick="switchPreview('mobile',this)">Mobile</div>
+        <div class="preview-tab" onclick="switchPreview('code',this)">HTML Code</div>
+      </div>
+      <div id="previewContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Test Send Modal -->
+<div class="modal-overlay" id="testModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-header">
+      <h3>Send Test Email</h3>
+      <button class="modal-close" onclick="closeModal('testModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="prop-group">
+        <div class="prop-label">Test Email Address</div>
+        <input class="prop-input" id="testEmail" type="email" placeholder="your@email.com">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tb-btn" onclick="closeModal('testModal')">Cancel</button>
+      <button class="tb-btn gold" onclick="sendTestEmail()"><i class="fas fa-paper-plane"></i> Send Test</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send Campaign Modal -->
+<div class="modal-overlay" id="sendModal">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <h3>Send Campaign</h3>
+      <button class="modal-close" onclick="closeModal('sendModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="prop-group">
+        <div class="prop-label">Select Recipients</div>
+        <div class="select-all-row" onclick="toggleAllLeads()">
+          <input type="checkbox" id="selectAllLeads"> Select All
+        </div>
+        <div class="lead-list" id="leadList"></div>
+      </div>
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:8px">
+        <span id="selectedCount">0</span> recipients selected
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tb-btn" onclick="closeModal('sendModal')">Cancel</button>
+      <button class="tb-btn gold" onclick="sendCampaign()"><i class="fas fa-rocket"></i> Send Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let state = {
+    id: null,
+    name: 'Untitled Campaign',
+    subject: '',
+    preview_text: '',
+    sender_name: 'Dubai Prod',
+    sender_email: 'info@dubaiprod.com',
+    blocks: [],
+    selectedBlockIndex: null,
+    status: 'draft'
+};
+
+let allLeads = [];
+let dragBlockType = null;
+let dragBlockIndex = null;
+
+// ── Block Defaults ─────────────────────────────────────────────────────────────
+function createBlock(type) {
+    const id = 'block_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    const defaults = {
+        logo: { id, type:'logo', src:'https://via.placeholder.com/180x60/c9a44c/ffffff?text=LOGO', width:180, link:'#', alt:'Logo' },
+        hero: { id, type:'hero', src:'https://via.placeholder.com/600x250/1a1a2e/c9a44c?text=HERO+BANNER', overlayText:'', overlayColor:'#ffffff', alt:'Hero' },
+        heading: { id, type:'heading', text:'Your Heading Here', level:'h2', color:'#333333', align:'center', bold:true },
+        text: { id, type:'text', text:'Write your email content here. This is a paragraph of text that will appear in your email campaign.', color:'#555555', fontSize:16, align:'left', bold:false, italic:false },
+        button: { id, type:'button', text:'Click Here', url:'#', bgColor:'#c9a44c', textColor:'#ffffff', borderRadius:6, paddingV:14, paddingH:30, align:'center' },
+        image: { id, type:'image', src:'https://via.placeholder.com/560x300/eeeeee/999999?text=IMAGE', alt:'Image', width:560, link:'', align:'center' },
+        divider: { id, type:'divider', color:'#e0e0e0', thickness:1, widthPercent:100 },
+        spacer: { id, type:'spacer', height:30 },
+        two_columns: { id, type:'two_columns', ratio:'50-50', leftType:'text', leftContent:'Left column content', rightType:'text', rightContent:'Right column content', leftImage:'https://via.placeholder.com/260x200/eeeeee/999999?text=LEFT', rightImage:'https://via.placeholder.com/260x200/eeeeee/999999?text=RIGHT' },
+        social: { id, type:'social', facebook:'#', instagram:'#', twitter:'', linkedin:'', youtube:'', tiktok:'', iconColor:'#c9a44c', align:'center' },
+        footer: { id, type:'footer', companyName:'Dubai Prod', address:'Dubai, UAE', unsubscribeText:'Unsubscribe from these emails', textColor:'#999999', bgColor:'#f8f8f8' }
+    };
+    return defaults[type] || { id, type };
+}
+
+// ── Templates ──────────────────────────────────────────────────────────────────
+const TEMPLATES = {
+    newsletter: {
+        name: 'Newsletter',
+        blocks: [
+            { type:'logo', src:'https://via.placeholder.com/180x60/c9a44c/ffffff?text=LOGO', width:180, link:'#', alt:'Logo' },
+            { type:'hero', src:'https://via.placeholder.com/600x250/1a1a2e/c9a44c?text=NEWSLETTER+BANNER', overlayText:'', overlayColor:'#ffffff', alt:'Hero' },
+            { type:'heading', text:'This Week in Review', level:'h1', color:'#1a1a2e', align:'center', bold:true },
+            { type:'text', text:'Welcome to our weekly newsletter! Here are the latest updates and insights from our team. We have been working on exciting new projects and we cannot wait to share them with you.', color:'#555555', fontSize:16, align:'left', bold:false, italic:false },
+            { type:'divider', color:'#e0e0e0', thickness:1, widthPercent:80 },
+            { type:'text', text:'Our latest project has just launched and the response has been incredible. Read more about how we achieved record-breaking results for our clients.', color:'#555555', fontSize:16, align:'left', bold:false, italic:false },
+            { type:'button', text:'Read More', url:'#', bgColor:'#c9a44c', textColor:'#ffffff', borderRadius:6, paddingV:14, paddingH:30, align:'center' },
+            { type:'footer', companyName:'Dubai Prod', address:'Dubai, UAE', unsubscribeText:'Unsubscribe from these emails', textColor:'#999999', bgColor:'#f8f8f8' }
+        ]
+    },
+    event: {
+        name: 'Event Invitation',
+        blocks: [
+            { type:'logo', src:'https://via.placeholder.com/180x60/c9a44c/ffffff?text=LOGO', width:180, link:'#', alt:'Logo' },
+            { type:'hero', src:'https://via.placeholder.com/600x300/1a1a2e/c9a44c?text=EVENT+BANNER', overlayText:'You Are Invited', overlayColor:'#ffffff', alt:'Event' },
+            { type:'heading', text:'Exclusive Dubai Networking Event', level:'h1', color:'#1a1a2e', align:'center', bold:true },
+            { type:'text', text:'Join us for an evening of networking, insights, and inspiration. Meet industry leaders and discover new opportunities in the heart of Dubai.', color:'#555555', fontSize:16, align:'center', bold:false, italic:false },
+            { type:'divider', color:'#c9a44c', thickness:2, widthPercent:40 },
+            { type:'two_columns', ratio:'50-50', leftType:'text', leftContent:'<strong>Date</strong><br>March 28, 2026<br><br><strong>Time</strong><br>7:00 PM - 10:00 PM', rightType:'text', rightContent:'<strong>Venue</strong><br>The Address Downtown<br><br><strong>Dress Code</strong><br>Business Casual' },
+            { type:'button', text:'RSVP Now', url:'#', bgColor:'#c9a44c', textColor:'#ffffff', borderRadius:30, paddingV:16, paddingH:40, align:'center' },
+            { type:'footer', companyName:'Dubai Prod', address:'Dubai, UAE', unsubscribeText:'Unsubscribe from these emails', textColor:'#999999', bgColor:'#f8f8f8' }
+        ]
+    },
+    property: {
+        name: 'Property Launch',
+        blocks: [
+            { type:'logo', src:'https://via.placeholder.com/180x60/c9a44c/ffffff?text=LOGO', width:180, link:'#', alt:'Logo' },
+            { type:'hero', src:'https://via.placeholder.com/600x350/1a1a2e/c9a44c?text=LUXURY+PROPERTY', overlayText:'', overlayColor:'#ffffff', alt:'Property' },
+            { type:'heading', text:'Introducing Marina Residences', level:'h1', color:'#1a1a2e', align:'center', bold:true },
+            { type:'text', text:'Experience luxury living at its finest. Our newest development offers breathtaking views, world-class amenities, and an unparalleled lifestyle in Dubai Marina.', color:'#555555', fontSize:16, align:'center', bold:false, italic:false },
+            { type:'two_columns', ratio:'50-50', leftType:'text', leftContent:'<strong>Features</strong><br>- Infinity Pool<br>- Private Beach<br>- Smart Home<br>- Concierge 24/7', rightType:'text', rightContent:'<strong>Unit Types</strong><br>- 1 BR from $450K<br>- 2 BR from $750K<br>- 3 BR from $1.2M<br>- Penthouse $3.5M' },
+            { type:'heading', text:'Starting from AED 1,650,000', level:'h2', color:'#c9a44c', align:'center', bold:true },
+            { type:'button', text:'Book a Viewing', url:'#', bgColor:'#c9a44c', textColor:'#ffffff', borderRadius:6, paddingV:16, paddingH:40, align:'center' },
+            { type:'footer', companyName:'Dubai Prod', address:'Dubai, UAE', unsubscribeText:'Unsubscribe from these emails', textColor:'#999999', bgColor:'#f8f8f8' }
+        ]
+    },
+    promo: {
+        name: 'Promotional',
+        blocks: [
+            { type:'logo', src:'https://via.placeholder.com/180x60/c9a44c/ffffff?text=LOGO', width:180, link:'#', alt:'Logo' },
+            { type:'heading', text:'EXCLUSIVE OFFER', level:'h1', color:'#c9a44c', align:'center', bold:true },
+            { type:'hero', src:'https://via.placeholder.com/600x300/1a1a2e/ffffff?text=SPECIAL+PROMOTION', overlayText:'', overlayColor:'#ffffff', alt:'Promo' },
+            { type:'heading', text:'50% OFF All Services', level:'h2', color:'#e74c3c', align:'center', bold:true },
+            { type:'text', text:'For a limited time only, enjoy 50% off all our digital marketing and production services. This exclusive offer is available to our valued subscribers only. Do not miss out on this incredible opportunity!', color:'#555555', fontSize:16, align:'center', bold:false, italic:false },
+            { type:'button', text:'Claim Your Discount', url:'#', bgColor:'#e74c3c', textColor:'#ffffff', borderRadius:30, paddingV:16, paddingH:40, align:'center' },
+            { type:'text', text:'*Offer valid until April 15, 2026. Terms and conditions apply. Cannot be combined with other offers.', color:'#999999', fontSize:12, align:'center', bold:false, italic:true },
+            { type:'footer', companyName:'Dubai Prod', address:'Dubai, UAE', unsubscribeText:'Unsubscribe from these emails', textColor:'#999999', bgColor:'#f8f8f8' }
+        ]
+    },
+    market: {
+        name: 'Market Update',
+        blocks: [
+            { type:'logo', src:'https://via.placeholder.com/180x60/c9a44c/ffffff?text=LOGO', width:180, link:'#', alt:'Logo' },
+            { type:'heading', text:'Q1 2026 Market Report', level:'h1', color:'#1a1a2e', align:'center', bold:true },
+            { type:'text', text:'Our latest market analysis reveals exciting trends and opportunities. Here are the key numbers you need to know.', color:'#555555', fontSize:16, align:'center', bold:false, italic:false },
+            { type:'divider', color:'#c9a44c', thickness:2, widthPercent:60 },
+            { type:'two_columns', ratio:'50-50', leftType:'text', leftContent:'<div style="text-align:center"><span style="font-size:32px;font-weight:800;color:#c9a44c">+27%</span><br><span style="font-size:13px;color:#777">Revenue Growth</span></div>', rightType:'text', rightContent:'<div style="text-align:center"><span style="font-size:32px;font-weight:800;color:#c9a44c">150+</span><br><span style="font-size:13px;color:#777">New Clients</span></div>' },
+            { type:'text', text:'The digital marketing landscape in the UAE continues to show strong growth. Our analysis shows that businesses investing in video content and social media advertising are seeing the highest returns. Download our full report for detailed insights and actionable recommendations.', color:'#555555', fontSize:16, align:'left', bold:false, italic:false },
+            { type:'button', text:'Download Full Report', url:'#', bgColor:'#c9a44c', textColor:'#ffffff', borderRadius:6, paddingV:14, paddingH:30, align:'center' },
+            { type:'footer', companyName:'Dubai Prod', address:'Dubai, UAE', unsubscribeText:'Unsubscribe from these emails', textColor:'#999999', bgColor:'#f8f8f8' }
+        ]
+    },
+    webinar: {
+        name: 'Webinar Invite',
+        blocks: [
+            { type:'logo', src:'https://via.placeholder.com/180x60/c9a44c/ffffff?text=LOGO', width:180, link:'#', alt:'Logo' },
+            { type:'image', src:'https://via.placeholder.com/200x200/1a1a2e/c9a44c?text=SPEAKER', alt:'Speaker', width:200, link:'', align:'center' },
+            { type:'heading', text:'Free Webinar: Digital Marketing in 2026', level:'h1', color:'#1a1a2e', align:'center', bold:true },
+            { type:'text', text:'Join our CEO for an exclusive 60-minute webinar on the latest trends and strategies in digital marketing. Learn how to leverage AI, video content, and data-driven campaigns to grow your business.', color:'#555555', fontSize:16, align:'center', bold:false, italic:false },
+            { type:'divider', color:'#c9a44c', thickness:2, widthPercent:40 },
+            { type:'two_columns', ratio:'50-50', leftType:'text', leftContent:'<strong>Date & Time</strong><br>April 5, 2026<br>2:00 PM GST', rightType:'text', rightContent:'<strong>Duration</strong><br>60 minutes<br>+ Live Q&A' },
+            { type:'button', text:'Register Free', url:'#', bgColor:'#2ecc71', textColor:'#ffffff', borderRadius:30, paddingV:16, paddingH:40, align:'center' },
+            { type:'text', text:'Seats are limited. Reserve your spot today and get a free copy of our Digital Marketing Playbook.', color:'#777777', fontSize:14, align:'center', bold:false, italic:false },
+            { type:'footer', companyName:'Dubai Prod', address:'Dubai, UAE', unsubscribeText:'Unsubscribe from these emails', textColor:'#999999', bgColor:'#f8f8f8' }
+        ]
+    }
+};
+
+function loadTemplate(key) {
+    const tpl = TEMPLATES[key];
+    if (!tpl) return;
+    if (state.blocks.length > 0 && !confirm('This will replace your current design. Continue?')) return;
+    state.blocks = tpl.blocks.map(b => {
+        const block = createBlock(b.type);
+        return { ...block, ...b, id: block.id };
+    });
+    state.selectedBlockIndex = null;
+    state.name = tpl.name + ' Campaign';
+    document.getElementById('campName').value = state.name;
+    renderCanvas();
+    showCampaignList();
+    toast('Template loaded: ' + tpl.name, 'info');
+}
+
+// ── Panel Tabs ─────────────────────────────────────────────────────────────────
+function switchPanelTab(tab, el) {
+    document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('sec-' + tab).classList.add('active');
+}
+
+// ── Drag & Drop ────────────────────────────────────────────────────────────────
+function dragBlock(e, type) {
+    dragBlockType = type;
+    dragBlockIndex = null;
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('text/plain', type);
+}
+
+function dragCanvasBlock(e, index) {
+    dragBlockType = null;
+    dragBlockIndex = index;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', 'move:' + index);
+    e.stopPropagation();
+}
+
+function canvasDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = dragBlockIndex !== null ? 'move' : 'copy';
+}
+
+function canvasDragLeave(e) {
+    document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+}
+
+function dropZoneDragOver(e, index) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+    e.currentTarget.classList.add('drag-over');
+}
+
+function dropZoneDrop(e, index) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+
+    if (dragBlockIndex !== null) {
+        // Reorder
+        const block = state.blocks.splice(dragBlockIndex, 1)[0];
+        const insertAt = index > dragBlockIndex ? index - 1 : index;
+        state.blocks.splice(insertAt, 0, block);
+        state.selectedBlockIndex = insertAt;
+    } else if (dragBlockType) {
+        // New block
+        const block = createBlock(dragBlockType);
+        state.blocks.splice(index, 0, block);
+        state.selectedBlockIndex = index;
+    }
+    dragBlockType = null;
+    dragBlockIndex = null;
+    renderCanvas();
+    showBlockSettings(state.selectedBlockIndex);
+}
+
+function canvasDrop(e) {
+    e.preventDefault();
+    if (dragBlockType) {
+        const block = createBlock(dragBlockType);
+        state.blocks.push(block);
+        state.selectedBlockIndex = state.blocks.length - 1;
+        dragBlockType = null;
+        renderCanvas();
+        showBlockSettings(state.selectedBlockIndex);
+    }
+    dragBlockIndex = null;
+}
+
+// ── Canvas Rendering ───────────────────────────────────────────────────────────
+function renderCanvas() {
+    const canvas = document.getElementById('emailCanvas');
+    const empty = document.getElementById('canvasEmpty');
+    if (state.blocks.length === 0) {
+        empty.style.display = 'flex';
+        // Remove all blocks but keep empty
+        Array.from(canvas.children).forEach(c => { if (c !== empty) c.remove(); });
+        return;
+    }
+    empty.style.display = 'none';
+    let html = '';
+    // Drop zone at top
+    html += `<div class="drop-zone" ondragover="dropZoneDragOver(event,0)" ondrop="dropZoneDrop(event,0)" ondragleave="canvasDragLeave(event)"></div>`;
+    state.blocks.forEach((block, i) => {
+        const sel = state.selectedBlockIndex === i ? ' selected' : '';
+        html += `<div class="canvas-block${sel}" onclick="selectBlock(${i})" draggable="true" ondragstart="dragCanvasBlock(event,${i})">`;
+        html += `<div class="block-controls">`;
+        if (i > 0) html += `<button class="block-ctrl-btn move" onclick="moveBlock(event,${i},-1)" title="Move up"><i class="fas fa-arrow-up"></i></button>`;
+        if (i < state.blocks.length - 1) html += `<button class="block-ctrl-btn move" onclick="moveBlock(event,${i},1)" title="Move down"><i class="fas fa-arrow-down"></i></button>`;
+        html += `<button class="block-ctrl-btn del" onclick="deleteBlock(event,${i})" title="Delete"><i class="fas fa-times"></i></button>`;
+        html += `</div>`;
+        html += renderBlockPreview(block);
+        html += `</div>`;
+        html += `<div class="drop-zone" ondragover="dropZoneDragOver(event,${i+1})" ondrop="dropZoneDrop(event,${i+1})" ondragleave="canvasDragLeave(event)"></div>`;
+    });
+    // Keep canvasEmpty but hidden
+    canvas.innerHTML = '<div class="canvas-empty" id="canvasEmpty" style="display:none"><i class="fas fa-envelope-open-text"></i><h3>Start building your email</h3><p>Drag blocks from the left panel or choose a template</p></div>' + html;
+}
+
+function renderBlockPreview(block) {
+    const esc = s => (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    switch (block.type) {
+        case 'logo':
+            return `<div style="text-align:center;padding:20px"><img src="${block.src}" alt="${esc(block.alt)}" style="max-width:${block.width}px;height:auto"></div>`;
+        case 'hero':
+            return `<div style="position:relative"><img src="${block.src}" alt="${esc(block.alt)}" style="width:100%;display:block">${block.overlayText ? `<div style="position:absolute;bottom:20px;left:0;right:0;text-align:center;color:${block.overlayColor};font-size:28px;font-weight:800;text-shadow:0 2px 8px rgba(0,0,0,0.5)">${esc(block.overlayText)}</div>` : ''}</div>`;
+        case 'heading': {
+            const tag = block.level || 'h2';
+            const sizes = { h1:'28px', h2:'22px', h3:'18px' };
+            return `<div style="padding:16px 20px;text-align:${block.align}"><${tag} style="color:${block.color};font-size:${sizes[tag]};font-weight:${block.bold?'800':'600'};margin:0;font-family:Arial,Helvetica,sans-serif">${esc(block.text)}</${tag}></div>`;
+        }
+        case 'text':
+            return `<div style="padding:8px 20px;color:${block.color};font-size:${block.fontSize}px;text-align:${block.align};font-style:${block.italic?'italic':'normal'};font-weight:${block.bold?'700':'400'};line-height:1.6;font-family:Arial,Helvetica,sans-serif">${esc(block.text)}</div>`;
+        case 'button':
+            return `<div style="text-align:${block.align};padding:16px 20px"><a style="display:inline-block;padding:${block.paddingV}px ${block.paddingH}px;background:${block.bgColor};color:${block.textColor};text-decoration:none;border-radius:${block.borderRadius}px;font-weight:700;font-size:16px;font-family:Arial,Helvetica,sans-serif">${esc(block.text)}</a></div>`;
+        case 'image':
+            return `<div style="text-align:${block.align};padding:10px 20px"><img src="${block.src}" alt="${esc(block.alt)}" style="max-width:${block.width}px;width:100%;height:auto;display:block;margin:${block.align==='center'?'0 auto':block.align==='right'?'0 0 0 auto':'0'}"></div>`;
+        case 'divider':
+            return `<div style="padding:10px ${(100-block.widthPercent)/2}%"><hr style="border:none;height:${block.thickness}px;background:${block.color}"></div>`;
+        case 'spacer':
+            return `<div style="height:${block.height}px;background:rgba(201,164,76,0.03)"></div>`;
+        case 'two_columns': {
+            const [l,r] = (block.ratio||'50-50').split('-').map(Number);
+            const lp = l/(l+r)*100, rp=100-lp;
+            const leftHtml = block.leftType==='image' ? `<img src="${block.leftImage||''}" style="width:100%;display:block">` : (block.leftContent||'');
+            const rightHtml = block.rightType==='image' ? `<img src="${block.rightImage||''}" style="width:100%;display:block">` : (block.rightContent||'');
+            return `<div style="padding:10px 20px;display:flex;gap:16px"><div style="flex:${l};font-size:14px;color:#555;line-height:1.6;font-family:Arial,Helvetica,sans-serif">${leftHtml}</div><div style="flex:${r};font-size:14px;color:#555;line-height:1.6;font-family:Arial,Helvetica,sans-serif">${rightHtml}</div></div>`;
+        }
+        case 'social': {
+            const icons = [];
+            if (block.facebook) icons.push(`<a href="${block.facebook}" style="color:${block.iconColor};font-size:20px;margin:0 8px;text-decoration:none"><i class="fab fa-facebook"></i></a>`);
+            if (block.instagram) icons.push(`<a href="${block.instagram}" style="color:${block.iconColor};font-size:20px;margin:0 8px;text-decoration:none"><i class="fab fa-instagram"></i></a>`);
+            if (block.twitter) icons.push(`<a href="${block.twitter}" style="color:${block.iconColor};font-size:20px;margin:0 8px;text-decoration:none"><i class="fab fa-x-twitter"></i></a>`);
+            if (block.linkedin) icons.push(`<a href="${block.linkedin}" style="color:${block.iconColor};font-size:20px;margin:0 8px;text-decoration:none"><i class="fab fa-linkedin"></i></a>`);
+            if (block.youtube) icons.push(`<a href="${block.youtube}" style="color:${block.iconColor};font-size:20px;margin:0 8px;text-decoration:none"><i class="fab fa-youtube"></i></a>`);
+            if (block.tiktok) icons.push(`<a href="${block.tiktok}" style="color:${block.iconColor};font-size:20px;margin:0 8px;text-decoration:none"><i class="fab fa-tiktok"></i></a>`);
+            return `<div style="text-align:${block.align};padding:16px 20px">${icons.join('')}</div>`;
+        }
+        case 'footer':
+            return `<div style="background:${block.bgColor};padding:24px 20px;text-align:center;color:${block.textColor};font-size:12px;line-height:1.8;font-family:Arial,Helvetica,sans-serif"><strong>${esc(block.companyName)}</strong><br>${esc(block.address)}<br><a href="#" style="color:${block.textColor}">${esc(block.unsubscribeText)}</a></div>`;
+        default:
+            return `<div style="padding:20px;color:#999">Unknown block: ${block.type}</div>`;
+    }
+}
+
+// ── Block Selection & Settings ─────────────────────────────────────────────────
+function selectBlock(index) {
+    state.selectedBlockIndex = index;
+    renderCanvas();
+    showBlockSettings(index);
+}
+
+function moveBlock(e, index, dir) {
+    e.stopPropagation();
+    const newIdx = index + dir;
+    if (newIdx < 0 || newIdx >= state.blocks.length) return;
+    [state.blocks[index], state.blocks[newIdx]] = [state.blocks[newIdx], state.blocks[index]];
+    state.selectedBlockIndex = newIdx;
+    renderCanvas();
+    showBlockSettings(newIdx);
+}
+
+function deleteBlock(e, index) {
+    e.stopPropagation();
+    state.blocks.splice(index, 1);
+    state.selectedBlockIndex = null;
+    renderCanvas();
+    showCampaignList();
+}
+
+function showCampaignList() {
+    document.getElementById('rpTitle').textContent = 'Campaigns';
+    document.getElementById('blockSettings').style.display = 'none';
+    document.getElementById('campaignList').style.display = 'block';
+    state.selectedBlockIndex = null;
+    loadCampaigns();
+}
+
+function showBlockSettings(index) {
+    if (index === null || index === undefined || !state.blocks[index]) {
+        showCampaignList();
+        return;
+    }
+    const block = state.blocks[index];
+    document.getElementById('rpTitle').textContent = blockTypeName(block.type) + ' Settings';
+    document.getElementById('campaignList').style.display = 'none';
+    const settingsEl = document.getElementById('blockSettings');
+    settingsEl.style.display = 'block';
+
+    let html = '';
+    const inp = (label, prop, type='text', extra='') => {
+        const val = (block[prop]||'').toString().replace(/"/g,'&quot;');
+        return `<div class="prop-group"><div class="prop-label">${label}</div><input class="prop-input" type="${type}" value="${val}" onchange="updateProp(${index},'${prop}',this.value)" ${extra}></div>`;
+    };
+    const ta = (label, prop) => {
+        const val = (block[prop]||'').replace(/"/g,'&quot;');
+        return `<div class="prop-group"><div class="prop-label">${label}</div><textarea class="prop-input" onchange="updateProp(${index},'${prop}',this.value)">${val}</textarea></div>`;
+    };
+    const sel = (label, prop, opts) => {
+        let o = opts.map(v => `<option value="${v[0]}"${block[prop]===v[0]?' selected':''}>${v[1]}</option>`).join('');
+        return `<div class="prop-group"><div class="prop-label">${label}</div><select class="prop-input" onchange="updateProp(${index},'${prop}',this.value)">${o}</select></div>`;
+    };
+    const color = (label, prop) => {
+        return `<div class="prop-group"><div class="prop-label">${label}</div><div class="prop-row"><input type="color" class="prop-color" value="${block[prop]||'#000000'}" onchange="updateProp(${index},'${prop}',this.value)"><input class="prop-input" value="${block[prop]||''}" onchange="updateProp(${index},'${prop}',this.value)" style="flex:1"></div></div>`;
+    };
+    const align = (label, prop) => {
+        const v = block[prop] || 'left';
+        return `<div class="prop-group"><div class="prop-label">${label}</div><div class="prop-btn-row">
+            <button class="prop-toggle${v==='left'?' active':''}" onclick="updateProp(${index},'${prop}','left')"><i class="fas fa-align-left"></i></button>
+            <button class="prop-toggle${v==='center'?' active':''}" onclick="updateProp(${index},'${prop}','center')"><i class="fas fa-align-center"></i></button>
+            <button class="prop-toggle${v==='right'?' active':''}" onclick="updateProp(${index},'${prop}','right')"><i class="fas fa-align-right"></i></button>
+        </div></div>`;
+    };
+
+    switch (block.type) {
+        case 'logo':
+            html += inp('Image URL', 'src');
+            html += inp('Width (px)', 'width', 'number');
+            html += inp('Link URL', 'link');
+            html += inp('Alt Text', 'alt');
+            break;
+        case 'hero':
+            html += inp('Image URL', 'src');
+            html += inp('Overlay Text', 'overlayText');
+            html += color('Overlay Color', 'overlayColor');
+            html += inp('Alt Text', 'alt');
+            break;
+        case 'heading':
+            html += inp('Text', 'text');
+            html += sel('Level', 'level', [['h1','H1 - Large'],['h2','H2 - Medium'],['h3','H3 - Small']]);
+            html += color('Color', 'color');
+            html += align('Alignment', 'align');
+            break;
+        case 'text':
+            html += ta('Content', 'text');
+            html += inp('Font Size (px)', 'fontSize', 'number');
+            html += color('Color', 'color');
+            html += align('Alignment', 'align');
+            html += `<div class="prop-group"><div class="prop-label">Style</div><div class="prop-btn-row">
+                <button class="prop-toggle${block.bold?' active':''}" onclick="toggleBool(${index},'bold')"><i class="fas fa-bold"></i></button>
+                <button class="prop-toggle${block.italic?' active':''}" onclick="toggleBool(${index},'italic')"><i class="fas fa-italic"></i></button>
+            </div></div>`;
+            break;
+        case 'button':
+            html += inp('Button Text', 'text');
+            html += inp('URL', 'url');
+            html += color('Background', 'bgColor');
+            html += color('Text Color', 'textColor');
+            html += inp('Border Radius', 'borderRadius', 'number');
+            html += inp('Padding V', 'paddingV', 'number');
+            html += inp('Padding H', 'paddingH', 'number');
+            html += align('Alignment', 'align');
+            break;
+        case 'image':
+            html += inp('Image URL', 'src');
+            html += inp('Alt Text', 'alt');
+            html += inp('Width (px)', 'width', 'number');
+            html += inp('Link URL', 'link');
+            html += align('Alignment', 'align');
+            break;
+        case 'divider':
+            html += color('Color', 'color');
+            html += inp('Thickness (px)', 'thickness', 'number');
+            html += inp('Width (%)', 'widthPercent', 'number');
+            break;
+        case 'spacer':
+            html += inp('Height (px)', 'height', 'number');
+            break;
+        case 'two_columns':
+            html += sel('Ratio', 'ratio', [['50-50','50 / 50'],['60-40','60 / 40'],['40-60','40 / 60']]);
+            html += sel('Left Type', 'leftType', [['text','Text'],['image','Image']]);
+            html += block.leftType === 'image' ? inp('Left Image URL', 'leftImage') : ta('Left Content (HTML)', 'leftContent');
+            html += sel('Right Type', 'rightType', [['text','Text'],['image','Image']]);
+            html += block.rightType === 'image' ? inp('Right Image URL', 'rightImage') : ta('Right Content (HTML)', 'rightContent');
+            break;
+        case 'social':
+            html += inp('Facebook', 'facebook');
+            html += inp('Instagram', 'instagram');
+            html += inp('X / Twitter', 'twitter');
+            html += inp('LinkedIn', 'linkedin');
+            html += inp('YouTube', 'youtube');
+            html += inp('TikTok', 'tiktok');
+            html += color('Icon Color', 'iconColor');
+            html += align('Alignment', 'align');
+            break;
+        case 'footer':
+            html += inp('Company Name', 'companyName');
+            html += inp('Address', 'address');
+            html += inp('Unsubscribe Text', 'unsubscribeText');
+            html += color('Text Color', 'textColor');
+            html += color('Background', 'bgColor');
+            break;
+    }
+    html += `<div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
+        <button class="tb-btn" style="width:100%;justify-content:center;margin-bottom:6px" onclick="duplicateBlock(${index})"><i class="fas fa-copy"></i> Duplicate Block</button>
+        <button class="tb-btn red" style="width:100%;justify-content:center" onclick="deleteBlock(event,${index})"><i class="fas fa-trash"></i> Delete Block</button>
+    </div>`;
+    html += `<div style="margin-top:8px"><button class="tb-btn" style="width:100%;justify-content:center;font-size:0.55rem" onclick="showCampaignList()"><i class="fas fa-arrow-left"></i> Back to Campaigns</button></div>`;
+    settingsEl.innerHTML = html;
+}
+
+function blockTypeName(type) {
+    const names = { logo:'Logo', hero:'Hero Banner', heading:'Heading', text:'Text', button:'Button', image:'Image', divider:'Divider', spacer:'Spacer', two_columns:'Two Columns', social:'Social Links', footer:'Footer' };
+    return names[type] || type;
+}
+
+function updateProp(index, prop, value) {
+    if (!state.blocks[index]) return;
+    // Convert numbers
+    if (['width','fontSize','thickness','widthPercent','height','borderRadius','paddingV','paddingH'].includes(prop)) {
+        value = parseInt(value) || 0;
+    }
+    state.blocks[index][prop] = value;
+    renderCanvas();
+    // Re-render settings if type-dependent
+    if (prop === 'leftType' || prop === 'rightType') {
+        showBlockSettings(index);
+    }
+}
+
+function toggleBool(index, prop) {
+    state.blocks[index][prop] = !state.blocks[index][prop];
+    renderCanvas();
+    showBlockSettings(index);
+}
+
+function duplicateBlock(index) {
+    const orig = state.blocks[index];
+    const dupe = { ...orig, id: 'block_' + Date.now() + '_' + Math.random().toString(36).slice(2,6) };
+    state.blocks.splice(index + 1, 0, dupe);
+    state.selectedBlockIndex = index + 1;
+    renderCanvas();
+    showBlockSettings(index + 1);
+}
+
+// Click on canvas background deselects
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.email-canvas') && !e.target.closest('.canvas-block') && !e.target.closest('.drop-zone')) {
+        state.selectedBlockIndex = null;
+        renderCanvas();
+        showCampaignList();
+    }
+});
+
+// ── HTML Email Renderer ────────────────────────────────────────────────────────
+function renderEmailHTML(blocks) {
+    const subject = state.subject || 'Email Campaign';
+    let rows = '';
+    blocks.forEach(block => {
+        rows += renderBlockToEmailHTML(block);
+    });
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>${escHtml(subject)}</title>
+<!--[if mso]><style>table,td{font-family:Arial,Helvetica,sans-serif!important}</style><![endif]-->
+<style>
+@media only screen and (max-width:600px){
+.email-container{width:100%!important;max-width:600px!important}
+.stack-column{display:block!important;width:100%!important;max-width:100%!important}
+.stack-column-center{text-align:center!important}
+.fluid-img{width:100%!important;max-width:100%!important;height:auto!important}
+.sm-padding{padding-left:16px!important;padding-right:16px!important}
+}
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<center style="width:100%;background-color:#f4f4f4;">
+<!--[if mso]><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" align="center"><tr><td><![endif]-->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container" style="margin:0 auto;max-width:600px;background-color:#ffffff;">
+${rows}
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+</center>
+</body>
+</html>`;
+}
+
+function escHtml(s) {
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderBlockToEmailHTML(block) {
+    switch (block.type) {
+        case 'logo':
+            return `<tr><td style="padding:20px 20px;text-align:center;">
+${block.link ? `<a href="${escHtml(block.link)}" target="_blank">` : ''}
+<img src="${escHtml(block.src)}" alt="${escHtml(block.alt)}" width="${block.width}" style="display:block;margin:0 auto;max-width:${block.width}px;width:100%;height:auto;border:0;">
+${block.link ? '</a>' : ''}
+</td></tr>`;
+
+        case 'hero':
+            let heroHtml = `<tr><td style="padding:0;">
+<div style="position:relative;">
+<img src="${escHtml(block.src)}" alt="${escHtml(block.alt)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;" class="fluid-img">`;
+            if (block.overlayText) {
+                heroHtml += `</div></td></tr>
+<tr><td style="padding:12px 20px;text-align:center;background-color:#1a1a2e;">
+<h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:800;color:${escHtml(block.overlayColor)};">${escHtml(block.overlayText)}</h1>
+</td></tr>`;
+            } else {
+                heroHtml += `</div></td></tr>`;
+            }
+            return heroHtml;
+
+        case 'heading': {
+            const sizes = { h1:'28px', h2:'22px', h3:'18px' };
+            const sz = sizes[block.level] || '22px';
+            return `<tr><td style="padding:16px 20px;text-align:${block.align};" class="sm-padding">
+<${block.level} style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:${sz};font-weight:${block.bold?'800':'600'};color:${escHtml(block.color)};">${escHtml(block.text)}</${block.level}>
+</td></tr>`;
+        }
+
+        case 'text':
+            return `<tr><td style="padding:8px 20px;font-family:Arial,Helvetica,sans-serif;font-size:${block.fontSize}px;line-height:1.6;color:${escHtml(block.color)};text-align:${block.align};font-style:${block.italic?'italic':'normal'};font-weight:${block.bold?'700':'400'};" class="sm-padding">
+${escHtml(block.text)}
+</td></tr>`;
+
+        case 'button': {
+            const br = block.borderRadius || 6;
+            return `<tr><td style="padding:16px 20px;text-align:${block.align};" class="sm-padding">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="${block.align==='center'?'margin:0 auto':block.align==='right'?'margin:0 0 0 auto':''}">
+<tr><td style="border-radius:${br}px;background:${escHtml(block.bgColor)};">
+<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${escHtml(block.url)}" style="height:${block.paddingV*2+18}px;v-text-anchor:middle;width:${block.paddingH*2+100}px;" arcsize="${Math.round(br/(block.paddingV*2+18)*100)}%" strokecolor="${escHtml(block.bgColor)}" fillcolor="${escHtml(block.bgColor)}"><w:anchorlock/><center style="color:${escHtml(block.textColor)};font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">${escHtml(block.text)}</center></v:roundrect><![endif]-->
+<!--[if !mso]><!--><a href="${escHtml(block.url)}" target="_blank" style="display:inline-block;padding:${block.paddingV}px ${block.paddingH}px;background:${escHtml(block.bgColor)};color:${escHtml(block.textColor)};font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-decoration:none;border-radius:${br}px;text-align:center;mso-hide:all;">${escHtml(block.text)}</a><!--<![endif]-->
+</td></tr></table>
+</td></tr>`;
+        }
+
+        case 'image': {
+            const marginStyle = block.align === 'center' ? 'margin:0 auto' : block.align === 'right' ? 'margin:0 0 0 auto' : '';
+            return `<tr><td style="padding:10px 20px;text-align:${block.align};" class="sm-padding">
+${block.link ? `<a href="${escHtml(block.link)}" target="_blank">` : ''}
+<img src="${escHtml(block.src)}" alt="${escHtml(block.alt)}" width="${block.width}" style="display:block;${marginStyle};max-width:${block.width}px;width:100%;height:auto;border:0;" class="fluid-img">
+${block.link ? '</a>' : ''}
+</td></tr>`;
+        }
+
+        case 'divider': {
+            const pad = (100 - block.widthPercent) / 2;
+            return `<tr><td style="padding:10px ${pad}%;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td style="border-top:${block.thickness}px solid ${escHtml(block.color)};font-size:0;line-height:0;">&nbsp;</td></tr></table>
+</td></tr>`;
+        }
+
+        case 'spacer':
+            return `<tr><td style="height:${block.height}px;font-size:0;line-height:0;">&nbsp;</td></tr>`;
+
+        case 'two_columns': {
+            const [l, r] = (block.ratio || '50-50').split('-').map(Number);
+            const lw = Math.round(l / (l + r) * 560);
+            const rw = 560 - lw;
+            const leftHtml = block.leftType === 'image'
+                ? `<img src="${escHtml(block.leftImage)}" width="${lw}" style="display:block;width:100%;max-width:${lw}px;height:auto;border:0;" class="fluid-img">`
+                : (block.leftContent || '');
+            const rightHtml = block.rightType === 'image'
+                ? `<img src="${escHtml(block.rightImage)}" width="${rw}" style="display:block;width:100%;max-width:${rw}px;height:auto;border:0;" class="fluid-img">`
+                : (block.rightContent || '');
+            return `<tr><td style="padding:10px 20px;" class="sm-padding">
+<!--[if mso]><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td valign="top" width="${lw}"><![endif]-->
+<div style="display:inline-block;width:100%;max-width:${lw}px;vertical-align:top;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#555555;line-height:1.6;" class="stack-column">${leftHtml}</div>
+<!--[if mso]></td><td valign="top" width="${rw}"><![endif]-->
+<div style="display:inline-block;width:100%;max-width:${rw}px;vertical-align:top;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#555555;line-height:1.6;" class="stack-column">${rightHtml}</div>
+<!--[if mso]></td></tr></table><![endif]-->
+</td></tr>`;
+        }
+
+        case 'social': {
+            const socialIcons = {
+                facebook: 'https://img.icons8.com/ios-filled/50/c9a44c/facebook-new.png',
+                instagram: 'https://img.icons8.com/ios-filled/50/c9a44c/instagram-new.png',
+                twitter: 'https://img.icons8.com/ios-filled/50/c9a44c/twitterx--v1.png',
+                linkedin: 'https://img.icons8.com/ios-filled/50/c9a44c/linkedin.png',
+                youtube: 'https://img.icons8.com/ios-filled/50/c9a44c/youtube-play.png',
+                tiktok: 'https://img.icons8.com/ios-filled/50/c9a44c/tiktok--v1.png'
+            };
+            let icons = '';
+            for (const [key, imgUrl] of Object.entries(socialIcons)) {
+                if (block[key]) {
+                    icons += `<td style="padding:0 6px;"><a href="${escHtml(block[key])}" target="_blank"><img src="${imgUrl}" alt="${key}" width="28" height="28" style="display:block;border:0;"></a></td>`;
+                }
+            }
+            return `<tr><td style="padding:16px 20px;text-align:${block.align};">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="${block.align==='center'?'margin:0 auto':block.align==='right'?'margin:0 0 0 auto':''}"><tr>${icons}</tr></table>
+</td></tr>`;
+        }
+
+        case 'footer':
+            return `<tr><td style="padding:24px 20px;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.8;color:${escHtml(block.textColor)};background-color:${escHtml(block.bgColor)};" bgcolor="${escHtml(block.bgColor)}" class="sm-padding">
+<strong>${escHtml(block.companyName)}</strong><br>
+${escHtml(block.address)}<br>
+<a href="{{unsubscribe_url}}" style="color:${escHtml(block.textColor)};text-decoration:underline;">${escHtml(block.unsubscribeText)}</a>
+</td></tr>`;
+
+        default:
+            return '';
+    }
+}
+
+// ── API Operations ─────────────────────────────────────────────────────────────
+async function loadCampaigns() {
+    try {
+        const res = await fetch('/api/campaigns');
+        const data = await res.json();
+        const list = document.getElementById('campaignList');
+        if (!data.length) {
+            list.innerHTML = '<div style="text-align:center;padding:30px 10px;color:rgba(255,255,255,0.2);font-size:0.7rem"><i class="fas fa-inbox" style="font-size:1.5rem;margin-bottom:10px;display:block"></i>No campaigns yet</div>';
+            return;
+        }
+        list.innerHTML = data.map(c => `
+            <div class="camp-item" onclick="loadCampaign(${c.id})">
+                <div class="camp-info">
+                    <div class="camp-name">${escHtml(c.campaign_name)}</div>
+                    <div class="camp-meta">${c.subject ? escHtml(c.subject) : 'No subject'} &bull; ${formatDate(c.updated_at)}</div>
+                </div>
+                <span class="camp-badge ${c.status}">${c.status}</span>
+                <div class="camp-actions">
+                    <button class="camp-act-btn" onclick="event.stopPropagation();duplicateCampaign(${c.id})" title="Duplicate"><i class="fas fa-copy"></i></button>
+                    <button class="camp-act-btn del" onclick="event.stopPropagation();deleteCampaign(${c.id})" title="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error('Load campaigns error:', e);
+    }
+}
+
+async function loadCampaign(id) {
+    try {
+        const res = await fetch(`/api/campaigns/${id}`);
+        const c = await res.json();
+        if (c.error) { toast(c.error, 'error'); return; }
+        state.id = c.id;
+        state.name = c.campaign_name;
+        state.subject = c.subject || '';
+        state.preview_text = c.preview_text || '';
+        state.sender_name = c.sender_name || 'Dubai Prod';
+        state.sender_email = c.sender_email || 'info@dubaiprod.com';
+        state.status = c.status || 'draft';
+        try { state.blocks = JSON.parse(c.template_json || '[]'); } catch { state.blocks = []; }
+        state.selectedBlockIndex = null;
+        document.getElementById('campName').value = state.name;
+        document.getElementById('campSubject').value = state.subject;
+        renderCanvas();
+        showCampaignList();
+        toast('Campaign loaded', 'info');
+    } catch (e) {
+        toast('Failed to load campaign', 'error');
+    }
+}
+
+async function saveDraft() {
+    state.name = document.getElementById('campName').value || 'Untitled Campaign';
+    state.subject = document.getElementById('campSubject').value || '';
+    const rendered = renderEmailHTML(state.blocks);
+    const body = {
+        campaign_name: state.name,
+        subject: state.subject,
+        preview_text: state.preview_text,
+        sender_name: state.sender_name,
+        sender_email: state.sender_email,
+        template_json: JSON.stringify(state.blocks),
+        rendered_html: rendered,
+        target_segment: '',
+        selected_leads: '[]',
+        status: state.status || 'draft'
+    };
+    try {
+        let res;
+        if (state.id) {
+            res = await fetch(`/api/campaigns/${state.id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        } else {
+            res = await fetch('/api/campaigns', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        }
+        const data = await res.json();
+        if (data.id) state.id = data.id;
+        toast('Campaign saved', 'success');
+        loadCampaigns();
+    } catch (e) {
+        toast('Failed to save', 'error');
+    }
+}
+
+async function deleteCampaign(id) {
+    if (!confirm('Delete this campaign?')) return;
+    try {
+        await fetch(`/api/campaigns/${id}`, { method:'DELETE' });
+        if (state.id === id) newCampaign();
+        loadCampaigns();
+        toast('Campaign deleted', 'success');
+    } catch (e) {
+        toast('Failed to delete', 'error');
+    }
+}
+
+async function duplicateCampaign(id) {
+    try {
+        const res = await fetch(`/api/campaigns/${id}`);
+        const c = await res.json();
+        const body = {
+            campaign_name: c.campaign_name + ' (copy)',
+            subject: c.subject,
+            preview_text: c.preview_text,
+            sender_name: c.sender_name,
+            sender_email: c.sender_email,
+            template_json: c.template_json,
+            rendered_html: c.rendered_html,
+            target_segment: '',
+            selected_leads: '[]',
+            status: 'draft'
+        };
+        await fetch('/api/campaigns', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        loadCampaigns();
+        toast('Campaign duplicated', 'success');
+    } catch (e) {
+        toast('Failed to duplicate', 'error');
+    }
+}
+
+function newCampaign() {
+    state = { id:null, name:'Untitled Campaign', subject:'', preview_text:'', sender_name:'Dubai Prod', sender_email:'info@dubaiprod.com', blocks:[], selectedBlockIndex:null, status:'draft' };
+    document.getElementById('campName').value = state.name;
+    document.getElementById('campSubject').value = '';
+    renderCanvas();
+    showCampaignList();
+}
+
+// ── Preview ────────────────────────────────────────────────────────────────────
+function openPreview() {
+    const html = renderEmailHTML(state.blocks);
+    document.getElementById('previewModal').classList.add('open');
+    showPreviewDesktop(html);
+}
+
+function switchPreview(mode, el) {
+    document.querySelectorAll('.preview-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const html = renderEmailHTML(state.blocks);
+    if (mode === 'desktop') showPreviewDesktop(html);
+    else if (mode === 'mobile') showPreviewMobile(html);
+    else showPreviewCode(html);
+}
+
+function showPreviewDesktop(html) {
+    const container = document.getElementById('previewContent');
+    container.innerHTML = '<div class="preview-frame desktop"><iframe id="previewIframe"></iframe></div>';
+    const iframe = document.getElementById('previewIframe');
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(html);
+    iframe.contentDocument.close();
+    iframe.onload = () => { iframe.style.height = iframe.contentDocument.body.scrollHeight + 20 + 'px'; };
+    setTimeout(() => { iframe.style.height = iframe.contentDocument.body.scrollHeight + 20 + 'px'; }, 200);
+}
+
+function showPreviewMobile(html) {
+    const container = document.getElementById('previewContent');
+    container.innerHTML = '<div class="preview-frame mobile"><iframe id="previewIframe"></iframe></div>';
+    const iframe = document.getElementById('previewIframe');
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(html);
+    iframe.contentDocument.close();
+    setTimeout(() => { iframe.style.height = iframe.contentDocument.body.scrollHeight + 20 + 'px'; }, 200);
+}
+
+function showPreviewCode(html) {
+    const container = document.getElementById('previewContent');
+    container.innerHTML = `<div class="preview-code" style="position:relative"><button class="copy-btn" onclick="copyHTML()">Copy HTML</button><pre>${escHtml(html)}</pre></div>`;
+}
+
+function copyHTML() {
+    const html = renderEmailHTML(state.blocks);
+    navigator.clipboard.writeText(html).then(() => toast('HTML copied!', 'success')).catch(() => toast('Copy failed', 'error'));
+}
+
+// ── Send Test ──────────────────────────────────────────────────────────────────
+function openTestSend() {
+    document.getElementById('testModal').classList.add('open');
+}
+
+async function sendTestEmail() {
+    const email = document.getElementById('testEmail').value.trim();
+    if (!email) { toast('Enter an email address', 'error'); return; }
+    // Save first
+    await saveDraft();
+    if (!state.id) { toast('Save campaign first', 'error'); return; }
+    try {
+        const res = await fetch(`/api/campaigns/${state.id}/send-test`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.status === 'sent') {
+            toast('Test email sent to ' + email, 'success');
+            closeModal('testModal');
+        } else {
+            toast(data.error || 'Failed to send', 'error');
+        }
+    } catch (e) {
+        toast('Send failed: ' + e.message, 'error');
+    }
+}
+
+// ── Send Campaign ──────────────────────────────────────────────────────────────
+async function openSendModal() {
+    // Save first
+    await saveDraft();
+    if (!state.id) { toast('Save campaign first', 'error'); return; }
+    document.getElementById('sendModal').classList.add('open');
+    // Load leads
+    try {
+        const res = await fetch('/api/all-leads');
+        allLeads = await res.json();
+        const list = document.getElementById('leadList');
+        if (!allLeads.length) {
+            list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.7rem">No leads with email addresses found</div>';
+            return;
+        }
+        list.innerHTML = allLeads.map((l, i) => `
+            <div class="lead-row" onclick="toggleLead(${i})">
+                <input type="checkbox" class="lead-check" data-email="${escHtml(l.email)}">
+                <span class="lr-name">${escHtml(l.contact_name || l.company_name)}</span>
+                <span class="lr-email">${escHtml(l.email)}</span>
+            </div>
+        `).join('');
+        updateSelectedCount();
+    } catch (e) {
+        console.error('Load leads error:', e);
+    }
+}
+
+function toggleLead(index) {
+    const checks = document.querySelectorAll('.lead-check');
+    if (checks[index]) checks[index].checked = !checks[index].checked;
+    updateSelectedCount();
+}
+
+function toggleAllLeads() {
+    const selAll = document.getElementById('selectAllLeads');
+    selAll.checked = !selAll.checked;
+    document.querySelectorAll('.lead-check').forEach(c => c.checked = selAll.checked);
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const count = document.querySelectorAll('.lead-check:checked').length;
+    document.getElementById('selectedCount').textContent = count;
+}
+
+async function sendCampaign() {
+    const checked = document.querySelectorAll('.lead-check:checked');
+    const emails = Array.from(checked).map(c => c.dataset.email).filter(Boolean);
+    if (!emails.length) { toast('Select at least one recipient', 'error'); return; }
+    if (!confirm(`Send this campaign to ${emails.length} recipient(s)?`)) return;
+    try {
+        const res = await fetch(`/api/campaigns/${state.id}/send`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ lead_emails: emails })
+        });
+        const data = await res.json();
+        if (data.status === 'sent') {
+            toast(`Campaign sent to ${data.sent_count} recipient(s)`, 'success');
+            state.status = 'sent';
+            closeModal('sendModal');
+            loadCampaigns();
+        } else {
+            toast(data.error || 'Send failed', 'error');
+        }
+    } catch (e) {
+        toast('Send failed: ' + e.message, 'error');
+    }
+}
+
+// ── Modals & Utils ─────────────────────────────────────────────────────────────
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('open');
+    });
+});
+
+// Close on Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    }
+});
+
+function toast(msg, type='info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function formatDate(d) {
+    if (!d) return '';
+    try {
+        const dt = new Date(d);
+        return dt.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+    } catch { return d; }
+}
+
+// Left panel blocks also clickable to add
+document.querySelectorAll('.block-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const type = item.dataset.type;
+        if (!type) return;
+        const block = createBlock(type);
+        state.blocks.push(block);
+        state.selectedBlockIndex = state.blocks.length - 1;
+        renderCanvas();
+        showBlockSettings(state.selectedBlockIndex);
+    });
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+renderCanvas();
+loadCampaigns();
+</script>
+</body>
+</html>

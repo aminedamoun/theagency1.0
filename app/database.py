@@ -141,6 +141,24 @@ async def init_db():
             pipeline_status TEXT DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS email_campaigns (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            campaign_name TEXT NOT NULL,
+            subject TEXT DEFAULT '',
+            preview_text TEXT DEFAULT '',
+            sender_name TEXT DEFAULT 'Dubai Prod',
+            sender_email TEXT DEFAULT 'info@dubaiprod.com',
+            template_json TEXT DEFAULT '[]',
+            rendered_html TEXT DEFAULT '',
+            target_segment TEXT DEFAULT '',
+            selected_leads TEXT DEFAULT '[]',
+            status TEXT DEFAULT 'draft',
+            scheduled_at TIMESTAMP,
+            sent_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     """)
     # Migrations — add columns if missing
     try:

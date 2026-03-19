@@ -10,6 +10,7 @@ If the primary SMTP fails, automatically tries GoDaddy as fallback.
 
 import logging
 import os
+import re
 import smtplib
 import mimetypes
 from email.message import EmailMessage
@@ -216,7 +217,3 @@ def send_email(
             conn.quit()
         except Exception:
             pass
-
-
-# Need re for HTML detection
-import re

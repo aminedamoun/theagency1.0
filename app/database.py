@@ -1,7 +1,10 @@
 """SQLite database for Dubai Prod Agent."""
 
+import logging
 import aiosqlite
 from pathlib import Path
+
+logger = logging.getLogger("amine-agent")
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "agent.db"
 
@@ -175,6 +178,16 @@ async def init_db():
         await db.execute("ALTER TABLE tasks ADD COLUMN source TEXT DEFAULT 'platform'")
     except Exception:
         pass  # Column already exists
+
+    # One-time cleanup: clear old prospecting data from before search engine rewrite
+    try:
+        count = await db.execute_fetchall("SELECT COUNT(*) as c FROM research_projects WHERE name LIKE '%Prospecting%' AND created_at < '2026-03-19'")
+        if count and count[0][0] > 0:
+            await db.execute("DELETE FROM leads WHERE project_id IN (SELECT id FROM research_projects WHERE created_at < '2026-03-19')")
+            await db.execute("DELETE FROM research_projects WHERE created_at < '2026-03-19'")
+            logger.info(f"[db] Cleaned {count[0][0]} old research projects")
+    except Exception:
+        pass
 
     await db.commit()
     await db.close()

@@ -756,7 +756,7 @@ function renderBlockPreview(block) {
         case 'footer':
             return `<div style="background:${block.bgColor};padding:24px 20px;text-align:center;color:${block.textColor};font-size:12px;line-height:1.8;font-family:Arial,Helvetica,sans-serif"><strong>${esc(block.companyName)}</strong><br>${esc(block.address)}<br><a href="#" style="color:${block.textColor}">${esc(block.unsubscribeText)}</a></div>`;
         case 'custom_html':
-            return `<div class="custom-html-preview" style="background:#fff;border-radius:4px;overflow:hidden"><iframe id="premiumFrame" srcdoc="${block.html.replace(/"/g,'&quot;')}" style="width:100%;min-height:3200px;border:none;pointer-events:none" scrolling="no" onload="this.style.height=this.contentDocument.body.scrollHeight+'px'"></iframe><div style="padding:8px 16px;background:#1a1a2e;border-top:1px solid #333;display:flex;align-items:center;gap:8px"><i class="fas fa-crown" style="color:#c9a44c"></i><span style="color:#c9a44c;font-size:12px;font-weight:600">Premium Template</span><span style="color:#666;font-size:11px;margin-left:auto">Click to edit fields</span></div></div>`;
+            return `<div class="custom-html-preview" style="background:#fff;border-radius:4px;overflow:hidden"><iframe id="premiumFrame" srcdoc="${block.html.replace(/"/g,'&quot;')}" style="width:100%;min-height:800px;border:none;pointer-events:none" scrolling="no" onload="try{this.style.height=this.contentDocument.body.scrollHeight+'px'}catch(e){this.style.height='3200px'}"></iframe><div style="padding:8px 16px;background:#1a1a2e;border-top:1px solid #333;display:flex;align-items:center;gap:8px"><i class="fas fa-crown" style="color:#c9a44c"></i><span style="color:#c9a44c;font-size:12px;font-weight:600">Premium Template</span><span style="color:#666;font-size:11px;margin-left:auto">Click to edit fields</span></div></div>`;
         default:
             return `<div style="padding:20px;color:#999">Unknown block: ${block.type}</div>`;
     }
@@ -1277,13 +1277,16 @@ function switchPreview(mode, el) {
 
 function showPreviewDesktop(html) {
     const container = document.getElementById('previewContent');
-    container.innerHTML = '<div class="preview-frame desktop"><iframe id="previewIframe"></iframe></div>';
+    container.innerHTML = '<div class="preview-frame desktop"><iframe id="previewIframe" style="min-height:600px"></iframe></div>';
     const iframe = document.getElementById('previewIframe');
     iframe.contentDocument.open();
     iframe.contentDocument.write(html);
     iframe.contentDocument.close();
-    iframe.onload = () => { iframe.style.height = iframe.contentDocument.body.scrollHeight + 20 + 'px'; };
-    setTimeout(() => { iframe.style.height = iframe.contentDocument.body.scrollHeight + 20 + 'px'; }, 200);
+    const resizeIframe = () => { try { iframe.style.height = Math.max(600, iframe.contentDocument.body.scrollHeight + 40) + 'px'; } catch(e) {} };
+    iframe.onload = resizeIframe;
+    setTimeout(resizeIframe, 300);
+    setTimeout(resizeIframe, 1000);
+    setTimeout(resizeIframe, 2500);
 }
 
 function showPreviewMobile(html) {
@@ -1450,6 +1453,15 @@ document.querySelectorAll('.block-item').forEach(item => {
         showBlockSettings(state.selectedBlockIndex);
     });
 });
+
+// Auto-resize premium iframe after fonts load
+function resizePremiumFrame() {
+    const frame = document.getElementById('premiumFrame');
+    if (frame) {
+        try { frame.style.height = frame.contentDocument.body.scrollHeight + 'px'; } catch(e) {}
+    }
+}
+setInterval(resizePremiumFrame, 1000);
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 renderCanvas();

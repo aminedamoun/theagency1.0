@@ -445,7 +445,9 @@ function ebRemove(i) { ebSections.splice(i,1); ebRender(); }
 function ebMoveUp(i) { if(i>0){[ebSections[i-1],ebSections[i]]=[ebSections[i],ebSections[i-1]]; ebRender();} }
 function ebMoveDown(i) { if(i<ebSections.length-1){[ebSections[i],ebSections[i+1]]=[ebSections[i+1],ebSections[i]]; ebRender();} }
 
-function ebUpdate(i, key, val) { ebSections[i][key] = val; ebUpdatePreview(); }
+function ebUpdate(i, key, val) { ebSections[i][key] = val; ebUpdatePreviewDebounced(); }
+let _ebPreviewTimer = null;
+function ebUpdatePreviewDebounced() { clearTimeout(_ebPreviewTimer); _ebPreviewTimer = setTimeout(ebUpdatePreview, 80); }
 function ebUpdatePreview() {
   const pv = document.getElementById('ebLivePreview');
   if(!pv || ebSections.length===0) { if(pv) pv.innerHTML='<div style="padding:60px 30px;text-align:center;color:#999;font-size:13px">Add sections to see your email preview here</div>'; return; }
@@ -533,74 +535,75 @@ function ebRender() {
     switch(s.type) {
       case 'header':
         fields = `<span class="eb-type-badge">📬 Header</span>
-          <label>Client Name</label><input value="${esc(s.clientName)}" onchange="ebUpdate(${i},'clientName',this.value)"/>
-          <label>Personal Message</label><textarea onchange="ebUpdate(${i},'message',this.value)">${esc(s.message)}</textarea>
+          <label>Client Name</label><input value="${esc(s.clientName)}" oninput="ebUpdate(${i},'clientName',this.value)"/>
+          <label>Personal Message</label><textarea oninput="ebUpdate(${i},'message',this.value)">${esc(s.message)}</textarea>
           <label>Client/Photo Image</label>
-          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.imageUrl)}" onchange="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'imageUrl')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
+          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.imageUrl)}" oninput="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'imageUrl')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
           ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="max-width:80px;max-height:50px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}
-          <label>Sender Name</label><input value="${esc(s.senderName)}" onchange="ebUpdate(${i},'senderName',this.value)"/>
-          <label>Sender Title</label><input value="${esc(s.senderTitle)}" onchange="ebUpdate(${i},'senderTitle',this.value)"/>`;
+          <label>Sender Name</label><input value="${esc(s.senderName)}" oninput="ebUpdate(${i},'senderName',this.value)"/>
+          <label>Sender Title</label><input value="${esc(s.senderTitle)}" oninput="ebUpdate(${i},'senderTitle',this.value)"/>`;
         break;
       case 'logo':
         fields = `<span class="eb-type-badge">🏢 Logo Bar</span>
           <label>Logo Image</label>
-          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.imageUrl)}" onchange="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'imageUrl')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
+          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.imageUrl)}" oninput="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'imageUrl')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
           ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="max-width:80px;max-height:50px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}
-          <label>Company Name</label><input value="${esc(s.companyName)}" onchange="ebUpdate(${i},'companyName',this.value)"/>
-          <label>Tagline</label><input value="${esc(s.tagline)}" onchange="ebUpdate(${i},'tagline',this.value)"/>`;
+          <label>Company Name</label><input value="${esc(s.companyName)}" oninput="ebUpdate(${i},'companyName',this.value)"/>
+          <label>Tagline</label><input value="${esc(s.tagline)}" oninput="ebUpdate(${i},'tagline',this.value)"/>`;
         break;
       case 'service':
         fields = `<span class="eb-type-badge">⚡ Service</span>
           <label>Pick from catalog</label>${ebPickService(i)}
-          <label>Service Name</label><input value="${esc(s.name)}" onchange="ebUpdate(${i},'name',this.value)"/>
-          <label>Description</label><textarea onchange="ebUpdate(${i},'desc',this.value)">${esc(s.desc)}</textarea>
-          <label>Tags (comma separated)</label><input value="${esc(s.tags)}" onchange="ebUpdate(${i},'tags',this.value)"/>
+          <label>Service Name</label><input value="${esc(s.name)}" oninput="ebUpdate(${i},'name',this.value)"/>
+          <label>Description</label><textarea oninput="ebUpdate(${i},'desc',this.value)">${esc(s.desc)}</textarea>
+          <label>Tags (comma separated)</label><input value="${esc(s.tags)}" oninput="ebUpdate(${i},'tags',this.value)"/>
           <label>CTA Type</label><select onchange="ebUpdate(${i},'ctaType',this.value)">
             <option value="whatsapp" ${s.ctaType==='whatsapp'?'selected':''}>WhatsApp</option>
             <option value="instagram" ${s.ctaType==='instagram'?'selected':''}>Instagram</option>
             <option value="website" ${s.ctaType==='website'?'selected':''}>Website</option>
             <option value="email" ${s.ctaType==='email'?'selected':''}>Email</option>
           </select>
-          <label>CTA Link</label><input value="${esc(s.ctaUrl)}" onchange="ebUpdate(${i},'ctaUrl',this.value)"/>
-          <label>CTA Button Text</label><input value="${esc(s.ctaLabel)}" onchange="ebUpdate(${i},'ctaLabel',this.value)"/>`;
+          <label>CTA Link</label><input value="${esc(s.ctaUrl)}" oninput="ebUpdate(${i},'ctaUrl',this.value)"/>
+          <label>CTA Button Text</label><input value="${esc(s.ctaLabel)}" oninput="ebUpdate(${i},'ctaLabel',this.value)"/>`;
         break;
       case 'clients':
         fields = `<span class="eb-type-badge">🏆 Clients</span>
-          <label>Section Title</label><input value="${esc(s.title)}" onchange="ebUpdate(${i},'title',this.value)"/>
-          <label>Client Names (comma separated)</label><textarea onchange="ebUpdate(${i},'items',this.value)">${esc(s.items)}</textarea>`;
+          <label>Section Title</label><input value="${esc(s.title)}" oninput="ebUpdate(${i},'title',this.value)"/>
+          <label>Client Names (comma separated)</label><textarea oninput="ebUpdate(${i},'items',this.value)">${esc(s.items)}</textarea>`;
         break;
       case 'cta':
         fields = `<span class="eb-type-badge">🎯 CTA Block</span>
-          <label>Heading</label><input value="${esc(s.heading)}" onchange="ebUpdate(${i},'heading',this.value)"/>
-          <label>Subtext</label><textarea onchange="ebUpdate(${i},'subtext',this.value)">${esc(s.subtext)}</textarea>
-          <label>Button Text</label><input value="${esc(s.buttonText)}" onchange="ebUpdate(${i},'buttonText',this.value)"/>
-          <label>Button URL</label><input value="${esc(s.buttonUrl)}" onchange="ebUpdate(${i},'buttonUrl',this.value)"/>`;
+          <label>Heading</label><input value="${esc(s.heading)}" oninput="ebUpdate(${i},'heading',this.value)"/>
+          <label>Subtext</label><textarea oninput="ebUpdate(${i},'subtext',this.value)">${esc(s.subtext)}</textarea>
+          <label>Button Text</label><input value="${esc(s.buttonText)}" oninput="ebUpdate(${i},'buttonText',this.value)"/>
+          <label>Button URL</label><input value="${esc(s.buttonUrl)}" oninput="ebUpdate(${i},'buttonUrl',this.value)"/>`;
         break;
       case 'text':
         fields = `<span class="eb-type-badge">📝 Text</span>
-          <label>Content</label><textarea rows="3" onchange="ebUpdate(${i},'content',this.value)">${esc(s.content)}</textarea>`;
+          <label>Content</label><textarea rows="3" oninput="ebUpdate(${i},'content',this.value)">${esc(s.content)}</textarea>`;
         break;
       case 'image':
         fields = `<span class="eb-type-badge">🖼 Image</span>
           <label>Image</label>
-          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.src)}" onchange="ebUpdate(${i},'src',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'src')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
+          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.src)}" oninput="ebUpdate(${i},'src',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'src')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
           ${s.src?`<img src="${esc(s.src)}" style="max-width:120px;max-height:80px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}
-          <label>Alt Text</label><input value="${esc(s.alt)}" onchange="ebUpdate(${i},'alt',this.value)"/>`;
+          <label>Alt Text</label><input value="${esc(s.alt)}" oninput="ebUpdate(${i},'alt',this.value)"/>`;
         break;
       case 'divider':
         fields = `<span class="eb-type-badge">── Divider</span>`;
         break;
       case 'footer':
         fields = `<span class="eb-type-badge">📌 Footer</span>
-          <label>Company Name</label><input value="${esc(s.companyName)}" onchange="ebUpdate(${i},'companyName',this.value)"/>
-          <label>Address/Info</label><input value="${esc(s.address)}" onchange="ebUpdate(${i},'address',this.value)"/>
-          <label>Email</label><input value="${esc(s.email)}" onchange="ebUpdate(${i},'email',this.value)"/>
-          <label>Phone</label><input value="${esc(s.phone)}" onchange="ebUpdate(${i},'phone',this.value)"/>
-          <label>Website</label><input value="${esc(s.website)}" onchange="ebUpdate(${i},'website',this.value)"/>`;
+          <label>Company Name</label><input value="${esc(s.companyName)}" oninput="ebUpdate(${i},'companyName',this.value)"/>
+          <label>Address/Info</label><input value="${esc(s.address)}" oninput="ebUpdate(${i},'address',this.value)"/>
+          <label>Email</label><input value="${esc(s.email)}" oninput="ebUpdate(${i},'email',this.value)"/>
+          <label>Phone</label><input value="${esc(s.phone)}" oninput="ebUpdate(${i},'phone',this.value)"/>
+          <label>Website</label><input value="${esc(s.website)}" oninput="ebUpdate(${i},'website',this.value)"/>`;
         break;
     }
     return `<div class="eb-section">${controls}${fields}</div>`;
   }).join('');
+  ebUpdatePreview();
 }
 
 function ebBuildHTML() {

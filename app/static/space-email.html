@@ -150,7 +150,7 @@
     <div class="tb-fill"></div>
     <button class="tb-btn tb-accent" onclick="switchTab('outreach')">🚀 Mass Outreach</button>
     <button class="tb-btn tb-green" onclick="switchTab('proposals')">📄 Proposals</button>
-    <a href="/space/campaigns" class="tb-btn" style="background:linear-gradient(135deg,#c9a44c,#a6882f);color:#0c0c12;text-decoration:none;font-weight:700"><i class="fas fa-envelope-open-text" style="margin-right:4px"></i> Campaign Builder</a>
+    <button class="tb-btn" onclick="switchTab('builder')" style="background:linear-gradient(135deg,#c9a44c,#a6882f);color:#0c0c12;font-weight:700">✉️ Email Builder</button>
   </div>
 
   <div class="main">
@@ -183,10 +183,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Campaign Log
       </div>
-      <a class="sb-item" href="/space/campaigns" style="text-decoration:none;color:#c9a44c;background:rgba(201,164,76,0.06);border-left:3px solid #c9a44c">
+      <div class="sb-item" onclick="switchTab('builder')" style="color:#c9a44c">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a44c" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Campaign Builder
-      </a>
+        Email Builder
+      </div>
       <div class="sb-divider"></div>
       <!-- Elena -->
       <div class="sb-agent">
@@ -327,10 +327,318 @@
           <div style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin:12px 0 8px">Activity Timeline</div>
           <div id="campaignList" class="campaign-list"><div class="empty">Email activity will appear here as you send</div></div>
         </div>
+
+        <!-- ═══ EMAIL BUILDER TAB ═══ -->
+        <div class="tab-pane" id="pane-builder">
+          <div class="sec-head"><div><h2>✉️ Email Builder</h2><div class="sub">Build branded email templates section by section</div></div></div>
+
+          <!-- Builder Controls -->
+          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+            <button onclick="ebPreview()" style="padding:8px 16px;background:rgba(201,164,76,0.15);border:1px solid #c9a44c;color:#c9a44c;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">👁 Preview</button>
+            <button onclick="ebSendTest()" style="padding:8px 16px;background:rgba(201,164,76,0.15);border:1px solid #c9a44c;color:#c9a44c;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">📧 Send Test</button>
+            <button onclick="ebCopyHTML()" style="padding:8px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:6px;cursor:pointer;font-size:12px">📋 Copy HTML</button>
+          </div>
+
+          <!-- Sections Container -->
+          <div id="ebSections" style="display:flex;flex-direction:column;gap:12px">
+          </div>
+
+          <!-- Add Section Buttons -->
+          <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px">
+            <button onclick="ebAdd('header')" class="eb-add-btn">+ Header</button>
+            <button onclick="ebAdd('logo')" class="eb-add-btn">+ Logo Bar</button>
+            <button onclick="ebAdd('service')" class="eb-add-btn">+ Service</button>
+            <button onclick="ebAdd('clients')" class="eb-add-btn">+ Clients</button>
+            <button onclick="ebAdd('cta')" class="eb-add-btn">+ CTA Block</button>
+            <button onclick="ebAdd('text')" class="eb-add-btn">+ Text Block</button>
+            <button onclick="ebAdd('image')" class="eb-add-btn">+ Image</button>
+            <button onclick="ebAdd('divider')" class="eb-add-btn">+ Divider</button>
+            <button onclick="ebAdd('footer')" class="eb-add-btn">+ Footer</button>
+          </div>
+
+          <!-- Quick Start Templates -->
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px">Quick Start</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="ebLoadTemplate('outreach')" class="eb-tpl-btn">🎯 Cold Outreach</button>
+              <button onclick="ebLoadTemplate('services')" class="eb-tpl-btn">💼 Full Services</button>
+              <button onclick="ebLoadTemplate('minimal')" class="eb-tpl-btn">✨ Minimal</button>
+            </div>
+          </div>
+
+          <!-- Preview Modal -->
+          <div id="ebPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;overflow-y:auto;padding:24px">
+            <div style="max-width:660px;margin:0 auto">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <span style="color:#c9a44c;font-size:13px;font-weight:600">EMAIL PREVIEW (600px)</span>
+                <button onclick="document.getElementById('ebPreviewModal').style.display='none'" style="background:none;border:none;color:#fff;font-size:24px;cursor:pointer">✕</button>
+              </div>
+              <div id="ebPreviewContent" style="background:#fff;border-radius:8px;overflow:hidden;border:2px solid #c9a44c"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 </div>
+
+<style>
+.eb-add-btn{padding:8px 14px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);color:#888;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.15s}
+.eb-add-btn:hover{border-color:#c9a44c;color:#c9a44c;background:rgba(201,164,76,0.06)}
+.eb-tpl-btn{padding:8px 16px;background:rgba(201,164,76,0.08);border:1px solid rgba(201,164,76,0.2);color:#c9a44c;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}
+.eb-tpl-btn:hover{background:rgba(201,164,76,0.15)}
+.eb-section{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;position:relative}
+.eb-section:hover{border-color:rgba(201,164,76,0.3)}
+.eb-section .eb-controls{position:absolute;top:8px;right:8px;display:flex;gap:4px}
+.eb-section .eb-controls button{width:26px;height:26px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#888;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.eb-section .eb-controls button:hover{border-color:#c9a44c;color:#c9a44c}
+.eb-section label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;margin-top:10px}
+.eb-section label:first-of-type{margin-top:0}
+.eb-section input,.eb-section textarea,.eb-section select{width:100%;padding:8px 10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:#e0e0e0;font-size:13px;font-family:inherit}
+.eb-section textarea{resize:vertical;min-height:60px}
+.eb-section select{cursor:pointer}
+.eb-section .eb-type-badge{display:inline-block;padding:2px 8px;background:rgba(201,164,76,0.15);color:#c9a44c;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-radius:3px;margin-bottom:10px}
+</style>
+
+<script>
+// ═══ EMAIL BUILDER ═══
+let ebSections = [];
+
+const EB_DEFAULTS = {
+  header: { type:'header', clientName:'{{First Name}}', message:'We came across your brand and noticed real opportunity to elevate your digital presence.', imageUrl:'', senderName:'Amine Damoun', senderTitle:'COO · Dubai Prod' },
+  logo: { type:'logo', imageUrl:'', companyName:'DUBAI PROD', tagline:'Global Standards · Local Results' },
+  service: { type:'service', name:'Social Media Management', desc:'Strategy, scripting, production, editing, and publishing — handled by our in-house team.', tags:'Content Strategy, Growth, Analytics', ctaLabel:'WhatsApp', ctaUrl:'https://wa.me/971543313587', ctaType:'whatsapp' },
+  clients: { type:'clients', title:'Brands We\'ve Elevated', items:'Hyundai, Red Bull, Luznar, Emirates NBD' },
+  cta: { type:'cta', heading:'Let\'s Discuss Your Brand', subtext:'Reply to this email — no commitment, just useful observations.', buttonText:'Reply to This Email', buttonUrl:'mailto:info@dubaiprod.com' },
+  text: { type:'text', content:'Custom text paragraph goes here. You can write anything.' },
+  image: { type:'image', src:'', alt:'Image', width:'100%' },
+  divider: { type:'divider' },
+  footer: { type:'footer', companyName:'Dubai Prod', address:'Digital Production Agency · Dubai, UAE', email:'info@dubaiprod.com', phone:'+971 54 331 3587', website:'dubaiprod.com', unsubscribe:true }
+};
+
+function ebAdd(type) {
+  ebSections.push(JSON.parse(JSON.stringify(EB_DEFAULTS[type])));
+  ebRender();
+}
+
+function ebRemove(i) { ebSections.splice(i,1); ebRender(); }
+function ebMoveUp(i) { if(i>0){[ebSections[i-1],ebSections[i]]=[ebSections[i],ebSections[i-1]]; ebRender();} }
+function ebMoveDown(i) { if(i<ebSections.length-1){[ebSections[i],ebSections[i+1]]=[ebSections[i+1],ebSections[i]]; ebRender();} }
+
+function ebUpdate(i, key, val) { ebSections[i][key] = val; }
+
+function ebRender() {
+  const el = document.getElementById('ebSections');
+  if(ebSections.length === 0) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#555;font-size:13px">Click "+" buttons below to add sections, or pick a Quick Start template</div>'; return; }
+
+  el.innerHTML = ebSections.map((s,i) => {
+    let fields = '';
+    const controls = `<div class="eb-controls">
+      ${i>0?`<button onclick="ebMoveUp(${i})" title="Move up">↑</button>`:''}
+      ${i<ebSections.length-1?`<button onclick="ebMoveDown(${i})" title="Move down">↓</button>`:''}
+      <button onclick="ebRemove(${i})" title="Remove" style="color:#e74c3c">✕</button>
+    </div>`;
+
+    switch(s.type) {
+      case 'header':
+        fields = `<span class="eb-type-badge">📬 Header</span>
+          <label>Client Name</label><input value="${esc(s.clientName)}" onchange="ebUpdate(${i},'clientName',this.value)"/>
+          <label>Personal Message</label><textarea onchange="ebUpdate(${i},'message',this.value)">${esc(s.message)}</textarea>
+          <label>Client/Photo Image URL (optional)</label><input value="${esc(s.imageUrl)}" onchange="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://..."/>
+          <label>Sender Name</label><input value="${esc(s.senderName)}" onchange="ebUpdate(${i},'senderName',this.value)"/>
+          <label>Sender Title</label><input value="${esc(s.senderTitle)}" onchange="ebUpdate(${i},'senderTitle',this.value)"/>`;
+        break;
+      case 'logo':
+        fields = `<span class="eb-type-badge">🏢 Logo Bar</span>
+          <label>Logo Image URL (optional)</label><input value="${esc(s.imageUrl)}" onchange="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://..."/>
+          <label>Company Name</label><input value="${esc(s.companyName)}" onchange="ebUpdate(${i},'companyName',this.value)"/>
+          <label>Tagline</label><input value="${esc(s.tagline)}" onchange="ebUpdate(${i},'tagline',this.value)"/>`;
+        break;
+      case 'service':
+        fields = `<span class="eb-type-badge">⚡ Service</span>
+          <label>Service Name</label><input value="${esc(s.name)}" onchange="ebUpdate(${i},'name',this.value)"/>
+          <label>Description</label><textarea onchange="ebUpdate(${i},'desc',this.value)">${esc(s.desc)}</textarea>
+          <label>Tags (comma separated)</label><input value="${esc(s.tags)}" onchange="ebUpdate(${i},'tags',this.value)"/>
+          <label>CTA Type</label><select onchange="ebUpdate(${i},'ctaType',this.value)">
+            <option value="whatsapp" ${s.ctaType==='whatsapp'?'selected':''}>WhatsApp</option>
+            <option value="instagram" ${s.ctaType==='instagram'?'selected':''}>Instagram</option>
+            <option value="website" ${s.ctaType==='website'?'selected':''}>Website</option>
+            <option value="email" ${s.ctaType==='email'?'selected':''}>Email</option>
+          </select>
+          <label>CTA Link</label><input value="${esc(s.ctaUrl)}" onchange="ebUpdate(${i},'ctaUrl',this.value)"/>
+          <label>CTA Button Text</label><input value="${esc(s.ctaLabel)}" onchange="ebUpdate(${i},'ctaLabel',this.value)"/>`;
+        break;
+      case 'clients':
+        fields = `<span class="eb-type-badge">🏆 Clients</span>
+          <label>Section Title</label><input value="${esc(s.title)}" onchange="ebUpdate(${i},'title',this.value)"/>
+          <label>Client Names (comma separated)</label><textarea onchange="ebUpdate(${i},'items',this.value)">${esc(s.items)}</textarea>`;
+        break;
+      case 'cta':
+        fields = `<span class="eb-type-badge">🎯 CTA Block</span>
+          <label>Heading</label><input value="${esc(s.heading)}" onchange="ebUpdate(${i},'heading',this.value)"/>
+          <label>Subtext</label><textarea onchange="ebUpdate(${i},'subtext',this.value)">${esc(s.subtext)}</textarea>
+          <label>Button Text</label><input value="${esc(s.buttonText)}" onchange="ebUpdate(${i},'buttonText',this.value)"/>
+          <label>Button URL</label><input value="${esc(s.buttonUrl)}" onchange="ebUpdate(${i},'buttonUrl',this.value)"/>`;
+        break;
+      case 'text':
+        fields = `<span class="eb-type-badge">📝 Text</span>
+          <label>Content</label><textarea rows="3" onchange="ebUpdate(${i},'content',this.value)">${esc(s.content)}</textarea>`;
+        break;
+      case 'image':
+        fields = `<span class="eb-type-badge">🖼 Image</span>
+          <label>Image URL</label><input value="${esc(s.src)}" onchange="ebUpdate(${i},'src',this.value)" placeholder="https://..."/>
+          <label>Alt Text</label><input value="${esc(s.alt)}" onchange="ebUpdate(${i},'alt',this.value)"/>`;
+        break;
+      case 'divider':
+        fields = `<span class="eb-type-badge">── Divider</span>`;
+        break;
+      case 'footer':
+        fields = `<span class="eb-type-badge">📌 Footer</span>
+          <label>Company Name</label><input value="${esc(s.companyName)}" onchange="ebUpdate(${i},'companyName',this.value)"/>
+          <label>Address/Info</label><input value="${esc(s.address)}" onchange="ebUpdate(${i},'address',this.value)"/>
+          <label>Email</label><input value="${esc(s.email)}" onchange="ebUpdate(${i},'email',this.value)"/>
+          <label>Phone</label><input value="${esc(s.phone)}" onchange="ebUpdate(${i},'phone',this.value)"/>
+          <label>Website</label><input value="${esc(s.website)}" onchange="ebUpdate(${i},'website',this.value)"/>`;
+        break;
+    }
+    return `<div class="eb-section">${controls}${fields}</div>`;
+  }).join('');
+}
+
+function ebBuildHTML() {
+  const css = `*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--orange:#E8900A;--dark:#16140E;--ink:#18160F;--ink-mid:#3A3830;--ink-light:#7A7568;--rule:#E4E0D8;--bg:#F5F4F1;--white:#FFF;--orange-bg:#FEF3E2;--orange-dim:rgba(232,144,10,0.13)}body{background:#E8E5DF;font-family:'DM Sans',Arial,sans-serif;color:var(--ink)}.wrap{max-width:640px;margin:0 auto;background:var(--bg)}`;
+
+  let html = '';
+  let svcNum = 0;
+
+  ebSections.forEach(s => {
+    switch(s.type) {
+      case 'header':
+        html += `<div style="background:#16140E;padding:8px 32px;display:flex;justify-content:space-between;align-items:center"><div style="font-family:'Bebas Neue',Arial,sans-serif;font-size:16px;letter-spacing:4px;color:#fff">DUBAI<span style="color:#E8900A">PROD</span></div><div style="font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4)">Digital Agency</div></div>`;
+        html += `<div style="background:#fff;display:grid;grid-template-columns:${s.imageUrl?'1fr 220px':'1fr'};min-height:280px;border-bottom:3px solid #E8900A;overflow:hidden">`;
+        html += `<div style="padding:36px 32px 32px;display:flex;flex-direction:column;justify-content:space-between">`;
+        html += `<div><div style="font-family:'Bebas Neue',Arial,sans-serif;font-size:42px;letter-spacing:5px;color:#18160F">DUBAI<span style="color:#E8900A">PROD</span></div><div style="font-size:9px;font-weight:500;letter-spacing:3.5px;text-transform:uppercase;color:#7A7568;margin-top:5px">Global Standards · Local Results</div></div>`;
+        html += `<div style="margin-top:28px"><div style="display:inline-flex;align-items:center;gap:7px;background:#FEF3E2;border:1px solid rgba(232,144,10,0.25);padding:5px 12px;border-radius:20px;margin-bottom:14px"><span style="width:5px;height:5px;border-radius:50%;background:#E8900A;display:inline-block"></span><span style="font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:#E8900A">Personal Observation</span></div><h1 style="font-family:'Playfair Display',Georgia,serif;font-size:30px;font-weight:700;line-height:1.15;color:#18160F">We Noticed<br><em style="color:#E8900A">Room for</em><br>Improvement.</h1></div>`;
+        html += `<div style="margin-top:auto;padding-top:20px;border-top:1px solid #E4E0D8"><div style="font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#E8900A;margin-bottom:4px">Message from</div><div style="font-size:16px;font-weight:700;color:#18160F">${esc(s.senderName)}</div><div style="font-size:11.5px;color:#7A7568;margin-top:2px">${esc(s.senderTitle)}</div></div>`;
+        html += `</div>`;
+        if(s.imageUrl) {
+          html += `<div style="position:relative;background:#1E1C15;overflow:hidden"><img src="${esc(s.imageUrl)}" style="width:100%;height:100%;object-fit:cover"/></div>`;
+        }
+        html += `</div>`;
+        html += `<div style="padding:28px 32px;background:#fff;border-bottom:1px solid #E4E0D8"><div style="border-left:3px solid #E8900A;padding:18px 20px;background:#F5F4F1;border-radius:0 6px 6px 0"><div style="font-size:15px;font-weight:600;color:#18160F;margin-bottom:8px">Hi ${esc(s.clientName)},</div><p style="font-size:13.5px;line-height:1.8;color:#3A3830">${esc(s.message)}</p></div></div>`;
+        break;
+
+      case 'logo':
+        html += `<div style="background:#16140E;padding:20px 32px;text-align:center">`;
+        if(s.imageUrl) { html += `<img src="${esc(s.imageUrl)}" style="max-width:180px;height:auto;margin-bottom:6px"/><br>`; }
+        else { html += `<div style="font-family:'Bebas Neue',Arial,sans-serif;font-size:28px;letter-spacing:5px;color:#fff">${esc(s.companyName).replace('PROD','<span style=color:#E8900A>PROD</span>')}</div>`; }
+        html += `<div style="font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.4)">${esc(s.tagline)}</div></div>`;
+        break;
+
+      case 'service':
+        svcNum++;
+        const ctaIcons = {whatsapp:'💬',instagram:'📸',website:'🌐',email:'✉️'};
+        html += `<div style="margin:0 32px 10px;background:#fff;border:1px solid #E4E0D8;border-radius:6px;display:grid;grid-template-columns:52px 1fr auto;align-items:center;overflow:hidden">`;
+        html += `<div style="background:rgba(232,144,10,0.13);width:52px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Arial,sans-serif;font-size:20px;color:#E8900A;letter-spacing:1px;border-right:1px solid #EDE9E3">${String(svcNum).padStart(2,'0')}</div>`;
+        html += `<div style="padding:16px 18px"><div style="font-size:14px;font-weight:700;color:#18160F;margin-bottom:3px">${esc(s.name)}</div><div style="font-size:12px;color:#3A3830;line-height:1.65">${esc(s.desc)}</div>`;
+        if(s.tags) { html += `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${s.tags.split(',').map(t=>`<span style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#E8900A;background:#FEF3E2;border:1px solid rgba(232,144,10,0.2);padding:2px 7px;border-radius:3px">${t.trim()}</span>`).join('')}</div>`; }
+        html += `</div>`;
+        html += `<div style="padding-right:18px"><a href="${esc(s.ctaUrl)}" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(232,144,10,0.1);border:1px solid rgba(232,144,10,0.25);border-radius:20px;text-decoration:none;font-size:11px;font-weight:600;color:#E8900A">${ctaIcons[s.ctaType]||'→'} ${esc(s.ctaLabel)}</a></div>`;
+        html += `</div>`;
+        break;
+
+      case 'clients':
+        html += `<div style="padding:36px 32px 4px;display:flex;align-items:center;gap:14px"><div><div style="font-size:9px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:#E8900A;margin-bottom:2px">Case Studies</div><div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:#18160F">${esc(s.title)}</div></div><div style="flex:1;height:1px;background:#E4E0D8"></div></div>`;
+        html += `<div style="padding:16px 32px 28px;display:flex;flex-direction:column;gap:10px">`;
+        s.items.split(',').forEach(c => {
+          const name = c.trim();
+          const abbr = name.substring(0,3).toUpperCase();
+          html += `<div style="background:#fff;border:1px solid #E4E0D8;border-radius:6px;padding:18px 20px;display:grid;grid-template-columns:52px 1fr 20px;gap:14px;align-items:center"><div style="width:52px;height:52px;background:#F5F4F1;border:1px solid #E4E0D8;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',Arial,sans-serif;font-size:13px;color:#7A7568">${abbr}</div><div><div style="font-family:'Playfair Display',Georgia,serif;font-size:16px;font-weight:600;color:#18160F">${esc(name)}</div></div><div style="color:#E4E0D8;font-size:20px">›</div></div>`;
+        });
+        html += `</div>`;
+        break;
+
+      case 'cta':
+        html += `<div style="background:#fff;padding:52px 32px;text-align:center;border-top:1px solid #E4E0D8"><h2 style="font-family:'Playfair Display',Georgia,serif;font-size:36px;font-weight:700;color:#18160F;margin-bottom:10px">${esc(s.heading).replace(/\n/g,'<br>')}</h2><p style="font-size:14px;color:#3A3830;line-height:1.75;max-width:380px;margin:0 auto 30px">${esc(s.subtext)}</p><a href="${esc(s.buttonUrl)}" style="display:inline-block;background:#E8900A;color:#fff;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:16px 44px;border-radius:3px;box-shadow:0 6px 24px rgba(232,144,10,0.28)">${esc(s.buttonText)}</a></div>`;
+        break;
+
+      case 'text':
+        html += `<div style="padding:20px 32px;font-size:14px;line-height:1.75;color:#3A3830;background:#fff">${esc(s.content)}</div>`;
+        break;
+
+      case 'image':
+        if(s.src) html += `<div style="text-align:center;background:#fff;padding:10px 32px"><img src="${esc(s.src)}" alt="${esc(s.alt)}" style="max-width:100%;height:auto;display:block;margin:0 auto"/></div>`;
+        break;
+
+      case 'divider':
+        html += `<div style="padding:8px 32px;background:#F5F4F1"><hr style="border:none;height:1px;background:#E4E0D8"/></div>`;
+        break;
+
+      case 'footer':
+        html += `<div style="background:#F5F4F1;padding:28px 32px 20px;border-top:1px solid #E4E0D8">`;
+        html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #E4E0D8"><div style="font-family:'Bebas Neue',Arial,sans-serif;font-size:20px;letter-spacing:3px;color:#18160F">${esc(s.companyName).replace('Prod','<span style=color:#E8900A>Prod</span>')}</div><div style="width:1px;height:22px;background:#E4E0D8"></div><div style="font-size:11px;color:#7A7568">${esc(s.address)}</div></div>`;
+        html += `<div style="font-size:12px;color:#7A7568;line-height:2">`;
+        if(s.email) html += `✉ <a href="mailto:${esc(s.email)}" style="color:#7A7568;text-decoration:none">${esc(s.email)}</a><br>`;
+        if(s.phone) html += `📱 ${esc(s.phone)}<br>`;
+        if(s.website) html += `🌐 <a href="https://${esc(s.website)}" style="color:#7A7568;text-decoration:none">${esc(s.website)}</a><br>`;
+        html += `</div>`;
+        html += `<div style="border-top:1px solid #E4E0D8;padding-top:14px;margin-top:16px;text-align:center;font-size:11px;color:#7A7568;line-height:1.8">© ${new Date().getFullYear()} ${esc(s.companyName)}. All rights reserved.<br><a href="#" style="color:#7A7568;text-decoration:underline">Unsubscribe</a> · <a href="#" style="color:#7A7568;text-decoration:underline">Privacy Policy</a></div>`;
+        html += `</div>`;
+        break;
+    }
+  });
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet"/><style>${css}</style></head><body><div class="wrap">${html}</div></body></html>`;
+}
+
+function ebPreview() {
+  if(ebSections.length===0){alert('Add some sections first');return;}
+  const html = ebBuildHTML();
+  document.getElementById('ebPreviewContent').innerHTML = `<iframe srcdoc="${html.replace(/"/g,'&quot;')}" style="width:100%;min-height:400px;border:none" onload="this.style.height=this.contentDocument.body.scrollHeight+'px'"></iframe>`;
+  document.getElementById('ebPreviewModal').style.display='block';
+}
+
+function ebCopyHTML() {
+  if(ebSections.length===0){alert('Add some sections first');return;}
+  navigator.clipboard.writeText(ebBuildHTML()).then(()=>alert('HTML copied to clipboard!'));
+}
+
+async function ebSendTest() {
+  if(ebSections.length===0){alert('Add some sections first');return;}
+  const email = prompt('Send test email to:','aminedamoun@gmail.com');
+  if(!email) return;
+  const html = ebBuildHTML();
+  try {
+    const res = await fetch('/api/campaigns', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaign_name:'Test Email',subject:'Dubai Prod — Preview',rendered_html:html,status:'draft'})});
+    const camp = await res.json();
+    await fetch(`/api/campaigns/${camp.id}/send-test`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({test_email:email})});
+    alert('Test email sent to '+email+'!');
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+function ebLoadTemplate(name) {
+  if(ebSections.length>0 && !confirm('Replace current sections?')) return;
+  ebSections = [];
+  if(name==='outreach') {
+    ebAdd('header'); ebAdd('service'); ebAdd('service'); ebAdd('service');
+    ebSections[1].name='Social Media Management'; ebSections[1].desc='Strategy, scripting, production, editing, and publishing — all in-house.'; ebSections[1].tags='Content Strategy, Growth, Analytics';
+    ebSections[2].name='Video Production'; ebSections[2].desc='From concept to final cut — corporate films, events, product launches, reels.'; ebSections[2].tags='Cinematic, Events, Reels'; ebSections[2].ctaLabel='Instagram'; ebSections[2].ctaType='instagram'; ebSections[2].ctaUrl='https://instagram.com/dubaiprod';
+    ebSections[3].name='Website & Web Development'; ebSections[3].desc='Fast, conversion-focused sites designed to turn visitors into paying clients.'; ebSections[3].tags='UI/UX, Conversion, SEO-ready'; ebSections[3].ctaLabel='Website'; ebSections[3].ctaType='website'; ebSections[3].ctaUrl='https://dubaiprod.com';
+    ebAdd('cta'); ebAdd('footer');
+  } else if(name==='services') {
+    ebAdd('header'); ebAdd('logo');
+    ['Social Media Management','Video Production','Website & Web Development','Branding & Identity','SEO & Paid Ads','3D & CGI'].forEach(sn=>{ebAdd('service');ebSections[ebSections.length-1].name=sn;});
+    ebAdd('clients'); ebAdd('cta'); ebAdd('footer');
+  } else if(name==='minimal') {
+    ebAdd('header'); ebAdd('service'); ebAdd('cta'); ebAdd('footer');
+  }
+  ebRender();
+}
+
+// Init empty
+ebRender();
+</script>
 
 <script>
 // ═══ STATE ═══
@@ -343,7 +651,7 @@ function switchTab(name){
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-'+name)?.classList.add('active');
   document.querySelectorAll('.sb-item').forEach(s=>s.classList.remove('active'));
-  const tabs=['inbox','sent','compose','outreach','proposals','campaigns'];
+  const tabs=['inbox','sent','compose','outreach','proposals','campaigns','builder'];
   const idx=tabs.indexOf(name);
   if(idx>=0) document.querySelectorAll('.sb-item')[idx]?.classList.add('active');
 }

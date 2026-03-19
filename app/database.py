@@ -142,6 +142,16 @@ async def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS email_templates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            sections_json TEXT DEFAULT '[]',
+            rendered_html TEXT DEFAULT '',
+            language TEXT DEFAULT 'en',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS email_campaigns (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             campaign_name TEXT NOT NULL,

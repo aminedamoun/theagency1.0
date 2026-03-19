@@ -267,19 +267,27 @@
         <!-- OUTREACH (Leads with emails) -->
         <div class="tab-pane" id="pane-outreach">
           <div class="sec-head">
-            <div><h2>🚀 Leads Outreach</h2><div class="sub">All leads with email addresses — select and send proposals</div></div>
+            <div><h2>🚀 Leads Outreach</h2><div class="sub">Select leads → pick a saved template → send personalized emails</div></div>
             <div class="sec-actions">
               <button class="sa-btn sa-outline" onclick="selectAllLeads()">☑ Select All</button>
-              <button class="sa-btn sa-primary" onclick="sendBulkProposals()">📧 Send Proposals to Selected</button>
             </div>
           </div>
           <div class="stats-row" id="outreachStats"></div>
+
+          <!-- Bulk action bar with template picker -->
           <div class="bulk-bar" id="bulkBar">
             <div class="bulk-count" id="bulkCount">0 selected</div>
-            <button class="sa-btn sa-outline" onclick="sendBulkProposals()">📧 Send Proposals</button>
-            <button class="sa-btn sa-outline" onclick="sendBulkEmail()">✉️ Custom Email</button>
+            <select id="templatePicker" style="padding:6px 10px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid rgba(230,126,34,0.3);color:#e67e22;font-size:0.6rem;font-weight:600;outline:none;min-width:180px;cursor:pointer">
+              <option value="">📂 Choose Template...</option>
+            </select>
+            <input id="bulkSubject" placeholder="Email subject..." style="padding:6px 10px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:0.6rem;outline:none;flex:1;min-width:200px" value="Dubai Prod — Your Digital Growth Partner"/>
+            <button class="sa-btn sa-primary" onclick="sendWithTemplate()" style="white-space:nowrap">📧 Send to Selected</button>
             <button class="sa-btn sa-outline" onclick="clearSelection()">✕ Clear</button>
           </div>
+
+          <!-- Send status -->
+          <div id="sendStatus" style="display:none;padding:12px 16px;margin-bottom:10px;border-radius:8px;font-size:0.68rem;font-weight:600"></div>
+
           <div id="outreachList" class="leads-grid"><div class="loading">Loading leads...</div></div>
         </div>
 
@@ -509,35 +517,53 @@ function ebUploadImage(i, key) {
   };
   input.click();
 }
-function ebSaveTemplate() {
+let serverTemplates = [];
+
+async function ebSaveTemplate() {
   const name = prompt('Template name:', 'My Template');
   if(!name) return;
-  let saved = JSON.parse(localStorage.getItem('ebTemplates')||'[]');
-  saved.push({name, sections: JSON.parse(JSON.stringify(ebSections)), date: new Date().toISOString()});
-  localStorage.setItem('ebTemplates', JSON.stringify(saved));
-  ebRenderSaved();
-  alert('Template "'+name+'" saved!');
+  if(ebSections.length === 0) { alert('Add sections first'); return; }
+  const html = ebBuildHTML();
+  try {
+    const res = await fetch('/api/email-templates', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, sections_json: JSON.stringify(ebSections), rendered_html: html, language: 'en' })
+    });
+    const data = await res.json();
+    if(data.id) { alert('✅ Template "'+name+'" saved!'); ebRenderSaved(); }
+    else { alert('Error saving'); }
+  } catch(e) { alert('Error: '+e.message); }
 }
-function ebLoadSaved(idx) {
-  const saved = JSON.parse(localStorage.getItem('ebTemplates')||'[]');
-  if(!saved[idx]) return;
-  if(ebSections.length>0 && !confirm('Replace current sections?')) return;
-  ebSections = JSON.parse(JSON.stringify(saved[idx].sections));
-  ebRender();
+
+async function ebLoadSaved(id) {
+  try {
+    const res = await fetch('/api/email-templates/'+id);
+    const tpl = await res.json();
+    if(tpl.error) return;
+    if(ebSections.length>0 && !confirm('Replace current sections?')) return;
+    ebSections = JSON.parse(tpl.sections_json || '[]');
+    ebRender();
+  } catch(e) { alert('Error loading template'); }
 }
-function ebDeleteSaved(idx) {
+
+async function ebDeleteSaved(id) {
   if(!confirm('Delete this template?')) return;
-  let saved = JSON.parse(localStorage.getItem('ebTemplates')||'[]');
-  saved.splice(idx,1);
-  localStorage.setItem('ebTemplates', JSON.stringify(saved));
+  await fetch('/api/email-templates/'+id, {method:'DELETE'});
   ebRenderSaved();
 }
-function ebRenderSaved() {
+
+async function ebRenderSaved() {
   const el = document.getElementById('ebSavedList');
   if(!el) return;
-  const saved = JSON.parse(localStorage.getItem('ebTemplates')||'[]');
-  if(saved.length===0) { el.innerHTML='<div style="color:#555;font-size:12px">No saved templates yet</div>'; return; }
-  el.innerHTML = saved.map((t,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:5px"><span style="flex:1;font-size:12px;color:#e0e0e0;cursor:pointer" onclick="ebLoadSaved(${i})">${esc(t.name)}</span><button onclick="ebDeleteSaved(${i})" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:12px">✕</button></div>`).join('');
+  try {
+    const res = await fetch('/api/email-templates');
+    serverTemplates = await res.json();
+    if(!serverTemplates.length) { el.innerHTML='<div style="color:#555;font-size:12px">No saved templates yet</div>'; return; }
+    el.innerHTML = serverTemplates.map(t=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:5px">
+      <span style="flex:1;font-size:12px;color:#e0e0e0;cursor:pointer" onclick="ebLoadSaved(${t.id})">${esc(t.name)} <span style="color:#666;font-size:10px">(${t.language})</span></span>
+      <button onclick="ebDeleteSaved(${t.id})" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:12px">✕</button>
+    </div>`).join('');
+  } catch(e) { el.innerHTML='<div style="color:#555;font-size:12px">Error loading templates</div>'; }
 }
 
 function ebRender() {
@@ -998,18 +1024,12 @@ function regenerateEmail(){
 // ═══ OUTREACH (Leads) ═══
 async function loadLeads(){
   try{
-    // Get all leads from all projects
-    const projRes=await fetch('/api/projects');
-    const projects=await projRes.json();
-    leads=[];
-    for(const p of projects){
-      try{
-        const lr=await fetch(`/api/projects/${p.id}/leads`);
-        const data=await lr.json();
-        if(data.leads) data.leads.forEach(l=>{l.project_name=p.name;leads.push(l)});
-      }catch(e){}
-    }
-    // Also get clients
+    // Use /api/all-leads for proper numeric IDs (needed for template send)
+    const allRes = await fetch('/api/all-leads');
+    const allLeads = await allRes.json();
+    leads = allLeads.map(l => ({...l, id: l.id})); // ensure numeric IDs
+
+    // Also merge clients (with 'c' prefix — these won't work with template send but show in grid)
     const cr=await fetch('/api/clients');
     const clients=await cr.json();
     clients.forEach(c=>{
@@ -1030,6 +1050,67 @@ async function loadLeads(){
     <div class="stat-card"><div class="val">${selectedLeads.size}</div><div class="lbl">Selected</div></div>`;
 
   renderLeadsGrid();
+  loadTemplatePicker();
+}
+
+async function loadTemplatePicker() {
+  const picker = document.getElementById('templatePicker');
+  if(!picker) return;
+  try {
+    const res = await fetch('/api/email-templates');
+    const templates = await res.json();
+    let opts = '<option value="">📂 Choose Template...</option>';
+    templates.forEach(t => {
+      opts += `<option value="${t.id}">${esc(t.name)} (${t.language})</option>`;
+    });
+    picker.innerHTML = opts;
+  } catch(e) { console.error('Error loading templates', e); }
+}
+
+async function sendWithTemplate() {
+  const templateId = document.getElementById('templatePicker').value;
+  const subject = document.getElementById('bulkSubject').value.trim();
+  if(!templateId) { alert('Please select a saved template first.\n\nGo to Email Builder → create your email → click Save.'); return; }
+  const selected = leads.filter(l=>selectedLeads.has(l.id)&&l.email);
+  if(!selected.length) { alert('Select at least one lead first.'); return; }
+  if(!subject) { alert('Enter an email subject.'); return; }
+
+  const tplName = document.getElementById('templatePicker').selectedOptions[0]?.text || 'template';
+  if(!confirm(`Send "${tplName}" to ${selected.length} lead(s)?\n\nEach email will be personalized with their name/company.\nSubject: ${subject}`)) return;
+
+  const statusEl = document.getElementById('sendStatus');
+  statusEl.style.display = 'block';
+  statusEl.style.background = 'rgba(230,126,34,0.1)';
+  statusEl.style.borderColor = 'rgba(230,126,34,0.3)';
+  statusEl.style.color = '#e67e22';
+  statusEl.textContent = `📤 Sending to ${selected.length} leads... please wait`;
+
+  try {
+    const leadIds = selected.map(l=>l.id).filter(id=>typeof id==='number');
+    const res = await fetch('/api/send-template-emails', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ template_id: parseInt(templateId), lead_ids: leadIds, subject })
+    });
+    const result = await res.json();
+
+    if(result.error) {
+      statusEl.style.background = 'rgba(231,76,60,0.15)';
+      statusEl.style.color = '#e74c3c';
+      statusEl.textContent = '❌ ' + result.error;
+    } else {
+      statusEl.style.background = 'rgba(46,204,113,0.12)';
+      statusEl.style.color = '#2ecc71';
+      statusEl.textContent = `✅ Sent ${result.sent_count}/${result.total} emails successfully!` +
+        (result.errors?.length ? ` (${result.errors.length} failed)` : '');
+      selectedLeads.clear();
+      renderLeadsGrid();
+    }
+    setTimeout(()=>{ statusEl.style.display='none'; }, 8000);
+  } catch(e) {
+    statusEl.style.background = 'rgba(231,76,60,0.15)';
+    statusEl.style.color = '#e74c3c';
+    statusEl.textContent = '❌ Error: ' + e.message;
+  }
 }
 
 function renderLeadsGrid(){
@@ -1038,8 +1119,9 @@ function renderLeadsGrid(){
   if(!withEmail.length){el.innerHTML='<div class="empty">No leads with email addresses.<br>Go to Leads & CRM space to find some!</div>';return}
   el.innerHTML=withEmail.map(l=>{
     const sel=selectedLeads.has(l.id);
+    const idStr = typeof l.id==='string' ? `'${l.id}'` : l.id;
     return `<div class="lead-card ${sel?'selected':''}">
-      <div class="lc-check ${sel?'on':''}" onclick="toggleLead(${l.id})">${sel?'✓':''}</div>
+      <div class="lc-check ${sel?'on':''}" onclick="toggleLead(${idStr})">${sel?'✓':''}</div>
       <div class="lc-name">${esc(l.company_name||l.contact_name||'Unknown')}</div>
       <div class="lc-field">📧 <a href="mailto:${esc(l.email)}">${esc(l.email)}</a></div>
       ${l.phone?`<div class="lc-field">📞 ${esc(l.phone)}</div>`:''}
@@ -1049,8 +1131,8 @@ function renderLeadsGrid(){
         ${l.project_name?`<span class="lc-tag" style="background:rgba(52,152,219,0.1);color:#3498db;border:1px solid rgba(52,152,219,0.15)">${esc(l.project_name)}</span>`:''}
       </div>
       <div class="lc-actions">
-        <button class="lc-btn" onclick="composeToLead(${l.id})">✉️ Compose Email</button>
-        <button class="lc-btn" onclick="quickSendToLead(${l.id})">⚡ Quick Send</button>
+        <button class="lc-btn" onclick="composeToLead(${idStr})">✉️ Compose</button>
+        <button class="lc-btn" onclick="quickSendToLead(${idStr})">⚡ Quick Send</button>
       </div>
     </div>`}).join('');
   updateBulk();

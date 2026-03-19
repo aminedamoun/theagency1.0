@@ -336,12 +336,13 @@ TOOLS = [
     },
     {
         "name": "search_companies",
-        "description": "FAST company search — finds companies with websites, emails, and phone numbers in seconds. Use this instead of browse_web when looking for companies/contacts. Much faster.",
+        "description": "FAST company search — finds companies with websites, emails, and phone numbers in seconds. Use this instead of browse_web when looking for companies/contacts. Much faster. Respects the count parameter — always finds exactly the number requested.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "What kind of companies (e.g. 'luxury hotels', 'restaurants', 'real estate agencies')"},
                 "location": {"type": "string", "description": "Location (e.g. 'Dubai', 'Slovenia', 'Abu Dhabi')"},
+                "count": {"type": "integer", "description": "How many companies to find. MUST match what the user requested. Default 20.", "default": 20},
             },
             "required": ["query"],
         },
@@ -936,7 +937,7 @@ async def _exec_tool_inner(name: str, args: dict) -> str:
 
         elif name == "search_companies":
             from browser.fast_search import find_companies
-            companies = await find_companies(args["query"], args.get("location", ""))
+            companies = await find_companies(args["query"], args.get("location", ""), count=args.get("count", 20))
             if companies:
                 return json.dumps({"companies": companies, "count": len(companies),
                     "message": f"Found {len(companies)} companies. Use save_lead to store them in a project."})

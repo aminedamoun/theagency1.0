@@ -1741,3 +1741,134 @@ async def get_gallery():
                 "created": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
             })
     return files[:50]
+
+
+# ═══ EMAIL TEMPLATES ═══
+
+class EmailTemplateIn(BaseModel):
+    name: str
+    sections_json: str = "[]"
+    rendered_html: str = ""
+    language: str = "en"
+
+
+@router.get("/email-templates")
+async def list_email_templates():
+    db = await get_db()
+    rows = await db.execute_fetchall(
+        "SELECT id, name, language, created_at, updated_at FROM email_templates ORDER BY updated_at DESC"
+    )
+    await db.close()
+    return [dict(r) for r in rows]
+
+
+@router.get("/email-templates/{template_id}")
+async def get_email_template(template_id: int):
+    db = await get_db()
+    rows = await db.execute_fetchall("SELECT * FROM email_templates WHERE id=?", (template_id,))
+    await db.close()
+    if not rows:
+        return {"error": "Not found"}
+    return dict(rows[0])
+
+
+@router.post("/email-templates")
+async def create_email_template(data: EmailTemplateIn):
+    db = await get_db()
+    cursor = await db.execute(
+        "INSERT INTO email_templates (name, sections_json, rendered_html, language) VALUES (?, ?, ?, ?)",
+        (data.name, data.sections_json, data.rendered_html, data.language),
+    )
+    await db.commit()
+    tid = cursor.lastrowid
+    await db.close()
+    return {"id": tid, "status": "created"}
+
+
+@router.put("/email-templates/{template_id}")
+async def update_email_template(template_id: int, data: EmailTemplateIn):
+    db = await get_db()
+    await db.execute(
+        "UPDATE email_templates SET name=?, sections_json=?, rendered_html=?, language=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+        (data.name, data.sections_json, data.rendered_html, data.language, template_id),
+    )
+    await db.commit()
+    await db.close()
+    return {"id": template_id, "status": "updated"}
+
+
+@router.delete("/email-templates/{template_id}")
+async def delete_email_template(template_id: int):
+    db = await get_db()
+    await db.execute("DELETE FROM email_templates WHERE id=?", (template_id,))
+    await db.commit()
+    await db.close()
+    return {"status": "deleted"}
+
+
+@router.post("/send-template-emails")
+async def send_template_emails(data: dict):
+    """Send personalized template emails to selected leads.
+
+    Expects: { template_id: int, lead_ids: [int], subject: str }
+    Personalizes {{clientName}} in the HTML for each lead.
+    """
+    template_id = data.get("template_id")
+    lead_ids = data.get("lead_ids", [])
+    subject = data.get("subject", "Dubai Prod — Your Digital Growth Partner")
+
+    if not template_id or not lead_ids:
+        return {"error": "template_id and lead_ids required"}
+
+    db = await get_db()
+
+    # Get template
+    tpl_rows = await db.execute_fetchall("SELECT * FROM email_templates WHERE id=?", (template_id,))
+    if not tpl_rows:
+        await db.close()
+        return {"error": "Template not found"}
+    tpl = dict(tpl_rows[0])
+    base_html = tpl.get("rendered_html", "")
+    if not base_html:
+        await db.close()
+        return {"error": "Template has no rendered HTML"}
+
+    # Get leads
+    placeholders = ",".join("?" * len(lead_ids))
+    lead_rows = await db.execute_fetchall(
+        f"SELECT * FROM leads WHERE id IN ({placeholders})", lead_ids
+    )
+    await db.close()
+
+    if not lead_rows:
+        return {"error": "No leads found"}
+
+    # Send personalized emails
+    from email_agent.sender import send_email
+    sent_count = 0
+    errors = []
+    for lead in lead_rows:
+        lead = dict(lead)
+        email_addr = lead.get("email", "")
+        if not email_addr:
+            continue
+        # Personalize HTML
+        name = lead.get("contact_name") or lead.get("company_name") or "there"
+        company = lead.get("company_name") or ""
+        personalized = base_html.replace("[First Name]", name).replace("{{First Name}}", name)
+        personalized = personalized.replace("[Company]", company).replace("{{Company}}", company)
+        personalized = personalized.replace("[Ime]", name)  # Slovenian
+        try:
+            sent = await asyncio.to_thread(
+                send_email,
+                to=email_addr,
+                subject=subject.replace("[Company]", company).replace("{{Company}}", company),
+                body=personalized,
+                confirm_callback=lambda _: True,
+            )
+            if sent:
+                sent_count += 1
+        except Exception as e:
+            errors.append({"email": email_addr, "error": str(e)})
+
+    return {"status": "sent", "sent_count": sent_count, "total": len(lead_rows), "errors": errors}

@@ -91,17 +91,28 @@ async def fast_research(query: str) -> str:
     return "\n".join(output)
 
 
-async def find_companies(query: str, location: str = "") -> list[dict]:
-    """Find companies with contact info. Scrapes in parallel for speed."""
+async def find_companies(query: str, location: str = "", count: int = 20) -> list[dict]:
+    """Find companies with contact info. Scrapes in parallel for speed.
 
+    Args:
+        count: Target number of companies to find. Will run extra searches to hit the target.
+    """
+    target = max(count, 5)
     search_query = f"{query} {location}".strip()
-    results = await search_web(search_query, num_results=20)
+    results = await search_web(search_query, num_results=min(target + 10, 30))
 
-    if len(results) < 5:
-        results += await search_web(f"{query} companies {location}".strip(), num_results=20)
-
-    if len(results) < 5:
-        results += await search_web(f"{query} {location} contact email".strip(), num_results=20)
+    # Run additional searches with different queries to hit the target count
+    extra_queries = [
+        f"{query} companies {location}",
+        f"{query} {location} contact email",
+        f"best {query} {location}",
+        f"top {query} near {location}",
+        f"{query} services {location}",
+    ]
+    qi = 0
+    while len(results) < target + 5 and qi < len(extra_queries):
+        results += await search_web(extra_queries[qi].strip(), num_results=min(target, 20))
+        qi += 1
 
     # Filter aggregator/social sites
     skip = {'google', 'facebook', 'linkedin.com', 'twitter', 'youtube', 'wikipedia',
@@ -144,5 +155,7 @@ async def find_companies(query: str, location: str = "") -> list[dict]:
             }
 
     companies = await asyncio.gather(*[extract(r) for r in filtered])
-    logger.info(f"[search] Found {len(companies)} companies for '{search_query}'")
-    return list(companies)
+    # Trim to requested count
+    companies = list(companies)[:target]
+    logger.info(f"[search] Found {len(companies)} companies for '{search_query}' (requested {count})")
+    return companies

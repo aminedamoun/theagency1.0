@@ -138,6 +138,52 @@ async def search_serper(query: str, count: int = 10) -> list[dict]:
         return []
 
 
+async def search_serper_places(query: str, location: str, count: int = 20) -> list[dict]:
+    """Use Serper Google search to find local businesses with knowledge graph/places data."""
+    api_key = os.getenv("SERPER_API_KEY")
+    if not api_key:
+        return []
+
+    companies = []
+    queries = [
+        f'{query} in {location} site:.si OR site:.com',
+        f'{query} {location} "contact" OR "@"',
+        f'best {query} {location}',
+    ]
+
+    seen_domains = set()
+    for q in queries:
+        if len(companies) >= count:
+            break
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.post("https://google.serper.dev/search", json={
+                    "q": q, "num": min(count + 5, 30)
+                }, headers={"X-API-KEY": api_key, "Content-Type": "application/json"})
+                data = resp.json()
+
+            for r in data.get("organic", []):
+                url = r.get("link", "")
+                domain = re.search(r'https?://(?:www\.)?([^/]+)', url)
+                if not domain:
+                    continue
+                d = domain.group(1)
+                if d in seen_domains or any(x in d for x in SKIP_DOMAINS):
+                    continue
+                seen_domains.add(d)
+                companies.append({
+                    "title": r.get("title", ""),
+                    "url": url,
+                    "snippet": r.get("snippet", ""),
+                })
+        except Exception as e:
+            logger.warning(f"[serper-places] Query failed: {e}")
+            continue
+
+    logger.info(f"[serper-places] Found {len(companies)} unique results for '{query}' in {location}'")
+    return companies[:count + 5]
+
+
 # ═══════════════════════════════════════════════════════
 # ENGINE 3: DuckDuckGo (free fallback)
 # ═══════════════════════════════════════════════════════
@@ -228,23 +274,26 @@ async def find_companies(query: str, location: str = "", count: int = 20) -> lis
             if d:
                 seen_domains.add(d.group(1))
 
-    # Run multiple search queries
-    search_queries = [
-        f'{q} {loc} "contact" OR "email" OR "phone"',
-        f'{q} company {loc}',
-        f'best {q} {loc}',
-        f'{q} {loc} official website',
-        f'top {q} near {loc}',
-        f'{q} {loc} phone email address',
-        f'{q} services {loc}',
-    ]
-
+    # Try Serper places-style search first (Google quality, pre-filtered)
+    serper_key = os.getenv("SERPER_API_KEY")
     all_results = []
-    for sq in search_queries:
-        if len(all_results) >= target * 3:
-            break
-        batch = await search_web(sq.strip(), num_results=min(target + 5, 25))
-        all_results += batch
+    if serper_key:
+        all_results = await search_serper_places(q, loc, target)
+
+    # If Serper didn't get enough, supplement with DDG
+    if len(all_results) < target:
+        search_queries = [
+            f'{q} {loc} "contact" OR "email" OR "phone"',
+            f'{q} company {loc}',
+            f'best {q} {loc}',
+            f'{q} {loc} official website',
+            f'top {q} near {loc}',
+        ]
+        for sq in search_queries:
+            if len(all_results) >= target * 2:
+                break
+            batch = await search_ddg(sq.strip(), num_results=min(target + 5, 25))
+            all_results += batch
 
     # Filter aggregators and deduplicate
     filtered = []

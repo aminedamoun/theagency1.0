@@ -1,11 +1,10 @@
 """Fast web research — multi-engine company search.
 
 Engines (in priority order):
-1. SerpAPI Google Maps — Best for local businesses (name, phone, website, address)
-2. Serper.dev — Google search results (if SERPER_API_KEY set)
-3. DuckDuckGo — Free fallback
+1. Serper.dev — Google search results (if SERPER_API_KEY set and valid)
+2. DuckDuckGo — Free fallback (always available)
 
-Set SERPAPI_KEY or SERPER_API_KEY in .env for best results.
+Set SERPER_API_KEY in .env for Google-quality results.
 """
 
 import re
@@ -13,7 +12,6 @@ import os
 import json
 import logging
 import asyncio
-from urllib.parse import unquote
 
 import httpx
 
@@ -42,87 +40,29 @@ SKIP_DOMAINS = {
     'travel.state', 'wikidata', 'dbpedia', 'nytimes', 'bbc',
     'forbes', 'businessinsider', 'cnbc', 'reuters', 'makemytrip',
     'ricksteves', 'wa.me', 'epicgames', 'buyereviews',
-    'community.ricksteves', 'elliott.org', 'idahoan', 'mariani',
+    'elliott.org', 'idahoan', 'mariani', 'shutterstock',
+    'community.ricksteves', 'mgmresorts', 'aman.com', 'broadmoor',
 }
 
 
 # ═══════════════════════════════════════════════════════
-# ENGINE 1: SerpAPI Google Maps (BEST for local business)
-# ═══════════════════════════════════════════════════════
-
-async def search_google_maps(query: str, location: str, count: int = 20) -> list[dict]:
-    """Search Google Maps via SerpAPI. Returns actual businesses with phone, website, address."""
-    api_key = os.getenv("SERPAPI_KEY") or os.getenv("SERPAPI_API_KEY")
-    if not api_key:
-        return []
-
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.get("https://serpapi.com/search.json", params={
-                "engine": "google_maps",
-                "q": f"{query} in {location}",
-                "type": "search",
-                "api_key": api_key,
-                "num": str(min(count + 5, 40)),
-            })
-            data = resp.json()
-
-        results = data.get("local_results", [])
-        companies = []
-        for r in results[:count]:
-            companies.append({
-                "company": r.get("title", "")[:60],
-                "website": r.get("website", ""),
-                "email": "",  # Maps doesn't give emails, we'll scrape
-                "phone": r.get("phone", ""),
-                "description": r.get("type", "") + " — " + r.get("address", ""),
-                "rating": r.get("rating", 0),
-                "reviews": r.get("reviews", 0),
-            })
-
-        # Scrape websites in parallel for emails
-        if companies:
-            async def get_email(c):
-                if not c["website"]:
-                    return c
-                try:
-                    page = await scrape_page(c["website"], 3000)
-                    emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', page)
-                    emails = [e for e in emails if not any(x in e.lower() for x in
-                              ['example', 'test', 'noreply', 'sentry', 'cloudflare', 'wixpress', 'googleapis', 'schema.org'])]
-                    if emails:
-                        c["email"] = emails[0]
-                except Exception:
-                    pass
-                return c
-
-            companies = await asyncio.gather(*[get_email(c) for c in companies])
-
-        logger.info(f"[serpapi-maps] Found {len(companies)} businesses for '{query}' in {location}")
-        return list(companies)
-
-    except Exception as e:
-        logger.error(f"[serpapi-maps] Error: {e}")
-        return []
-
-
-# ═══════════════════════════════════════════════════════
-# ENGINE 2: Serper.dev Google Search
+# SEARCH ENGINES
 # ═══════════════════════════════════════════════════════
 
 async def search_serper(query: str, count: int = 10) -> list[dict]:
     """Search via Serper.dev (Google search API)."""
-    api_key = os.getenv("SERPER_API_KEY")
+    api_key = os.getenv("SERPER_API_KEY", "").strip()
     if not api_key:
         return []
-
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.post("https://google.serper.dev/search", json={
                 "q": query, "num": min(count, 30)
             }, headers={"X-API-KEY": api_key, "Content-Type": "application/json"})
             data = resp.json()
-
+        if "message" in data:  # API error
+            logger.warning(f"[serper] API error: {data.get('message')}")
+            return []
         results = []
         for r in data.get("organic", []):
             results.append({
@@ -132,69 +72,17 @@ async def search_serper(query: str, count: int = 10) -> list[dict]:
             })
         logger.info(f"[serper] {len(results)} results for '{query}'")
         return results
-
     except Exception as e:
         logger.error(f"[serper] Error: {e}")
         return []
 
 
-async def search_serper_places(query: str, location: str, count: int = 20) -> list[dict]:
-    """Use Serper Google search to find local businesses with knowledge graph/places data."""
-    api_key = os.getenv("SERPER_API_KEY")
-    if not api_key:
-        return []
-
-    companies = []
-    queries = [
-        f'{query} in {location} site:.si OR site:.com',
-        f'{query} {location} "contact" OR "@"',
-        f'best {query} {location}',
-    ]
-
-    seen_domains = set()
-    for q in queries:
-        if len(companies) >= count:
-            break
-        try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.post("https://google.serper.dev/search", json={
-                    "q": q, "num": min(count + 5, 30)
-                }, headers={"X-API-KEY": api_key, "Content-Type": "application/json"})
-                data = resp.json()
-
-            for r in data.get("organic", []):
-                url = r.get("link", "")
-                domain = re.search(r'https?://(?:www\.)?([^/]+)', url)
-                if not domain:
-                    continue
-                d = domain.group(1)
-                if d in seen_domains or any(x in d for x in SKIP_DOMAINS):
-                    continue
-                seen_domains.add(d)
-                companies.append({
-                    "title": r.get("title", ""),
-                    "url": url,
-                    "snippet": r.get("snippet", ""),
-                })
-        except Exception as e:
-            logger.warning(f"[serper-places] Query failed: {e}")
-            continue
-
-    logger.info(f"[serper-places] Found {len(companies)} unique results for '{query}' in {location}'")
-    return companies[:count + 5]
-
-
-# ═══════════════════════════════════════════════════════
-# ENGINE 3: DuckDuckGo (free fallback)
-# ═══════════════════════════════════════════════════════
-
 async def search_ddg(query: str, num_results: int = 10) -> list[dict]:
-    """Search the web using DuckDuckGo API."""
+    """Search using DuckDuckGo."""
     try:
         from ddgs import DDGS
         def _search():
             return DDGS().text(query, max_results=num_results)
-
         results = await asyncio.to_thread(_search)
         out = []
         for r in results:
@@ -205,117 +93,91 @@ async def search_ddg(query: str, num_results: int = 10) -> list[dict]:
             })
         logger.info(f"[ddg] {len(out)} results for '{query}'")
         return out
-
     except Exception as e:
         logger.error(f"[ddg] Error: {e}")
         return []
 
 
-# Keep backward compatibility
 async def search_web(query: str, num_results: int = 10) -> list[dict]:
     """Search web — tries Serper first, falls back to DuckDuckGo."""
-    # Try Serper first (Google quality)
     results = await search_serper(query, num_results)
     if results:
         return results
-    # Fallback to DuckDuckGo
     return await search_ddg(query, num_results)
 
 
 # ═══════════════════════════════════════════════════════
-# SCRAPER
+# PAGE SCRAPER
 # ═══════════════════════════════════════════════════════
 
 async def scrape_page(url: str, max_chars: int = 5000) -> str:
     """Fetch a web page and extract clean text content."""
     try:
-        async with httpx.AsyncClient(timeout=10, headers=HEADERS, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=8, headers=HEADERS, follow_redirects=True) as client:
             resp = await client.get(url)
             html = resp.text
-
-        # Remove junk
         html = re.sub(r'<(script|style|nav|footer|header|aside)[^>]*>[\s\S]*?</\1>', '', html, flags=re.IGNORECASE)
         text = re.sub(r'<[^>]+>', ' ', html)
         text = re.sub(r'\s+', ' ', text).strip()
         text = text.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"')
-
         return text[:max_chars]
     except Exception as e:
         return f"Error: {e}"
 
 
 # ═══════════════════════════════════════════════════════
-# MAIN: find_companies (multi-engine)
+# MAIN: find_companies
 # ═══════════════════════════════════════════════════════
 
 async def find_companies(query: str, location: str = "", count: int = 20) -> list[dict]:
-    """Find companies with contact info using best available engine.
-
-    Priority:
-    1. SerpAPI Google Maps — actual local businesses with phones
-    2. Serper/DDG web search + page scraping
-    """
+    """Find companies with contact info. Uses multiple search queries + parallel scraping."""
     target = max(count, 5)
     loc = location.strip()
     q = query.strip()
 
-    # ── Try Google Maps first (best for local businesses) ──
-    maps_results = await search_google_maps(q, loc, target)
-    if len(maps_results) >= target * 0.6:  # Got enough from Maps
-        logger.info(f"[find] Google Maps returned {len(maps_results)} results — using those")
-        return maps_results[:target]
+    # Build multiple search queries to maximize results
+    search_queries = [
+        f'{q} {loc} contact email',
+        f'{q} {loc} company',
+        f'best {q} {loc}',
+        f'{q} {loc} official website',
+        f'top {q} in {loc}',
+        f'{q} near {loc} phone',
+        f'{q} {loc} services',
+    ]
 
-    # ── Fall back to web search + scraping ──
-    all_companies = list(maps_results)  # start with any Maps results
-    seen_domains = set()
-    for c in all_companies:
-        if c.get("website"):
-            d = re.search(r'https?://(?:www\.)?([^/]+)', c["website"])
-            if d:
-                seen_domains.add(d.group(1))
-
-    # Try Serper places-style search first (Google quality, pre-filtered)
-    serper_key = os.getenv("SERPER_API_KEY")
+    # Run searches and collect unique results
     all_results = []
-    if serper_key:
-        all_results = await search_serper_places(q, loc, target)
+    seen_domains = set()
 
-    # If Serper didn't get enough, supplement with DDG
-    if len(all_results) < target:
-        search_queries = [
-            f'{q} {loc} "contact" OR "email" OR "phone"',
-            f'{q} company {loc}',
-            f'best {q} {loc}',
-            f'{q} {loc} official website',
-            f'top {q} near {loc}',
-        ]
-        for sq in search_queries:
-            if len(all_results) >= target * 2:
-                break
-            batch = await search_ddg(sq.strip(), num_results=min(target + 5, 25))
-            all_results += batch
-
-    # Filter aggregators and deduplicate
-    filtered = []
-    for r in all_results:
-        domain = re.search(r'https?://(?:www\.)?([^/]+)', r['url'])
-        if domain:
+    for sq in search_queries:
+        if len(all_results) >= target * 2:
+            break
+        batch = await search_web(sq.strip(), num_results=min(target + 5, 20))
+        for r in batch:
+            url = r.get("url", "")
+            domain = re.search(r'https?://(?:www\.)?([^/]+)', url)
+            if not domain:
+                continue
             d = domain.group(1)
             if d in seen_domains or any(x in d for x in SKIP_DOMAINS):
                 continue
             seen_domains.add(d)
-        filtered.append(r)
+            all_results.append(r)
 
-    if not filtered and not all_companies:
+    if not all_results:
+        logger.warning(f"[find] No results for '{q} {loc}'")
         return []
 
-    # Scrape pages in parallel for contact info
+    # Scrape all pages in parallel for contact info
     async def extract(r):
         try:
             page = await scrape_page(r['url'], 3000)
             emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', page)
             emails = [e for e in emails if not any(x in e.lower() for x in
-                      ['example', 'test', 'noreply', 'sentry', 'cloudflare', 'wixpress', 'googleapis', 'schema.org'])]
+                      ['example', 'test', 'noreply', 'sentry', 'cloudflare',
+                       'wixpress', 'googleapis', 'schema.org', 'w3.org',
+                       'your-email', 'email@', 'name@', 'user@'])]
             phones = re.findall(r'(?:\+\d{1,3}[\s.-]?)?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}', page)
             phones = [p.strip() for p in phones if 8 <= len(p.strip()) <= 20]
             return {
@@ -332,21 +194,10 @@ async def find_companies(query: str, location: str = "", count: int = 20) -> lis
                 "description": r.get('snippet', '')[:200],
             }
 
-    scraped = await asyncio.gather(*[extract(r) for r in filtered[:target * 2]])
-    all_companies += list(scraped)
-
-    # Deduplicate by domain
-    final = []
-    seen = set()
-    for c in all_companies:
-        domain = re.search(r'https?://(?:www\.)?([^/]+)', c.get("website", ""))
-        key = domain.group(1) if domain else c.get("company", "")
-        if key not in seen:
-            seen.add(key)
-            final.append(c)
-
-    logger.info(f"[find] Found {len(final)} companies for '{q} {loc}' (requested {count})")
-    return final[:target]
+    companies = await asyncio.gather(*[extract(r) for r in all_results[:target * 2]])
+    companies = [c for c in companies if c.get("company")]  # Remove empties
+    logger.info(f"[find] Found {len(companies)} companies for '{q} {loc}' (requested {count})")
+    return companies[:target]
 
 
 # ═══════════════════════════════════════════════════════
@@ -356,7 +207,6 @@ async def find_companies(query: str, location: str = "", count: int = 20) -> lis
 async def fast_research(query: str) -> str:
     """Full research: search + scrape top results."""
     logger.info(f"[research] Searching: {query}")
-
     results = await search_web(query, num_results=8)
     if not results:
         return f"No results found for: {query}"
@@ -369,7 +219,6 @@ async def fast_research(query: str) -> str:
             output.append(f"{r['snippet']}")
         output.append("")
 
-    # Scrape top 3 in parallel
     scrape_tasks = [scrape_page(r['url'], 1500) for r in results[:3]]
     pages = await asyncio.gather(*scrape_tasks, return_exceptions=True)
 

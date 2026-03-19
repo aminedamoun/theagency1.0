@@ -49,9 +49,9 @@ async def run_prospecting_campaign(
     industries: list[str] = None,
     exclude_industries: list[str] = None,
     project_name: str = None,
-    require_email: bool = True,
+    require_email: bool = False,
     require_phone: bool = False,
-    require_website: bool = True,
+    require_website: bool = False,
 ) -> dict:
     """Run a full prospecting campaign.
 

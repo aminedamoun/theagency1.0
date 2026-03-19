@@ -12,3 +12,5 @@ openai
 anthropic
 httpx
 reportlab
+ddgs
+google-search-results

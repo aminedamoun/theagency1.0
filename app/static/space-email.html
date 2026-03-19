@@ -274,6 +274,17 @@
           </div>
           <div class="stats-row" id="outreachStats"></div>
 
+          <!-- Filter bar -->
+          <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">
+            <span style="font-size:0.55rem;color:rgba(255,255,255,0.3);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Filter:</span>
+            <button class="sa-btn sa-outline" id="filterAll" onclick="setLeadFilter('all')" style="font-size:0.55rem;padding:4px 12px;background:rgba(230,126,34,0.1);border-color:rgba(230,126,34,0.3);color:#e67e22">All</button>
+            <button class="sa-btn sa-outline" id="filterEmail" onclick="setLeadFilter('email')" style="font-size:0.55rem;padding:4px 12px">📧 Has Email</button>
+            <button class="sa-btn sa-outline" id="filterPhone" onclick="setLeadFilter('phone')" style="font-size:0.55rem;padding:4px 12px">📱 Has Phone</button>
+            <button class="sa-btn sa-outline" id="filterBoth" onclick="setLeadFilter('both')" style="font-size:0.55rem;padding:4px 12px">📧+📱 Both</button>
+            <div style="flex:1"></div>
+            <button class="sa-btn sa-outline" onclick="selectFilteredLeads()" style="font-size:0.55rem;padding:4px 12px">☑ Select All Filtered</button>
+          </div>
+
           <!-- Bulk action bar with template picker -->
           <div class="bulk-bar" id="bulkBar">
             <div class="bulk-count" id="bulkCount">0 selected</div>
@@ -1113,17 +1124,55 @@ async function sendWithTemplate() {
   }
 }
 
+let currentLeadFilter = 'all';
+
+function setLeadFilter(filter) {
+  currentLeadFilter = filter;
+  // Update button styles
+  ['filterAll','filterEmail','filterPhone','filterBoth'].forEach(id => {
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    btn.style.background = 'rgba(255,255,255,0.04)';
+    btn.style.borderColor = 'rgba(255,255,255,0.08)';
+    btn.style.color = 'rgba(255,255,255,0.5)';
+  });
+  const activeId = {all:'filterAll',email:'filterEmail',phone:'filterPhone',both:'filterBoth'}[filter];
+  const activeBtn = document.getElementById(activeId);
+  if(activeBtn) {
+    activeBtn.style.background = 'rgba(230,126,34,0.1)';
+    activeBtn.style.borderColor = 'rgba(230,126,34,0.3)';
+    activeBtn.style.color = '#e67e22';
+  }
+  renderLeadsGrid();
+}
+
+function getFilteredLeads() {
+  return leads.filter(l => {
+    if(currentLeadFilter === 'email') return l.email;
+    if(currentLeadFilter === 'phone') return l.phone;
+    if(currentLeadFilter === 'both') return l.email && l.phone;
+    return l.email || l.phone; // 'all' shows any with contact info
+  });
+}
+
+function selectFilteredLeads() {
+  const filtered = getFilteredLeads();
+  if(selectedLeads.size === filtered.length) { selectedLeads.clear(); }
+  else { filtered.forEach(l => selectedLeads.add(l.id)); }
+  renderLeadsGrid();
+}
+
 function renderLeadsGrid(){
-  const withEmail=leads.filter(l=>l.email);
+  const filtered = getFilteredLeads();
   const el=document.getElementById('outreachList');
-  if(!withEmail.length){el.innerHTML='<div class="empty">No leads with email addresses.<br>Go to Leads & CRM space to find some!</div>';return}
-  el.innerHTML=withEmail.map(l=>{
+  if(!filtered.length){el.innerHTML='<div class="empty">No leads match this filter.<br>Go to Leads & CRM space to find companies!</div>';return}
+  el.innerHTML=filtered.map(l=>{
     const sel=selectedLeads.has(l.id);
     const idStr = typeof l.id==='string' ? `'${l.id}'` : l.id;
     return `<div class="lead-card ${sel?'selected':''}">
       <div class="lc-check ${sel?'on':''}" onclick="toggleLead(${idStr})">${sel?'✓':''}</div>
       <div class="lc-name">${esc(l.company_name||l.contact_name||'Unknown')}</div>
-      <div class="lc-field">📧 <a href="mailto:${esc(l.email)}">${esc(l.email)}</a></div>
+      ${l.email?`<div class="lc-field">📧 <a href="mailto:${esc(l.email)}">${esc(l.email)}</a></div>`:''}
       ${l.phone?`<div class="lc-field">📞 ${esc(l.phone)}</div>`:''}
       ${l.website?`<div class="lc-field">🌐 ${esc(l.website)}</div>`:''}
       <div class="lc-tags">
@@ -1131,8 +1180,8 @@ function renderLeadsGrid(){
         ${l.project_name?`<span class="lc-tag" style="background:rgba(52,152,219,0.1);color:#3498db;border:1px solid rgba(52,152,219,0.15)">${esc(l.project_name)}</span>`:''}
       </div>
       <div class="lc-actions">
-        <button class="lc-btn" onclick="composeToLead(${idStr})">✉️ Compose</button>
-        <button class="lc-btn" onclick="quickSendToLead(${idStr})">⚡ Quick Send</button>
+        ${l.email?`<button class="lc-btn" onclick="composeToLead(${idStr})">✉️ Email</button>`:''}
+        ${l.phone?`<button class="lc-btn" onclick="whatsappLead(${idStr})">💬 WhatsApp</button>`:''}
       </div>
     </div>`}).join('');
   updateBulk();
@@ -1194,6 +1243,16 @@ client_name="${l.contact_name||l.company_name}"
 client_company="${l.company_name}"
 
 This will auto-generate the PDF proposal and attach it. Send immediately.`);
+}
+
+function whatsappLead(id){
+  const l=leads.find(x=>x.id===id);if(!l||!l.phone)return;
+  // Clean phone number for WhatsApp
+  let phone = l.phone.replace(/[^0-9+]/g,'');
+  if(!phone.startsWith('+')) phone = '+' + phone;
+  const company = l.company_name || 'your company';
+  const msg = encodeURIComponent(`Hi! I'm reaching out from Dubai Prod — a full-service digital agency. We noticed ${company} could benefit from our social media and content services. Would you be open to a quick chat?`);
+  window.open(`https://wa.me/${phone.replace('+','')}?text=${msg}`, '_blank');
 }
 
 function sendBulkEmail(){

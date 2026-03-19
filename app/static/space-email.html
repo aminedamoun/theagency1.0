@@ -41,11 +41,12 @@
 
     /* Content area */
     .content{flex:1;display:flex;flex-direction:column;min-width:0}
-    .tab-content{flex:1;overflow-y:auto;padding:16px 20px}
+    .tab-content{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column}
     .tab-content::-webkit-scrollbar{width:4px}
     .tab-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
     .tab-pane{display:none}
     .tab-pane.active{display:block}
+    #pane-builder.active{display:flex!important;flex-direction:column}
 
     /* Section headers */
     .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -329,51 +330,58 @@
         </div>
 
         <!-- ═══ EMAIL BUILDER TAB ═══ -->
-        <div class="tab-pane" id="pane-builder">
-          <div class="sec-head"><div><h2>✉️ Email Builder</h2><div class="sub">Build branded email templates section by section</div></div></div>
-
-          <!-- Builder Controls -->
-          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-            <button onclick="ebPreview()" style="padding:8px 16px;background:rgba(201,164,76,0.15);border:1px solid #c9a44c;color:#c9a44c;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">👁 Preview</button>
-            <button onclick="ebSendTest()" style="padding:8px 16px;background:rgba(201,164,76,0.15);border:1px solid #c9a44c;color:#c9a44c;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">📧 Send Test</button>
-            <button onclick="ebCopyHTML()" style="padding:8px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:6px;cursor:pointer;font-size:12px">📋 Copy HTML</button>
-          </div>
-
-          <!-- Sections Container -->
-          <div id="ebSections" style="display:flex;flex-direction:column;gap:12px">
-          </div>
-
-          <!-- Add Section Buttons -->
-          <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px">
-            <button onclick="ebAdd('header')" class="eb-add-btn">+ Header</button>
-            <button onclick="ebAdd('logo')" class="eb-add-btn">+ Logo Bar</button>
-            <button onclick="ebAdd('service')" class="eb-add-btn">+ Service</button>
-            <button onclick="ebAdd('clients')" class="eb-add-btn">+ Clients</button>
-            <button onclick="ebAdd('cta')" class="eb-add-btn">+ CTA Block</button>
-            <button onclick="ebAdd('text')" class="eb-add-btn">+ Text Block</button>
-            <button onclick="ebAdd('image')" class="eb-add-btn">+ Image</button>
-            <button onclick="ebAdd('divider')" class="eb-add-btn">+ Divider</button>
-            <button onclick="ebAdd('footer')" class="eb-add-btn">+ Footer</button>
-          </div>
-
-          <!-- Quick Start Templates -->
-          <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px">Quick Start</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button onclick="ebLoadTemplate('outreach')" class="eb-tpl-btn">🎯 Cold Outreach</button>
-              <button onclick="ebLoadTemplate('services')" class="eb-tpl-btn">💼 Full Services</button>
-              <button onclick="ebLoadTemplate('minimal')" class="eb-tpl-btn">✨ Minimal</button>
+        <div class="tab-pane" id="pane-builder" style="display:none;padding:0!important;flex-direction:column;height:100%">
+          <!-- Top Controls Bar (sticky) -->
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.4);flex-shrink:0;position:sticky;top:0;z-index:50;backdrop-filter:blur(12px)">
+            <span style="font-size:13px;font-weight:700;color:#c9a44c;margin-right:8px">✉️ Email Builder</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
+              <button onclick="ebAdd('header')" class="eb-add-btn">+ Header</button>
+              <button onclick="ebAdd('logo')" class="eb-add-btn">+ Logo</button>
+              <button onclick="ebAdd('service')" class="eb-add-btn">+ Service</button>
+              <button onclick="ebAdd('clients')" class="eb-add-btn">+ Clients</button>
+              <button onclick="ebAdd('cta')" class="eb-add-btn">+ CTA</button>
+              <button onclick="ebAdd('text')" class="eb-add-btn">+ Text</button>
+              <button onclick="ebAdd('image')" class="eb-add-btn">+ Image</button>
+              <button onclick="ebAdd('divider')" class="eb-add-btn">+ Divider</button>
+              <button onclick="ebAdd('footer')" class="eb-add-btn">+ Footer</button>
             </div>
+            <button onclick="ebSendTest()" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid #c9a44c;color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap">📧 Send Test</button>
+            <button onclick="ebCopyHTML()" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📋 Copy</button>
+            <select id="ebLoadSelect" onchange="if(this.value){ebLoadTemplate(this.value);this.value=''}" style="padding:6px 10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);color:#aaa;border-radius:5px;cursor:pointer;font-size:11px">
+              <option value="">📂 Load Template...</option>
+              <option value="outreach">🎯 Cold Outreach</option>
+              <option value="services">💼 Full Services</option>
+              <option value="minimal">✨ Minimal</option>
+            </select>
+            <button onclick="ebSaveTemplate()" style="padding:6px 12px;background:#c9a44c;border:none;color:#0c0c12;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap">💾 Save</button>
           </div>
 
-          <!-- Preview Modal -->
-          <div id="ebPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;overflow-y:auto;padding:24px">
-            <div style="max-width:660px;margin:0 auto">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                <span style="color:#c9a44c;font-size:13px;font-weight:600">EMAIL PREVIEW (600px)</span>
-                <button onclick="document.getElementById('ebPreviewModal').style.display='none'" style="background:none;border:none;color:#fff;font-size:24px;cursor:pointer">✕</button>
+          <!-- Split Layout: Editor | Preview -->
+          <div style="display:flex;flex:1;overflow:hidden;height:calc(100vh - 100px)">
+            <!-- LEFT: Editor -->
+            <div style="flex:1;overflow-y:auto;padding:16px;border-right:1px solid rgba(255,255,255,0.06)">
+              <!-- Sections Container -->
+              <div id="ebSections" style="display:flex;flex-direction:column;gap:12px"></div>
+
+              <!-- Quick Start & Saved Templates -->
+              <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Quick Start</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button onclick="ebLoadTemplate('outreach')" class="eb-tpl-btn">🎯 Cold Outreach</button>
+                  <button onclick="ebLoadTemplate('services')" class="eb-tpl-btn">💼 Full Services</button>
+                  <button onclick="ebLoadTemplate('minimal')" class="eb-tpl-btn">✨ Minimal</button>
+                </div>
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin:14px 0 8px">Saved Templates</div>
+                <div id="ebSavedList" style="display:flex;flex-direction:column;gap:6px"><div style="color:#555;font-size:12px">No saved templates yet</div></div>
               </div>
-              <div id="ebPreviewContent" style="background:#fff;border-radius:8px;overflow:hidden;border:2px solid #c9a44c"></div>
+            </div>
+
+            <!-- RIGHT: Live Preview -->
+            <div style="width:50%;min-width:400px;overflow-y:auto;background:#2a2a2a;padding:16px">
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;text-align:center">LIVE PREVIEW (600px)</div>
+              <div id="ebLivePreview" style="max-width:600px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden;border:1px solid rgba(201,164,76,0.3);min-height:200px">
+                <div style="padding:60px 30px;text-align:center;color:#999;font-size:13px">Add sections to see your email preview here</div>
+              </div>
             </div>
           </div>
         </div>
@@ -405,6 +413,17 @@
 // ═══ EMAIL BUILDER ═══
 let ebSections = [];
 
+const EB_SERVICES_CATALOG = [
+  { name:'Social Media Management', desc:'Strategy, scripting, production, editing, and publishing — handled by our in-house team.', tags:'Content Strategy, Growth, Analytics' },
+  { name:'Video Production', desc:'From concept to final cut — corporate films, events, product launches, reels.', tags:'Cinematic, Events, Reels' },
+  { name:'Website & Web Development', desc:'Fast, conversion-focused sites designed to turn visitors into paying clients.', tags:'UI/UX, Conversion, SEO-ready' },
+  { name:'Branding & Identity', desc:'Complete visual identities that communicate authority, trust, and ambition.', tags:'Logo, Brand Guidelines, Messaging' },
+  { name:'SEO & Paid Ads', desc:'Data-driven SEO and precision ad campaigns built for ROI — every dirham accounted for.', tags:'Google Ads, Meta Ads, SEO' },
+  { name:'3D & CGI', desc:'Photorealistic 3D visuals and CGI that make your brand impossible to ignore.', tags:'Product Renders, Animation, CGI' },
+  { name:'Photography', desc:'Professional product, lifestyle, and event photography with studio-quality results.', tags:'Product Shots, Events, Lifestyle' },
+  { name:'Email Marketing', desc:'Targeted campaigns, automation sequences, and newsletters that convert.', tags:'Campaigns, Automation, Analytics' },
+];
+
 const EB_DEFAULTS = {
   header: { type:'header', clientName:'{{First Name}}', message:'We came across your brand and noticed real opportunity to elevate your digital presence.', imageUrl:'', senderName:'Amine Damoun', senderTitle:'COO · Dubai Prod' },
   logo: { type:'logo', imageUrl:'', companyName:'DUBAI PROD', tagline:'Global Standards · Local Results' },
@@ -426,11 +445,82 @@ function ebRemove(i) { ebSections.splice(i,1); ebRender(); }
 function ebMoveUp(i) { if(i>0){[ebSections[i-1],ebSections[i]]=[ebSections[i],ebSections[i-1]]; ebRender();} }
 function ebMoveDown(i) { if(i<ebSections.length-1){[ebSections[i],ebSections[i+1]]=[ebSections[i+1],ebSections[i]]; ebRender();} }
 
-function ebUpdate(i, key, val) { ebSections[i][key] = val; }
+function ebUpdate(i, key, val) { ebSections[i][key] = val; ebUpdatePreview(); }
+function ebUpdatePreview() {
+  const pv = document.getElementById('ebLivePreview');
+  if(!pv || ebSections.length===0) { if(pv) pv.innerHTML='<div style="padding:60px 30px;text-align:center;color:#999;font-size:13px">Add sections to see your email preview here</div>'; return; }
+  const html = ebBuildHTML();
+  pv.innerHTML = `<iframe srcdoc="${html.replace(/"/g,'&quot;')}" style="width:100%;border:none;min-height:600px" onload="this.style.height=this.contentDocument.body.scrollHeight+'px'"></iframe>`;
+}
+function ebPickService(i) {
+  const opts = EB_SERVICES_CATALOG.map((s,j)=>`<option value="${j}" ${ebSections[i].name===s.name?'selected':''}>${s.name}</option>`).join('');
+  return `<select onchange="ebApplyService(${i},this.value)" style="width:100%;padding:8px 10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:#c9a44c;font-size:12px;cursor:pointer;margin-bottom:6px"><option value="">-- Pick a service --</option>${opts}<option value="custom">✏️ Custom service...</option></select>`;
+}
+function ebApplyService(i, val) {
+  if(val==='' || val==='custom') return;
+  const s = EB_SERVICES_CATALOG[parseInt(val)];
+  if(!s) return;
+  ebSections[i].name = s.name;
+  ebSections[i].desc = s.desc;
+  ebSections[i].tags = s.tags;
+  ebRender();
+}
+function ebUploadImage(i, key) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch('/upload', {method:'POST', body:fd});
+      const data = await res.json();
+      if(data.url) { ebSections[i][key] = data.url; ebRender(); }
+    } catch(err) {
+      // Fallback to base64
+      const reader = new FileReader();
+      reader.onload = () => { ebSections[i][key] = reader.result; ebRender(); };
+      reader.readAsDataURL(file);
+    }
+  };
+  input.click();
+}
+function ebSaveTemplate() {
+  const name = prompt('Template name:', 'My Template');
+  if(!name) return;
+  let saved = JSON.parse(localStorage.getItem('ebTemplates')||'[]');
+  saved.push({name, sections: JSON.parse(JSON.stringify(ebSections)), date: new Date().toISOString()});
+  localStorage.setItem('ebTemplates', JSON.stringify(saved));
+  ebRenderSaved();
+  alert('Template "'+name+'" saved!');
+}
+function ebLoadSaved(idx) {
+  const saved = JSON.parse(localStorage.getItem('ebTemplates')||'[]');
+  if(!saved[idx]) return;
+  if(ebSections.length>0 && !confirm('Replace current sections?')) return;
+  ebSections = JSON.parse(JSON.stringify(saved[idx].sections));
+  ebRender();
+}
+function ebDeleteSaved(idx) {
+  if(!confirm('Delete this template?')) return;
+  let saved = JSON.parse(localStorage.getItem('ebTemplates')||'[]');
+  saved.splice(idx,1);
+  localStorage.setItem('ebTemplates', JSON.stringify(saved));
+  ebRenderSaved();
+}
+function ebRenderSaved() {
+  const el = document.getElementById('ebSavedList');
+  if(!el) return;
+  const saved = JSON.parse(localStorage.getItem('ebTemplates')||'[]');
+  if(saved.length===0) { el.innerHTML='<div style="color:#555;font-size:12px">No saved templates yet</div>'; return; }
+  el.innerHTML = saved.map((t,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:5px"><span style="flex:1;font-size:12px;color:#e0e0e0;cursor:pointer" onclick="ebLoadSaved(${i})">${esc(t.name)}</span><button onclick="ebDeleteSaved(${i})" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:12px">✕</button></div>`).join('');
+}
 
 function ebRender() {
   const el = document.getElementById('ebSections');
-  if(ebSections.length === 0) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#555;font-size:13px">Click "+" buttons below to add sections, or pick a Quick Start template</div>'; return; }
+  if(ebSections.length === 0) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#555;font-size:13px">Click "+" buttons above to add sections, or pick a Quick Start template</div>'; ebUpdatePreview(); return; }
 
   el.innerHTML = ebSections.map((s,i) => {
     let fields = '';
@@ -445,18 +535,23 @@ function ebRender() {
         fields = `<span class="eb-type-badge">📬 Header</span>
           <label>Client Name</label><input value="${esc(s.clientName)}" onchange="ebUpdate(${i},'clientName',this.value)"/>
           <label>Personal Message</label><textarea onchange="ebUpdate(${i},'message',this.value)">${esc(s.message)}</textarea>
-          <label>Client/Photo Image URL (optional)</label><input value="${esc(s.imageUrl)}" onchange="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://..."/>
+          <label>Client/Photo Image</label>
+          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.imageUrl)}" onchange="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'imageUrl')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
+          ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="max-width:80px;max-height:50px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}
           <label>Sender Name</label><input value="${esc(s.senderName)}" onchange="ebUpdate(${i},'senderName',this.value)"/>
           <label>Sender Title</label><input value="${esc(s.senderTitle)}" onchange="ebUpdate(${i},'senderTitle',this.value)"/>`;
         break;
       case 'logo':
         fields = `<span class="eb-type-badge">🏢 Logo Bar</span>
-          <label>Logo Image URL (optional)</label><input value="${esc(s.imageUrl)}" onchange="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://..."/>
+          <label>Logo Image</label>
+          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.imageUrl)}" onchange="ebUpdate(${i},'imageUrl',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'imageUrl')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
+          ${s.imageUrl?`<img src="${esc(s.imageUrl)}" style="max-width:80px;max-height:50px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}
           <label>Company Name</label><input value="${esc(s.companyName)}" onchange="ebUpdate(${i},'companyName',this.value)"/>
           <label>Tagline</label><input value="${esc(s.tagline)}" onchange="ebUpdate(${i},'tagline',this.value)"/>`;
         break;
       case 'service':
         fields = `<span class="eb-type-badge">⚡ Service</span>
+          <label>Pick from catalog</label>${ebPickService(i)}
           <label>Service Name</label><input value="${esc(s.name)}" onchange="ebUpdate(${i},'name',this.value)"/>
           <label>Description</label><textarea onchange="ebUpdate(${i},'desc',this.value)">${esc(s.desc)}</textarea>
           <label>Tags (comma separated)</label><input value="${esc(s.tags)}" onchange="ebUpdate(${i},'tags',this.value)"/>
@@ -487,7 +582,9 @@ function ebRender() {
         break;
       case 'image':
         fields = `<span class="eb-type-badge">🖼 Image</span>
-          <label>Image URL</label><input value="${esc(s.src)}" onchange="ebUpdate(${i},'src',this.value)" placeholder="https://..."/>
+          <label>Image</label>
+          <div style="display:flex;gap:6px;align-items:center"><input value="${esc(s.src)}" onchange="ebUpdate(${i},'src',this.value)" placeholder="https://... or upload" style="flex:1"/><button onclick="ebUploadImage(${i},'src')" style="padding:6px 12px;background:rgba(201,164,76,0.15);border:1px solid rgba(201,164,76,0.3);color:#c9a44c;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap">📁 Upload</button></div>
+          ${s.src?`<img src="${esc(s.src)}" style="max-width:120px;max-height:80px;border-radius:4px;margin-top:6px;border:1px solid rgba(255,255,255,0.1)"/>`:''}
           <label>Alt Text</label><input value="${esc(s.alt)}" onchange="ebUpdate(${i},'alt',this.value)"/>`;
         break;
       case 'divider':
@@ -638,6 +735,7 @@ function ebLoadTemplate(name) {
 
 // Init empty
 ebRender();
+ebRenderSaved();
 </script>
 
 <script>

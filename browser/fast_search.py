@@ -98,25 +98,41 @@ async def find_companies(query: str, location: str = "", count: int = 20) -> lis
         count: Target number of companies to find. Will run extra searches to hit the target.
     """
     target = max(count, 5)
-    search_query = f"{query} {location}".strip()
-    results = await search_web(search_query, num_results=min(target + 10, 30))
-
-    # Run additional searches with different queries to hit the target count
-    extra_queries = [
-        f"{query} companies {location}",
-        f"{query} {location} contact email",
-        f"best {query} {location}",
-        f"top {query} near {location}",
-        f"{query} services {location}",
+    # Use multiple targeted queries to find actual business websites
+    loc = location.strip()
+    q = query.strip()
+    search_queries = [
+        f'"{q}" "{loc}" site:.com OR site:.si OR site:.ae -tripadvisor -yelp -booking',
+        f'{q} {loc} "contact us" OR "@" OR "email"',
+        f'{q} {loc} official website',
+        f'{q} company {loc}',
+        f'best {q} {loc}',
+        f'top {q} near {loc}',
+        f'{q} {loc} phone email address',
     ]
-    qi = 0
-    while len(results) < target + 5 and qi < len(extra_queries):
-        results += await search_web(extra_queries[qi].strip(), num_results=min(target, 20))
-        qi += 1
+    results = []
+    for sq in search_queries:
+        if len(results) >= target + 15:
+            break
+        batch = await search_web(sq.strip(), num_results=min(target + 5, 25))
+        results += batch
 
-    # Filter aggregator/social sites
+    # Filter aggregator/social/directory sites — we want actual business websites
     skip = {'google', 'facebook', 'linkedin.com', 'twitter', 'youtube', 'wikipedia',
-            'yelp.com', 'tripadvisor', 'booking.com', 'amazon', 'reddit'}
+            'yelp.com', 'tripadvisor', 'booking.com', 'amazon', 'reddit',
+            'michelin', 'fodors.com', 'viamichelin', 'timeout.com', 'thefork',
+            'opentable', 'zomato', 'justeat', 'deliveroo', 'uber', 'glassdoor',
+            'indeed.com', 'yellowpages', 'whitepages', 'crunchbase', 'bloomberg',
+            'jacadatravel', 'lonelyplanet', 'theculturetrip', 'travelandleisure',
+            'cntraveler', 'afar.com', 'skyscanner', 'kayak', 'expedia', 'hotels.com',
+            'airbnb', 'vrbo', 'agoda', 'trivago', 'wikitravel', 'wikivoyage',
+            'pinterest', 'instagram', 'tiktok', 'medium.com', 'quora.com',
+            'trustpilot', 'capterra', 'g2.com', 'clutch.co', 'behance',
+            'dribbble', 'fiverr', 'upwork', 'thumbtack', 'angi.com',
+            'slovenia.info', 'travelslovenia', 'visitslovenia', 'myguideslovenia',
+            'tasteatlas', 'inyourpocket', '2foodtrippers', 'sloveniaholidays',
+            'talesmag', 'theinfatuation', 'eater.com', 'thrillist',
+            'travel.state', 'wikidata', 'dbpedia'}
     filtered = []
     seen = set()
     for r in results:
@@ -157,5 +173,5 @@ async def find_companies(query: str, location: str = "", count: int = 20) -> lis
     companies = await asyncio.gather(*[extract(r) for r in filtered])
     # Trim to requested count
     companies = list(companies)[:target]
-    logger.info(f"[search] Found {len(companies)} companies for '{search_query}' (requested {count})")
+    logger.info(f"[search] Found {len(companies)} companies for '{q} {loc}' (requested {count})")
     return companies

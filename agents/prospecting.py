@@ -135,56 +135,58 @@ async def run_prospecting_campaign(
         await db.close()
         return added
 
-    # Pass 1: search all industries
+    # Pass 1: search all industries (with count per industry to be efficient)
+    per_industry = max(5, target_count // len(search_industries) + 3)
     for industry in search_industries:
         if len(all_leads) >= target_count:
             break
         search_count += 1
         logger.info(f"[prospect] Search {search_count}: '{industry}' in {location} ({len(all_leads)}/{target_count})")
         try:
-            companies = await asyncio.wait_for(find_companies(industry, location), timeout=20)
+            companies = await asyncio.wait_for(
+                find_companies(industry, location, count=per_industry), timeout=30
+            )
         except (asyncio.TimeoutError, Exception) as e:
             logger.warning(f"[prospect] Search failed for '{industry}': {e}")
             continue
         await save_companies(companies, industry)
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.2)
 
-    # Pass 2: if still under target, retry with more specific queries
+    # Pass 2: if still under target, relax email requirement immediately and retry
     if len(all_leads) < target_count:
-        logger.info(f"[prospect] Pass 2: {len(all_leads)}/{target_count}, trying specific queries")
+        logger.info(f"[prospect] Pass 2: relaxing email requirement ({len(all_leads)}/{target_count})")
+        require_email = False
+        for industry in search_industries:
+            if len(all_leads) >= target_count:
+                break
+            search_count += 1
+            try:
+                companies = await asyncio.wait_for(
+                    find_companies(industry, location, count=per_industry), timeout=30
+                )
+            except (asyncio.TimeoutError, Exception):
+                continue
+            await save_companies(companies, industry)
+            await asyncio.sleep(0.2)
+
+    # Pass 3: try broader queries
+    if len(all_leads) < target_count:
+        logger.info(f"[prospect] Pass 3: broader queries ({len(all_leads)}/{target_count})")
         extra_queries = [
-            f"best {ind} in {location} contact email" for ind in search_industries[:10]
-        ] + [
-            f"{location} {ind} company phone email website" for ind in search_industries[10:]
-        ] + [
             f"top {location} businesses directory",
             f"{location} small business listings contact",
-            f"new companies {location} marketing",
-        ]
+            f"new companies {location} 2025",
+        ] + [f"best {ind} in {location} official site" for ind in search_industries[:5]]
         for q in extra_queries:
             if len(all_leads) >= target_count:
                 break
             search_count += 1
             try:
-                companies = await asyncio.wait_for(find_companies(q, ""), timeout=20)
-            except (asyncio.TimeoutError, Exception) as e:
-                continue
-            await save_companies(companies, q.split()[0])
-            await asyncio.sleep(0.3)
-
-    # Pass 3: if still under target, relax email requirement and try again
-    if len(all_leads) < target_count and require_email:
-        logger.info(f"[prospect] Pass 3: relaxing email requirement ({len(all_leads)}/{target_count})")
-        require_email = False
-        for industry in search_industries:
-            if len(all_leads) >= target_count:
-                break
-            try:
-                companies = await asyncio.wait_for(find_companies(industry, location), timeout=20)
+                companies = await asyncio.wait_for(find_companies(q, "", count=10), timeout=25)
             except (asyncio.TimeoutError, Exception):
                 continue
-            await save_companies(companies, industry)
-            await asyncio.sleep(0.3)
+            await save_companies(companies, q.split()[0])
+            await asyncio.sleep(0.2)
 
     # Summary
     qualified = sum(1 for l in all_leads if l["status"] == "qualified")

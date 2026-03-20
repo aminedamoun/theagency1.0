@@ -1910,49 +1910,68 @@ async def transcribe_video(data: TranscribeRequest):
     audio_path = uploads_dir / f"transcribe_{ts}"
 
     try:
-        # Step 1: Download with yt-dlp — download best audio, no postprocessing
-        cmd = [
-            "yt-dlp",
-            "-f", "bestaudio[ext=m4a]/bestaudio",
-            "--no-playlist",
-            "--no-check-certificates",
-            "--no-post-overwrites",
-            "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            "-o", str(audio_path) + ".%(ext)s",
-            data.url,
+        # Get ffmpeg path
+        try:
+            import imageio_ffmpeg
+            _ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            _ffmpeg = shutil.which("ffmpeg") or "ffmpeg"
+
+        # Step 1: Try audio-only first, then fall back to full video download
+        formats_to_try = [
+            ["-f", "bestaudio[ext=m4a]/bestaudio"],  # Audio only (YouTube, etc.)
+            ["-f", "best[height<=720]"],               # Full video (TikTok, Instagram)
+            [],                                        # Default (let yt-dlp decide)
         ]
-        proc = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
 
-        # Find the downloaded file
         actual_file = None
-        for ext in [".m4a", ".webm", ".mp4", ".opus", ".ogg", ".mp3", ".wav"]:
-            candidate = Path(str(audio_path) + ext)
-            if candidate.exists():
-                actual_file = candidate
+        last_error = ""
+
+        for fmt_args in formats_to_try:
+            # Clean up any previous attempt
+            for ext in [".m4a", ".webm", ".mp4", ".opus", ".ogg", ".mp3", ".wav", ".mkv"]:
+                Path(str(audio_path) + ext).unlink(missing_ok=True)
+
+            cmd = [
+                "yt-dlp",
+                *fmt_args,
+                "--no-playlist",
+                "--no-check-certificates",
+                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                "-o", str(audio_path) + ".%(ext)s",
+                data.url,
+            ]
+            proc = await asyncio.create_subprocess_exec(
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
+
+            # Find the downloaded file
+            for ext in [".m4a", ".mp4", ".webm", ".opus", ".ogg", ".mp3", ".wav", ".mkv"]:
+                candidate = Path(str(audio_path) + ext)
+                if candidate.exists() and candidate.stat().st_size > 1000:
+                    actual_file = candidate
+                    break
+
+            if actual_file:
                 break
+            last_error = stderr.decode()[:300]
 
-        if not actual_file or not actual_file.exists():
-            return {"error": f"Failed to download audio: {stderr.decode()[:300]}"}
+        if not actual_file:
+            return {"error": f"Failed to download: {last_error}"}
 
-        # Convert to mp3 with imageio-ffmpeg if needed
-        if actual_file.suffix not in (".mp3", ".m4a", ".wav", ".mp4"):
-            try:
-                import imageio_ffmpeg
-                ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-            except Exception:
-                ffmpeg_exe = "ffmpeg"
+        # Extract audio to mp3 (needed for video files like mp4/webm/mkv)
+        if actual_file.suffix not in (".mp3", ".m4a", ".wav"):
             mp3_path = actual_file.with_suffix(".mp3")
             conv_proc = await asyncio.create_subprocess_exec(
-                ffmpeg_exe, "-i", str(actual_file), "-vn", "-acodec", "libmp3lame",
-                "-q:a", "5", str(mp3_path), "-y",
+                _ffmpeg, "-i", str(actual_file), "-vn", "-acodec", "libmp3lame",
+                "-q:a", "5", "-y", str(mp3_path),
                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             await asyncio.wait_for(conv_proc.communicate(), timeout=60)
-            actual_file.unlink(missing_ok=True)
-            actual_file = mp3_path
+            if mp3_path.exists() and mp3_path.stat().st_size > 100:
+                actual_file.unlink(missing_ok=True)
+                actual_file = mp3_path
 
         file_size = actual_file.stat().st_size
         if file_size > 25 * 1024 * 1024:  # Whisper limit is 25MB

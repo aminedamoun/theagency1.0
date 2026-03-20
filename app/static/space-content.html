@@ -134,6 +134,7 @@
         <div class="tab" onclick="sw('tasks')">📋 Tasks</div>
         <div class="tab" onclick="sw('results')">📝 Results</div>
         <div class="tab" onclick="sw('calendar')">📅 Calendar</div>
+        <div class="tab" onclick="sw('transcribe')" style="color:#c9a84c">🎙 Transcribe</div>
       </div>
       <div class="tab-body">
         <!-- PIPELINE -->
@@ -221,6 +222,91 @@
           <div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:8px" id="calTitle"></div>
           <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="calGrid"></div>
         </div>
+
+        <!-- TRANSCRIBE -->
+        <div class="pane" id="p-transcribe">
+          <h2 style="font-size:1rem;font-weight:800;margin-bottom:4px">🎙 Video / Audio Transcription</h2>
+          <p style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-bottom:16px">Extract script from any video — paste a URL or upload a file</p>
+
+          <!-- URL Input -->
+          <div style="margin-bottom:16px">
+            <label style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:6px">Video URL</label>
+            <div style="display:flex;gap:8px">
+              <input id="trUrl" placeholder="Paste YouTube, Instagram, TikTok, or any video URL..." style="flex:1;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.72rem;outline:none;font-family:inherit" />
+              <button onclick="transcribeUrl()" style="padding:10px 20px;border-radius:8px;background:linear-gradient(135deg,#c9a84c,#ffe08a);border:none;color:#000;font-size:0.65rem;font-weight:700;cursor:pointer;white-space:nowrap">Transcribe</button>
+            </div>
+            <div style="font-size:0.5rem;color:rgba(255,255,255,0.2);margin-top:6px">Supports: YouTube, Instagram, TikTok, Facebook, Twitter/X, Vimeo, and 1000+ sites</div>
+          </div>
+
+          <!-- OR divider -->
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div>
+            <span style="font-size:0.55rem;color:rgba(255,255,255,0.2);font-weight:600">OR UPLOAD FILE</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.06)"></div>
+          </div>
+
+          <!-- Upload -->
+          <div style="margin-bottom:16px">
+            <div id="trDropzone" onclick="document.getElementById('trFileInput').click()" style="padding:28px;border:2px dashed rgba(255,255,255,0.08);border-radius:10px;text-align:center;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='rgba(201,168,76,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+              <div style="font-size:1.5rem;margin-bottom:6px">📁</div>
+              <div style="font-size:0.68rem;color:rgba(255,255,255,0.4)">Click to upload video or audio file</div>
+              <div style="font-size:0.5rem;color:rgba(255,255,255,0.15);margin-top:4px">MP4, MOV, MP3, WAV, M4A — max 25MB</div>
+            </div>
+            <input id="trFileInput" type="file" accept="video/*,audio/*,.mp3,.mp4,.mov,.wav,.m4a,.webm" style="display:none" onchange="transcribeFile(this.files[0])"/>
+          </div>
+
+          <!-- Language (optional) -->
+          <div style="margin-bottom:16px">
+            <label style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:6px">Language (optional — auto-detects)</label>
+            <select id="trLang" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:0.65rem;outline:none;cursor:pointer;width:200px">
+              <option value="">Auto-detect</option>
+              <option value="en">English</option>
+              <option value="sl">Slovenian</option>
+              <option value="ar">Arabic</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="es">Spanish</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="ru">Russian</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+              <option value="zh">Chinese</option>
+              <option value="hi">Hindi</option>
+              <option value="tr">Turkish</option>
+              <option value="nl">Dutch</option>
+              <option value="pl">Polish</option>
+              <option value="sv">Swedish</option>
+              <option value="hr">Croatian</option>
+              <option value="sr">Serbian</option>
+              <option value="bs">Bosnian</option>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div id="trStatus" style="display:none;padding:14px 16px;border-radius:8px;font-size:0.68rem;font-weight:600;margin-bottom:16px"></div>
+
+          <!-- Result -->
+          <div id="trResult" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <h3 style="font-size:0.8rem;font-weight:700;color:#c9a84c">Transcription Result</h3>
+              <div style="display:flex;gap:6px">
+                <span id="trMeta" style="font-size:0.55rem;color:rgba(255,255,255,0.25)"></span>
+                <button onclick="copyTranscript()" style="padding:5px 12px;border-radius:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.55rem;cursor:pointer">📋 Copy</button>
+                <button onclick="useAsScript()" style="padding:5px 12px;border-radius:5px;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:#c9a84c;font-size:0.55rem;font-weight:600;cursor:pointer">Use as Script →</button>
+              </div>
+            </div>
+            <textarea id="trText" style="width:100%;min-height:250px;padding:16px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:0.72rem;line-height:1.8;font-family:inherit;resize:vertical;outline:none"></textarea>
+
+            <!-- Timestamps toggle -->
+            <div style="margin-top:10px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.6rem;color:rgba(255,255,255,0.4)">
+                <input type="checkbox" id="trShowTimestamps" onchange="toggleTimestamps()" style="accent-color:#c9a84c"/> Show timestamps
+              </label>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -294,7 +380,7 @@ function sw(n){
   document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+n)?.classList.add('on');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  const i={pipeline:0,tasks:1,results:2,calendar:3}[n];
+  const i={pipeline:0,tasks:1,results:2,calendar:3,transcribe:4}[n];
   if(i!==undefined)document.querySelectorAll('.tab')[i]?.classList.add('on');
   if(n==='tasks')loadTasks();
   if(n==='results')loadResults();
@@ -653,6 +739,91 @@ document.querySelector('.tb-fill').insertAdjacentHTML('beforebegin',
   '<button class="tb-btn tb-ghost" onclick="clearWorkflow()" style="color:rgba(231,76,60,0.5)">🗑 Clear & New</button>');
 
 loadTasks();loadResults();
+
+// ═══ TRANSCRIBE ═══
+let trSegments = [];
+
+async function transcribeUrl() {
+  const url = document.getElementById('trUrl').value.trim();
+  if(!url) { alert('Paste a video URL first'); return; }
+  const lang = document.getElementById('trLang').value;
+  trShowStatus('Downloading and transcribing... this may take 30-60 seconds', 'working');
+  try {
+    const res = await fetch('/api/transcribe', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ url, language: lang })
+    });
+    const data = await res.json();
+    if(data.error) { trShowStatus('Error: ' + data.error, 'error'); return; }
+    trShowResult(data);
+  } catch(e) { trShowStatus('Error: ' + e.message, 'error'); }
+}
+
+async function transcribeFile(file) {
+  if(!file) return;
+  const lang = document.getElementById('trLang').value;
+  trShowStatus('Uploading and transcribing ' + file.name + '...', 'working');
+  const fd = new FormData();
+  fd.append('file', file);
+  if(lang) fd.append('language', lang);
+  try {
+    const res = await fetch('/api/transcribe-upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if(data.error) { trShowStatus('Error: ' + data.error, 'error'); return; }
+    trShowResult(data);
+  } catch(e) { trShowStatus('Error: ' + e.message, 'error'); }
+}
+
+function trShowStatus(msg, type) {
+  const el = document.getElementById('trStatus');
+  el.style.display = 'block';
+  el.style.background = type==='error' ? 'rgba(231,76,60,0.1)' : 'rgba(201,168,76,0.08)';
+  el.style.border = '1px solid ' + (type==='error' ? 'rgba(231,76,60,0.2)' : 'rgba(201,168,76,0.15)');
+  el.style.color = type==='error' ? '#e74c3c' : '#c9a84c';
+  el.textContent = type==='working' ? '⏳ ' + msg : (type==='error' ? '❌ ' + msg : '✅ ' + msg);
+}
+
+function trShowResult(data) {
+  trSegments = data.segments || [];
+  const dur = data.duration ? Math.round(data.duration) : 0;
+  const lang = data.language || 'auto';
+  document.getElementById('trMeta').textContent = (dur ? dur + 's' : '') + (lang ? ' · ' + lang : '');
+  document.getElementById('trText').value = data.text || '';
+  document.getElementById('trResult').style.display = 'block';
+  trShowStatus('Transcription complete!', 'success');
+  setTimeout(() => { document.getElementById('trStatus').style.display = 'none'; }, 3000);
+}
+
+function toggleTimestamps() {
+  const show = document.getElementById('trShowTimestamps').checked;
+  const el = document.getElementById('trText');
+  if(show && trSegments.length) {
+    el.value = trSegments.map(s => {
+      const mm = Math.floor(s.start/60);
+      const ss = Math.floor(s.start%60).toString().padStart(2,'0');
+      return '[' + mm + ':' + ss + '] ' + s.text.trim();
+    }).join('\n');
+  } else if(trSegments.length) {
+    el.value = trSegments.map(s => s.text.trim()).join(' ');
+  }
+}
+
+function copyTranscript() {
+  const text = document.getElementById('trText').value;
+  navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+}
+
+function useAsScript() {
+  const text = document.getElementById('trText').value;
+  if(!text) return;
+  // Switch to pipeline and pre-fill the chat with the script
+  sw('pipeline');
+  const chatInput = document.getElementById('chatInput');
+  if(chatInput) {
+    chatInput.value = 'Use this script for the next video:\\n\\n' + text;
+    chatInput.focus();
+  }
+}
 </script>
 </body>
 </html>

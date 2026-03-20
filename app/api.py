@@ -1872,3 +1872,158 @@ async def send_template_emails(data: dict):
             errors.append({"email": email_addr, "error": str(e)})
 
     return {"status": "sent", "sent_count": sent_count, "total": len(lead_rows), "errors": errors}
+
+
+# ═══ VIDEO TRANSCRIPTION ═══
+
+class TranscribeRequest(BaseModel):
+    url: str = ""
+    language: str = ""  # auto-detect if empty
+
+
+@router.post("/transcribe")
+async def transcribe_video(data: TranscribeRequest):
+    """Transcribe a video from URL (YouTube, Instagram, TikTok, etc.) or uploaded file.
+
+    Uses yt-dlp to download audio, then OpenAI Whisper to transcribe.
+    """
+    if not data.url:
+        return {"error": "URL is required"}
+
+    uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
+    uploads_dir.mkdir(exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    audio_path = uploads_dir / f"transcribe_{ts}.mp3"
+
+    try:
+        # Step 1: Download audio with yt-dlp
+        cmd = [
+            "yt-dlp",
+            "--extract-audio",
+            "--audio-format", "mp3",
+            "--audio-quality", "5",  # medium quality, smaller file
+            "--max-filesize", "50M",
+            "--no-playlist",
+            "-o", str(audio_path).replace(".mp3", ".%(ext)s"),
+            data.url,
+        ]
+        proc = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
+
+        # Find the actual output file (yt-dlp may change extension)
+        actual_file = None
+        for ext in [".mp3", ".m4a", ".opus", ".webm"]:
+            candidate = Path(str(audio_path).replace(".mp3", ext))
+            if candidate.exists():
+                actual_file = candidate
+                break
+
+        if not actual_file or not actual_file.exists():
+            return {"error": f"Failed to download audio: {stderr.decode()[:300]}"}
+
+        # Convert to mp3 if not already
+        if actual_file.suffix != ".mp3":
+            mp3_path = actual_file.with_suffix(".mp3")
+            ffmpeg_proc = await asyncio.create_subprocess_exec(
+                "ffmpeg", "-i", str(actual_file), "-vn", "-acodec", "libmp3lame",
+                "-q:a", "5", str(mp3_path), "-y",
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            await asyncio.wait_for(ffmpeg_proc.communicate(), timeout=60)
+            actual_file.unlink(missing_ok=True)
+            actual_file = mp3_path
+
+        file_size = actual_file.stat().st_size
+        if file_size > 25 * 1024 * 1024:  # Whisper limit is 25MB
+            return {"error": f"Audio file too large ({file_size // 1024 // 1024}MB). Max 25MB."}
+
+        # Step 2: Transcribe with OpenAI Whisper
+        from openai import OpenAI
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+        with open(actual_file, "rb") as f:
+            kwargs = {"model": "whisper-1", "file": f, "response_format": "verbose_json"}
+            if data.language:
+                kwargs["language"] = data.language
+            result = await asyncio.to_thread(
+                client.audio.transcriptions.create, **kwargs
+            )
+
+        # Clean up audio file
+        actual_file.unlink(missing_ok=True)
+
+        return {
+            "text": result.text,
+            "language": getattr(result, "language", ""),
+            "duration": getattr(result, "duration", 0),
+            "segments": [
+                {"start": s.start, "end": s.end, "text": s.text}
+                for s in getattr(result, "segments", [])
+            ],
+        }
+
+    except asyncio.TimeoutError:
+        return {"error": "Download timed out (max 2 minutes)"}
+    except Exception as e:
+        # Clean up on error
+        audio_path.unlink(missing_ok=True)
+        return {"error": str(e)}
+
+
+@router.post("/transcribe-upload")
+async def transcribe_upload(file: UploadFile = File(...), language: str = ""):
+    """Transcribe an uploaded video/audio file."""
+    uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
+    uploads_dir.mkdir(exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Save uploaded file
+    safe_name = f"transcribe_{ts}_{file.filename}"
+    dest = uploads_dir / safe_name
+    with open(dest, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    try:
+        # Extract audio if it's a video
+        audio_path = dest
+        if dest.suffix.lower() in (".mp4", ".mov", ".avi", ".mkv", ".webm"):
+            audio_path = dest.with_suffix(".mp3")
+            proc = await asyncio.create_subprocess_exec(
+                "ffmpeg", "-i", str(dest), "-vn", "-acodec", "libmp3lame",
+                "-q:a", "5", str(audio_path), "-y",
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            await asyncio.wait_for(proc.communicate(), timeout=60)
+            dest.unlink(missing_ok=True)
+
+        file_size = audio_path.stat().st_size
+        if file_size > 25 * 1024 * 1024:
+            return {"error": f"File too large ({file_size // 1024 // 1024}MB). Max 25MB."}
+
+        from openai import OpenAI
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+        with open(audio_path, "rb") as f:
+            kwargs = {"model": "whisper-1", "file": f, "response_format": "verbose_json"}
+            if language:
+                kwargs["language"] = language
+            result = await asyncio.to_thread(
+                client.audio.transcriptions.create, **kwargs
+            )
+
+        audio_path.unlink(missing_ok=True)
+
+        return {
+            "text": result.text,
+            "language": getattr(result, "language", ""),
+            "duration": getattr(result, "duration", 0),
+            "segments": [
+                {"start": s.start, "end": s.end, "text": s.text}
+                for s in getattr(result, "segments", [])
+            ],
+        }
+    except Exception as e:
+        dest.unlink(missing_ok=True)
+        return {"error": str(e)}

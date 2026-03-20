@@ -14,3 +14,4 @@ httpx
 reportlab
 ddgs
 google-search-results
+yt-dlp

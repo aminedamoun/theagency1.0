@@ -1890,6 +1890,19 @@ async def transcribe_video(data: TranscribeRequest):
     if not data.url:
         return {"error": "URL is required"}
 
+    # Ensure ffmpeg is findable — use imageio-ffmpeg bundled binary as fallback
+    ffmpeg_path = shutil.which("ffmpeg")
+    if not ffmpeg_path:
+        try:
+            import imageio_ffmpeg
+            ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+            ffprobe_path = ffmpeg_path.replace("ffmpeg", "ffprobe")
+            # Add to PATH so yt-dlp can find it
+            ffmpeg_dir = str(Path(ffmpeg_path).parent)
+            os.environ["PATH"] = ffmpeg_dir + ":" + os.environ.get("PATH", "")
+        except Exception:
+            return {"error": "ffmpeg not available on server. Contact admin."}
+
     uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
     uploads_dir.mkdir(exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1978,6 +1991,14 @@ async def transcribe_video(data: TranscribeRequest):
 @router.post("/transcribe-upload")
 async def transcribe_upload(file: UploadFile = File(...), language: str = ""):
     """Transcribe an uploaded video/audio file."""
+    # Ensure ffmpeg is findable
+    if not shutil.which("ffmpeg"):
+        try:
+            import imageio_ffmpeg
+            ffdir = str(Path(imageio_ffmpeg.get_ffmpeg_exe()).parent)
+            os.environ["PATH"] = ffdir + ":" + os.environ.get("PATH", "")
+        except Exception:
+            pass
     uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
     uploads_dir.mkdir(exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")

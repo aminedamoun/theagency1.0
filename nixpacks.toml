@@ -1,3 +1,6 @@
 [phases.setup]
-aptPkgs = ["ffmpeg"]
 nixPkgs = ["ffmpeg-full"]
+aptPkgs = ["ffmpeg"]
+
+[phases.build]
+cmds = ["pip install -r requirements.txt", "which ffmpeg || echo 'ffmpeg not found'", "ffmpeg -version || echo 'ffmpeg version check failed'"]

@@ -1901,9 +1901,12 @@ async def transcribe_video(data: TranscribeRequest):
             "yt-dlp",
             "--extract-audio",
             "--audio-format", "mp3",
-            "--audio-quality", "5",  # medium quality, smaller file
+            "--audio-quality", "5",
             "--max-filesize", "50M",
             "--no-playlist",
+            "--no-check-certificates",
+            "--prefer-free-formats",
+            "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
             "-o", str(audio_path).replace(".mp3", ".%(ext)s"),
             data.url,
         ]

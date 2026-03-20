@@ -1,6 +1,6 @@
 [phases.setup]
-nixPkgs = ["ffmpeg-full"]
+nixPkgs = ["ffmpeg-full", "deno"]
 aptPkgs = ["ffmpeg"]
 
 [phases.build]
-cmds = ["pip install -r requirements.txt", "which ffmpeg || echo 'ffmpeg not found'", "ffmpeg -version || echo 'ffmpeg version check failed'"]
+cmds = ["pip install -r requirements.txt"]

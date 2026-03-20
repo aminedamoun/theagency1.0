@@ -16,3 +16,4 @@ ddgs
 google-search-results
 yt-dlp
 imageio-ffmpeg
+curl_cffi

@@ -183,34 +183,73 @@ padding:18px 52px;border-radius:4px">REPLY TO THIS EMAIL</a>
 </td></tr>
 </table>
 
-<!-- FOOTER SIGNATURE -->
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#141414;border-top:2px solid {O}">
-<tr><td style="padding:28px 48px 24px">
+<!-- FOOTER -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#111;border-top:2px solid {O}">
+<tr><td style="padding:32px 48px 12px">
+
+<!-- COO Signature Row -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+<tr>
+<td width="80" valign="top">
+<img src="{NEJC}" alt="Nejc Soklic" width="72" height="72"
+style="width:72px;height:72px;border-radius:50%;border:2px solid {O}"/>
+</td>
+<td valign="top" style="padding-left:18px;{F}">
+<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:2px">Nejc Soklic</div>
+<div style="font-size:11px;color:{O};font-weight:700;letter-spacing:1px;margin-bottom:8px">COO · DUBAI PROD</div>
+<div style="font-size:12px;color:#888;line-height:1.6;font-style:italic">"Global Standards · Local Results"</div>
+</td>
+</tr>
+</table>
+
+<!-- Divider -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+<tr><td style="height:1px;background:rgba(255,255,255,0.08)"></td><td style="padding:0 16px;white-space:nowrap;font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:{O};{F}">GET IN TOUCH</td><td style="height:1px;background:rgba(255,255,255,0.08);width:100%"></td></tr>
+</table>
+
+<!-- Two Columns: Contact + Socials -->
 <table width="100%" cellpadding="0" cellspacing="0">
 <tr>
-<td width="72" valign="top">
-<img src="{NEJC}" alt="Nejc Soklic" width="64" height="64"
-style="width:64px;height:64px;border-radius:50%;border:2px solid {O}"/>
-</td>
-<td valign="middle" style="padding-left:16px;{F}">
-<span style="font-size:16px;font-weight:700;color:#fff">Nejc Soklic</span><br/>
-<span style="font-size:11px;color:{O};font-weight:600">COO · Dubai Prod</span>
-</td>
-<td valign="middle" style="text-align:right;{F}">
-<span style="font-size:11px;color:#666">✉ info@dubaiprod.com</span><br/>
-<span style="font-size:11px;color:#666">📱 +971 54 333 3587</span><br/>
-<span style="font-size:11px;color:#666">🌐 dubaiprod.com</span>
-</td>
-</tr>
+<td width="50%" valign="top" style="{F}">
+<div style="font-size:10px;font-weight:700;color:#555;letter-spacing:2px;margin-bottom:12px">DIRECT CONTACT</div>
+<table cellpadding="0" cellspacing="0">
+<tr><td style="padding:6px 0;font-size:13px;color:#999">✉&nbsp;&nbsp;<a href="mailto:info@dubaiprod.com" style="color:#ccc;text-decoration:none">info@dubaiprod.com</a></td></tr>
+<tr><td style="padding:6px 0;font-size:13px;color:#999">📱&nbsp;&nbsp;+971 54 333 3587 (WhatsApp)</td></tr>
+<tr><td style="padding:6px 0;font-size:13px;color:#999">📞&nbsp;&nbsp;+386 40 797 340</td></tr>
+<tr><td style="padding:6px 0;font-size:13px;color:#999">🌐&nbsp;&nbsp;<a href="https://dubaiprod.com" style="color:#ccc;text-decoration:none">dubaiprod.com</a></td></tr>
 </table>
-<table cellpadding="0" cellspacing="0" style="margin-top:14px">
+</td>
+<td width="50%" valign="top" style="{F}">
+<div style="font-size:10px;font-weight:700;color:#555;letter-spacing:2px;margin-bottom:12px">FOLLOW US</div>
+<table cellpadding="0" cellspacing="0" width="100%">
 <tr>
-{social_btn('Instagram', 'https://instagram.com/dubaiprod')}
-{social_btn('LinkedIn', 'https://linkedin.com/company/dubaiprod')}
-{social_btn('Facebook', 'https://facebook.com/dubaiprod')}
-{social_btn('YouTube', 'https://youtube.com/@dubaiprod')}
+<td width="50%" style="padding:4px">
+<a href="https://instagram.com/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">📸&nbsp;Instagram</a>
+</td>
+<td width="50%" style="padding:4px">
+<a href="https://linkedin.com/company/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">💼&nbsp;Linkedin</a>
+</td>
+</tr>
+<tr>
+<td width="50%" style="padding:4px">
+<a href="https://facebook.com/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">📘&nbsp;Facebook</a>
+</td>
+<td width="50%" style="padding:4px">
+<a href="https://youtube.com/@dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">▶️&nbsp;Youtube</a>
+</td>
 </tr>
 </table>
+</td>
+</tr>
+</table>
+
+<!-- Copyright -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.06)">
+<tr><td style="padding:16px 0 0;text-align:center;font-size:10px;color:#444;{F}">
+© 2026 Dubai Prod. All rights reserved. · <a href="#" style="color:#444;text-decoration:underline">Unsubscribe</a>
+</td></tr>
+</table>
+
 </td></tr>
 </table>
 

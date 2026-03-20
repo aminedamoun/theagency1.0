@@ -1890,37 +1890,35 @@ async def transcribe_video(data: TranscribeRequest):
     if not data.url:
         return {"error": "URL is required"}
 
-    # Ensure ffmpeg is findable — use imageio-ffmpeg bundled binary as fallback
-    ffmpeg_path = shutil.which("ffmpeg")
-    if not ffmpeg_path:
+    # Ensure ffmpeg/ffprobe is in PATH — use imageio-ffmpeg as fallback
+    if not shutil.which("ffmpeg"):
         try:
             import imageio_ffmpeg
-            ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
-            ffprobe_path = ffmpeg_path.replace("ffmpeg", "ffprobe")
-            # Add to PATH so yt-dlp can find it
-            ffmpeg_dir = str(Path(ffmpeg_path).parent)
-            os.environ["PATH"] = ffmpeg_dir + ":" + os.environ.get("PATH", "")
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            ffdir = str(Path(ffmpeg_exe).parent)
+            os.environ["PATH"] = ffdir + ":" + os.environ.get("PATH", "")
+            # Create ffprobe symlink if missing (imageio only ships ffmpeg)
+            ffprobe_path = Path(ffdir) / "ffprobe"
+            if not ffprobe_path.exists():
+                ffprobe_path.symlink_to(ffmpeg_exe)
         except Exception:
-            return {"error": "ffmpeg not available on server. Contact admin."}
+            pass
 
     uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
     uploads_dir.mkdir(exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    audio_path = uploads_dir / f"transcribe_{ts}.mp3"
+    audio_path = uploads_dir / f"transcribe_{ts}"
 
     try:
-        # Step 1: Download audio with yt-dlp
+        # Step 1: Download with yt-dlp — download best audio, no postprocessing
         cmd = [
             "yt-dlp",
-            "--extract-audio",
-            "--audio-format", "mp3",
-            "--audio-quality", "5",
-            "--max-filesize", "50M",
+            "-f", "bestaudio[ext=m4a]/bestaudio",
             "--no-playlist",
             "--no-check-certificates",
-            "--prefer-free-formats",
+            "--no-post-overwrites",
             "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            "-o", str(audio_path).replace(".mp3", ".%(ext)s"),
+            "-o", str(audio_path) + ".%(ext)s",
             data.url,
         ]
         proc = await asyncio.create_subprocess_exec(
@@ -1928,10 +1926,10 @@ async def transcribe_video(data: TranscribeRequest):
         )
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
 
-        # Find the actual output file (yt-dlp may change extension)
+        # Find the downloaded file
         actual_file = None
-        for ext in [".mp3", ".m4a", ".opus", ".webm"]:
-            candidate = Path(str(audio_path).replace(".mp3", ext))
+        for ext in [".m4a", ".webm", ".mp4", ".opus", ".ogg", ".mp3", ".wav"]:
+            candidate = Path(str(audio_path) + ext)
             if candidate.exists():
                 actual_file = candidate
                 break
@@ -1939,15 +1937,20 @@ async def transcribe_video(data: TranscribeRequest):
         if not actual_file or not actual_file.exists():
             return {"error": f"Failed to download audio: {stderr.decode()[:300]}"}
 
-        # Convert to mp3 if not already
-        if actual_file.suffix != ".mp3":
+        # Convert to mp3 with imageio-ffmpeg if needed
+        if actual_file.suffix not in (".mp3", ".m4a", ".wav", ".mp4"):
+            try:
+                import imageio_ffmpeg
+                ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            except Exception:
+                ffmpeg_exe = "ffmpeg"
             mp3_path = actual_file.with_suffix(".mp3")
-            ffmpeg_proc = await asyncio.create_subprocess_exec(
-                "ffmpeg", "-i", str(actual_file), "-vn", "-acodec", "libmp3lame",
+            conv_proc = await asyncio.create_subprocess_exec(
+                ffmpeg_exe, "-i", str(actual_file), "-vn", "-acodec", "libmp3lame",
                 "-q:a", "5", str(mp3_path), "-y",
                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
-            await asyncio.wait_for(ffmpeg_proc.communicate(), timeout=60)
+            await asyncio.wait_for(conv_proc.communicate(), timeout=60)
             actual_file.unlink(missing_ok=True)
             actual_file = mp3_path
 
@@ -1991,14 +1994,6 @@ async def transcribe_video(data: TranscribeRequest):
 @router.post("/transcribe-upload")
 async def transcribe_upload(file: UploadFile = File(...), language: str = ""):
     """Transcribe an uploaded video/audio file."""
-    # Ensure ffmpeg is findable
-    if not shutil.which("ffmpeg"):
-        try:
-            import imageio_ffmpeg
-            ffdir = str(Path(imageio_ffmpeg.get_ffmpeg_exe()).parent)
-            os.environ["PATH"] = ffdir + ":" + os.environ.get("PATH", "")
-        except Exception:
-            pass
     uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
     uploads_dir.mkdir(exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -2014,8 +2009,13 @@ async def transcribe_upload(file: UploadFile = File(...), language: str = ""):
         audio_path = dest
         if dest.suffix.lower() in (".mp4", ".mov", ".avi", ".mkv", ".webm"):
             audio_path = dest.with_suffix(".mp3")
+            try:
+                import imageio_ffmpeg
+                _ff = imageio_ffmpeg.get_ffmpeg_exe()
+            except Exception:
+                _ff = "ffmpeg"
             proc = await asyncio.create_subprocess_exec(
-                "ffmpeg", "-i", str(dest), "-vn", "-acodec", "libmp3lame",
+                _ff, "-i", str(dest), "-vn", "-acodec", "libmp3lame",
                 "-q:a", "5", str(audio_path), "-y",
                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )

@@ -213,10 +213,10 @@ style="width:72px;height:72px;border-radius:50%;border:2px solid {O}"/>
 <td width="50%" valign="top" style="{F}">
 <div style="font-size:10px;font-weight:700;color:#555;letter-spacing:2px;margin-bottom:12px">DIRECT CONTACT</div>
 <table cellpadding="0" cellspacing="0">
-<tr><td style="padding:6px 0;font-size:13px;color:#999">✉&nbsp;&nbsp;<a href="mailto:info@dubaiprod.com" style="color:#ccc;text-decoration:none">info@dubaiprod.com</a></td></tr>
-<tr><td style="padding:6px 0;font-size:13px;color:#999">📱&nbsp;&nbsp;+971 54 333 3587 (WhatsApp)</td></tr>
-<tr><td style="padding:6px 0;font-size:13px;color:#999">📞&nbsp;&nbsp;+386 40 797 340</td></tr>
-<tr><td style="padding:6px 0;font-size:13px;color:#999">🌐&nbsp;&nbsp;<a href="https://dubaiprod.com" style="color:#ccc;text-decoration:none">dubaiprod.com</a></td></tr>
+<tr><td style="padding:6px 0;font-size:13px;color:#999"><a href="mailto:info@dubaiprod.com" style="color:#ccc;text-decoration:none">info@dubaiprod.com</a></td></tr>
+<tr><td style="padding:6px 0;font-size:13px;color:#999">+971 54 333 3587 (WhatsApp)</td></tr>
+<tr><td style="padding:6px 0;font-size:13px;color:#999">+386 40 797 340</td></tr>
+<tr><td style="padding:6px 0;font-size:13px;color:#999"><a href="https://dubaiprod.com" style="color:#ccc;text-decoration:none">dubaiprod.com</a></td></tr>
 </table>
 </td>
 <td width="50%" valign="top" style="{F}">
@@ -224,18 +224,18 @@ style="width:72px;height:72px;border-radius:50%;border:2px solid {O}"/>
 <table cellpadding="0" cellspacing="0" width="100%">
 <tr>
 <td width="50%" style="padding:4px">
-<a href="https://instagram.com/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">📸&nbsp;Instagram</a>
+<a href="https://instagram.com/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">Instagram</a>
 </td>
 <td width="50%" style="padding:4px">
-<a href="https://linkedin.com/company/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">💼&nbsp;Linkedin</a>
+<a href="https://linkedin.com/company/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">Linkedin</a>
 </td>
 </tr>
 <tr>
 <td width="50%" style="padding:4px">
-<a href="https://facebook.com/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">📘&nbsp;Facebook</a>
+<a href="https://facebook.com/dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">Facebook</a>
 </td>
 <td width="50%" style="padding:4px">
-<a href="https://youtube.com/@dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">▶️&nbsp;Youtube</a>
+<a href="https://youtube.com/@dubaiprod" style="display:block;text-align:center;font-size:11px;font-weight:600;color:{O};text-decoration:none;border:1px solid rgba(232,144,10,0.25);padding:8px 0;border-radius:4px;{F}">Youtube</a>
 </td>
 </tr>
 </table>

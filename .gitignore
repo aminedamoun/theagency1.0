@@ -16,3 +16,4 @@ config/google_token.json
 config/google_credentials.json
 data/*.db
 whatsapp_qr.png
+video-editor-pro/

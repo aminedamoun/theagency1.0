@@ -408,7 +408,51 @@
 
         <!-- EMAIL SEND TAB -->
         <div class="tab-pane" id="pane-emails">
-          <div class="item-list" id="emailList"></div>
+          <!-- Step 1: Select Leads -->
+          <div id="emailStep1">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+              <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0">📧 Send Email Campaign</h3>
+              <select id="emProjectFilter" onchange="emLoadLeads()" style="padding:6px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:12px;cursor:pointer">
+                <option value="all">All Projects</option>
+              </select>
+              <span id="emSelectedCount" style="font-size:11px;color:#c9a44c;font-weight:600"></span>
+              <button onclick="emSelectAll()" style="margin-left:auto;padding:4px 12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);color:#c9a44c;border-radius:4px;cursor:pointer;font-size:11px">Select All with Email</button>
+            </div>
+            <div id="emLeadsList" style="max-height:280px;overflow-y:auto;border:1px solid rgba(255,255,255,0.06);border-radius:8px;background:rgba(0,0,0,0.15)"></div>
+          </div>
+
+          <!-- Step 2: Choose Template -->
+          <div id="emailStep2" style="margin-top:20px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+              <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0">📋 Choose Template</h3>
+              <a href="/space/email" target="_blank" style="font-size:11px;color:#c9a44c;text-decoration:none;border:1px solid rgba(201,168,76,0.3);padding:4px 12px;border-radius:4px">+ Create New Template</a>
+            </div>
+            <div id="emTemplatesList" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"></div>
+          </div>
+
+          <!-- Step 3: Subject + Preview + Send -->
+          <div id="emailStep3" style="margin-top:20px;display:none">
+            <h3 style="font-size:16px;font-weight:700;color:#fff;margin:0 0 12px">✉️ Compose & Send</h3>
+            <div style="margin-bottom:12px">
+              <label style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px">Subject Line</label>
+              <input id="emSubject" value="Dubai Prod — Your Digital Growth Partner" style="width:100%;padding:10px 14px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e0e0e0;font-size:14px"/>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+              <button onclick="emPreview()" style="padding:8px 20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e0e0e0;border-radius:6px;cursor:pointer;font-size:12px">👁 Preview</button>
+              <button onclick="emSendTest()" style="padding:8px 20px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);color:#c9a44c;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">📨 Send Test to Me</button>
+              <button onclick="emSendAll()" id="emSendBtn" style="padding:8px 24px;background:#c9a44c;border:none;color:#000;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🚀 SEND TO SELECTED</button>
+              <span id="emSendStatus" style="font-size:12px;color:#888"></span>
+            </div>
+            <div id="emPreviewBox" style="display:none;border:1px solid rgba(255,255,255,0.08);border-radius:8px;overflow:hidden;max-height:400px;overflow-y:auto">
+              <iframe id="emPreviewFrame" style="width:100%;height:400px;border:none;background:#1a1a1a"></iframe>
+            </div>
+          </div>
+
+          <!-- Send History -->
+          <div style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.06);padding-top:16px">
+            <h4 style="font-size:13px;color:#888;margin:0 0 10px">Recent Sends</h4>
+            <div id="emHistory" class="item-list"></div>
+          </div>
         </div>
 
         <!-- READ BACK / FEEDBACK TAB -->
@@ -711,14 +755,179 @@ function renderMarket(){
 }
 
 // ══ EMAIL SEND TAB ══
-function renderEmails(){
-  const el=document.getElementById('emailList');
-  const items=tasks.filter(t=>(t.title||'').toLowerCase().match(/email|outreach|send|proposal/)||(t.assigned_agent||'')==='elena');
-  if(!items.length){el.innerHTML='<div class="empty-state">No emails sent yet — use Auto-Outreach from a folder</div>';return}
-  el.innerHTML=items.map(t=>`<div class="item-row">
+let emAllLeads=[], emSelectedLeadIds=new Set(), emTemplates=[], emSelectedTplId=null;
+
+async function renderEmails(){
+  // Load projects into filter dropdown
+  const sel=document.getElementById('emProjectFilter');
+  const existing=sel.querySelectorAll('option:not(:first-child)');
+  existing.forEach(o=>o.remove());
+  projects.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.id;o.textContent=p.name;sel.appendChild(o);
+  });
+  await emLoadLeads();
+  await emLoadTemplates();
+  emRenderHistory();
+}
+
+async function emLoadLeads(){
+  const pid=document.getElementById('emProjectFilter').value;
+  try{
+    const url=pid==='all'?'/api/all-leads':'/api/leads/'+pid;
+    const res=await fetch(url);
+    emAllLeads=await res.json();
+    if(!Array.isArray(emAllLeads))emAllLeads=[];
+  }catch(e){emAllLeads=[];}
+  emRenderLeads();
+}
+
+function emRenderLeads(){
+  const el=document.getElementById('emLeadsList');
+  const withEmail=emAllLeads.filter(l=>l.email);
+  if(!withEmail.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:#555;font-size:13px">No leads with email found. Run prospecting first.</div>';
+    emUpdateCount();return;
+  }
+  el.innerHTML=withEmail.map(l=>{
+    const checked=emSelectedLeadIds.has(l.id)?'checked':'';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer" onclick="emToggleLead(${l.id})">
+      <input type="checkbox" ${checked} style="accent-color:#c9a44c;cursor:pointer" onclick="event.stopPropagation();emToggleLead(${l.id})"/>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#e0e0e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.company_name||l.contact_name||'Unknown')}</div>
+        <div style="font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.email)}</div>
+      </div>
+      <span style="font-size:10px;color:#555;white-space:nowrap">${esc(l.industry||'')}</span>
+    </div>`;
+  }).join('');
+  emUpdateCount();
+}
+
+function emToggleLead(id){
+  if(emSelectedLeadIds.has(id))emSelectedLeadIds.delete(id);
+  else emSelectedLeadIds.add(id);
+  emRenderLeads();
+  emShowStep3();
+}
+function emSelectAll(){
+  const withEmail=emAllLeads.filter(l=>l.email);
+  if(emSelectedLeadIds.size===withEmail.length){emSelectedLeadIds.clear();}
+  else{withEmail.forEach(l=>emSelectedLeadIds.add(l.id));}
+  emRenderLeads();
+  emShowStep3();
+}
+function emUpdateCount(){
+  const el=document.getElementById('emSelectedCount');
+  const n=emSelectedLeadIds.size;
+  el.textContent=n?`${n} selected`:'';
+}
+
+async function emLoadTemplates(){
+  try{
+    const res=await fetch('/api/email-templates');
+    emTemplates=await res.json();
+    if(!Array.isArray(emTemplates))emTemplates=[];
+  }catch(e){emTemplates=[];}
+  emRenderTemplates();
+}
+
+function emRenderTemplates(){
+  const el=document.getElementById('emTemplatesList');
+  if(!emTemplates.length){
+    el.innerHTML='<div style="padding:16px;color:#555;font-size:13px">No saved templates yet. <a href="/space/email" target="_blank" style="color:#c9a44c">Create one in Email Builder →</a></div>';
+    return;
+  }
+  el.innerHTML=emTemplates.map(t=>{
+    const active=emSelectedTplId===t.id?'border-color:#c9a44c;background:rgba(201,168,76,0.1)':'';
+    const lang=t.language==='sl'?'🇸🇮':'🇬🇧';
+    return `<div onclick="emSelectTemplate(${t.id})" style="padding:14px 18px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;min-width:160px;${active};transition:all 0.2s">
+      <div style="font-size:13px;font-weight:600;color:#e0e0e0;margin-bottom:4px">${lang} ${esc(t.name)}</div>
+      <div style="font-size:10px;color:#666">${new Date(t.updated_at||t.created_at).toLocaleDateString()}</div>
+    </div>`;
+  }).join('');
+}
+
+function emSelectTemplate(id){
+  emSelectedTplId=id;
+  emRenderTemplates();
+  emShowStep3();
+}
+
+function emShowStep3(){
+  const show=emSelectedLeadIds.size>0&&emSelectedTplId;
+  document.getElementById('emailStep3').style.display=show?'block':'none';
+  if(show){
+    const btn=document.getElementById('emSendBtn');
+    btn.textContent=`🚀 SEND TO ${emSelectedLeadIds.size} CONTACT${emSelectedLeadIds.size>1?'S':''}`;
+  }
+}
+
+async function emPreview(){
+  if(!emSelectedTplId)return;
+  try{
+    const res=await fetch('/api/email-templates/'+emSelectedTplId);
+    const tpl=await res.json();
+    const frame=document.getElementById('emPreviewFrame');
+    frame.srcdoc=tpl.rendered_html||'<p>No HTML</p>';
+    document.getElementById('emPreviewBox').style.display='block';
+  }catch(e){alert('Failed to load preview');}
+}
+
+async function emSendTest(){
+  if(!emSelectedTplId)return alert('Select a template first');
+  const subject=document.getElementById('emSubject').value;
+  const status=document.getElementById('emSendStatus');
+  status.textContent='Sending test...';status.style.color='#c9a44c';
+  try{
+    const res=await fetch('/api/send-template-emails',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({template_id:emSelectedTplId,lead_ids:[-1],subject:subject,test_email:'info@dubaiprod.com'})
+    });
+    const data=await res.json();
+    if(data.sent_count>0||data.status==='sent'){
+      status.textContent='✅ Test sent to info@dubaiprod.com';status.style.color='#4ade80';
+    }else{
+      status.textContent='❌ Failed: '+(data.error||'Unknown error');status.style.color='#ef4444';
+    }
+  }catch(e){status.textContent='❌ Error: '+e.message;status.style.color='#ef4444';}
+}
+
+async function emSendAll(){
+  if(!emSelectedTplId)return alert('Select a template first');
+  if(!emSelectedLeadIds.size)return alert('Select at least one contact');
+  const n=emSelectedLeadIds.size;
+  if(!confirm(`Send email to ${n} contact${n>1?'s':''}? Each will receive a personalized email.`))return;
+  const subject=document.getElementById('emSubject').value;
+  const status=document.getElementById('emSendStatus');
+  const btn=document.getElementById('emSendBtn');
+  btn.disabled=true;btn.textContent='⏳ Sending...';
+  status.textContent=`Sending to ${n} contacts...`;status.style.color='#c9a44c';
+  try{
+    const res=await fetch('/api/send-template-emails',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({template_id:emSelectedTplId,lead_ids:[...emSelectedLeadIds],subject:subject})
+    });
+    const data=await res.json();
+    status.textContent=`✅ Sent ${data.sent_count||0}/${data.total||n} emails`;
+    status.style.color='#4ade80';
+    if(data.errors&&data.errors.length){
+      status.textContent+=` (${data.errors.length} failed)`;
+    }
+  }catch(e){
+    status.textContent='❌ Error: '+e.message;status.style.color='#ef4444';
+  }
+  btn.disabled=false;btn.textContent=`🚀 SEND TO ${n} CONTACT${n>1?'S':''}`;
+  emRenderHistory();
+}
+
+function emRenderHistory(){
+  const el=document.getElementById('emHistory');
+  const items=tasks.filter(t=>(t.title||'').toLowerCase().match(/email|outreach|send|campaign/));
+  if(!items.length){el.innerHTML='<div style="padding:12px;color:#555;font-size:12px">No send history yet</div>';return;}
+  el.innerHTML=items.slice(0,10).map(t=>`<div class="item-row">
     <div class="ir-icon">📧</div>
     <div class="ir-info"><div class="ir-title">${esc(t.title)}</div><div class="ir-sub">${esc(t.description||'')}</div></div>
-    <div class="ir-badge ${t.status==='completed'?'badge-sent':t.status==='in_progress'?'badge-progress':'badge-pending'}">${t.status==='completed'?'sent':t.status||'pending'}</div>
+    <div class="ir-badge ${t.status==='completed'?'badge-sent':'badge-progress'}">${t.status==='completed'?'sent':t.status||'pending'}</div>
   </div>`).join('');
 }
 

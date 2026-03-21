@@ -1843,16 +1843,36 @@ async def send_template_emails(data: dict):
     if not lead_rows:
         return {"error": "No leads found"}
 
-    # Send personalized emails
+    # Handle test email mode
+    test_email = data.get("test_email")
     from email_agent.sender import send_email
     sent_count = 0
     errors = []
+
+    if test_email:
+        # Send test to specified email
+        personalized = base_html.replace("[First Name]", "Test").replace("{{First Name}}", "Test")
+        personalized = personalized.replace("[Company]", "Test Company").replace("{{Company}}", "Test Company")
+        personalized = personalized.replace("[Ime]", "Test")
+        try:
+            sent = await asyncio.to_thread(
+                send_email, to=test_email,
+                subject=f"[TEST] {subject}",
+                body=personalized,
+                confirm_callback=lambda _: True,
+            )
+            if sent:
+                sent_count = 1
+        except Exception as e:
+            errors.append({"email": test_email, "error": str(e)})
+        return {"status": "sent", "sent_count": sent_count, "total": 1, "errors": errors}
+
+    # Send personalized emails to each lead
     for lead in lead_rows:
         lead = dict(lead)
         email_addr = lead.get("email", "")
         if not email_addr:
             continue
-        # Personalize HTML
         name = lead.get("contact_name") or lead.get("company_name") or "there"
         company = lead.get("company_name") or ""
         personalized = base_html.replace("[First Name]", name).replace("{{First Name}}", name)

@@ -866,7 +866,7 @@ async function ebSendTest() {
   try {
     const res = await fetch('/api/campaigns', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaign_name:'Test Email',subject:'Dubai Prod — Preview',rendered_html:html,status:'draft'})});
     const camp = await res.json();
-    await fetch(`/api/campaigns/${camp.id}/send-test`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({test_email:email})});
+    await fetch(`/api/campaigns/${camp.id}/send-test`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
     alert('Test email sent to '+email+'!');
   } catch(e) { alert('Error: '+e.message); }
 }

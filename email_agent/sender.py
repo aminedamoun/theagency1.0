@@ -51,9 +51,9 @@ SMTP_CONFIGS = [
 def _try_connect(host, port, user, password, use_ssl=False, use_starttls=True):
     """Try to connect and authenticate to an SMTP server."""
     if use_ssl:
-        conn = smtplib.SMTP_SSL(host, port, timeout=15)
+        conn = smtplib.SMTP_SSL(host, port, timeout=10)
     else:
-        conn = smtplib.SMTP(host, port, timeout=15)
+        conn = smtplib.SMTP(host, port, timeout=10)
         conn.ehlo()
         if use_starttls:
             conn.starttls()
@@ -74,7 +74,8 @@ def _get_smtp_connection() -> smtplib.SMTP:
     configured_host = os.getenv("EMAIL_SMTP_HOST", "smtp.office365.com")
     configured_port = int(os.getenv("EMAIL_SMTP_PORT", "587"))
 
-    # Build ordered list: configured first, then fallbacks
+    # Build ordered list: configured first, then only Office365 fallback
+    # GoDaddy SMTP doesn't work from cloud servers (Railway/Heroku)
     configs = [
         {
             "name": "Configured",
@@ -84,10 +85,15 @@ def _get_smtp_connection() -> smtplib.SMTP:
             "starttls": configured_port != 465,
         }
     ]
-    # Add other configs that aren't duplicates
-    for cfg in SMTP_CONFIGS:
-        if cfg["host"] != configured_host or cfg["port"] != configured_port:
-            configs.append(cfg)
+    # Only add Office365 as fallback (GoDaddy blocks cloud IPs)
+    if configured_host != "smtp.office365.com":
+        configs.append({
+            "name": "Office365",
+            "host": "smtp.office365.com",
+            "port": 587,
+            "ssl": False,
+            "starttls": True,
+        })
 
     last_error = None
     for cfg in configs:

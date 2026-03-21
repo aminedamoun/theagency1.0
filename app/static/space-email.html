@@ -237,7 +237,32 @@
               <div class="compose-label">Subject</div>
               <input class="compose-input" id="compSubject" placeholder="Subject line..."/>
             </div>
-            <textarea class="compose-ta" id="compBody" style="height:260px"></textarea>
+
+            <!-- Template Picker -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <div class="compose-label" style="margin:0">Template</div>
+              <select id="compTemplatePicker" onchange="compLoadTemplate()" style="flex:1;padding:8px 12px;border-radius:6px;background:rgba(0,0,0,0.3);border:1px solid rgba(230,126,34,0.3);color:#e67e22;font-size:0.65rem;font-weight:600;outline:none;cursor:pointer">
+                <option value="">— Write custom or pick a saved template —</option>
+              </select>
+              <button onclick="compPreviewTemplate()" style="padding:6px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#ccc;border-radius:6px;cursor:pointer;font-size:0.6rem">👁 Preview</button>
+            </div>
+
+            <!-- Mode toggle: Custom text vs Template HTML -->
+            <div id="compCustomMode">
+              <textarea class="compose-ta" id="compBody" style="height:200px" placeholder="Write your email here or select a template above..."></textarea>
+            </div>
+            <div id="compTemplateMode" style="display:none">
+              <div style="padding:16px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:8px;margin-bottom:8px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <span style="font-size:0.7rem;font-weight:700;color:#c9a44c" id="compTplName">Template loaded</span>
+                  <button onclick="compClearTemplate()" style="margin-left:auto;background:none;border:none;color:#e74c3c;cursor:pointer;font-size:0.6rem">✕ Clear</button>
+                </div>
+                <div style="font-size:0.55rem;color:rgba(255,255,255,0.4)">The full HTML template will be sent. Personalization tags like {{First Name}} and {{Company}} will be auto-replaced.</div>
+              </div>
+              <div style="border:1px solid rgba(255,255,255,0.06);border-radius:8px;overflow:hidden;max-height:250px;overflow-y:auto">
+                <iframe id="compTplPreview" style="width:100%;height:250px;border:none;background:#1a1a1a"></iframe>
+              </div>
+            </div>
 
             <!-- Attachments checkboxes -->
             <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;padding:12px;border-radius:8px;background:rgba(230,126,34,0.04);border:1px solid rgba(230,126,34,0.1)">
@@ -990,15 +1015,89 @@ Dubai Prod — Social Media Agency
 📧 info@dubaiprod.com`;
 }
 
+// ═══ COMPOSE: Template Picker ═══
+let compSelectedTplId=null, compSelectedTplHtml='';
+
+async function compLoadTemplateList(){
+  const sel=document.getElementById('compTemplatePicker');
+  if(!sel)return;
+  // Keep first option
+  while(sel.options.length>1)sel.remove(1);
+  try{
+    const res=await fetch('/api/email-templates');
+    const tpls=await res.json();
+    if(Array.isArray(tpls)){
+      tpls.forEach(t=>{
+        const o=document.createElement('option');
+        o.value=t.id;
+        o.textContent=(t.language==='sl'?'🇸🇮 ':'🇬🇧 ')+t.name;
+        sel.appendChild(o);
+      });
+    }
+  }catch(e){}
+}
+
+async function compLoadTemplate(){
+  const sel=document.getElementById('compTemplatePicker');
+  const id=sel.value;
+  if(!id){compClearTemplate();return;}
+  try{
+    const res=await fetch('/api/email-templates/'+id);
+    const tpl=await res.json();
+    if(tpl.error)return;
+    compSelectedTplId=tpl.id;
+    compSelectedTplHtml=tpl.rendered_html||'';
+    document.getElementById('compTplName').textContent=tpl.name;
+    document.getElementById('compTplPreview').srcdoc=compSelectedTplHtml;
+    document.getElementById('compCustomMode').style.display='none';
+    document.getElementById('compTemplateMode').style.display='block';
+  }catch(e){alert('Error loading template');}
+}
+
+function compClearTemplate(){
+  compSelectedTplId=null;compSelectedTplHtml='';
+  document.getElementById('compTemplatePicker').value='';
+  document.getElementById('compCustomMode').style.display='block';
+  document.getElementById('compTemplateMode').style.display='none';
+}
+
+function compPreviewTemplate(){
+  if(!compSelectedTplHtml){alert('Select a template first');return;}
+  const w=window.open('','_blank','width=700,height=800');
+  w.document.write(compSelectedTplHtml);
+  w.document.close();
+}
+
 function sendCompose(){
   const to=document.getElementById('compTo').value.trim();
   const subject=document.getElementById('compSubject').value.trim();
+  if(!to||!subject){alert('Fill in To and Subject');return}
+
+  // If template is selected, send via API directly
+  if(compSelectedTplId && compSelectedTplHtml){
+    const status=document.getElementById('compStatus');
+    status.textContent='📤 Sending...';
+    // Personalize
+    let html=compSelectedTplHtml;
+    html=html.replace(/\[First Name\]/g, to.split('@')[0]).replace(/\{\{First Name\}\}/g, to.split('@')[0]);
+    fetch('/api/send-template-emails',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({template_id:compSelectedTplId, lead_ids:[-1], subject:subject, test_email:to})
+    }).then(r=>r.json()).then(data=>{
+      if(data.sent_count>0){
+        status.textContent='✅ Sent with template!';status.style.color='#4ade80';
+      }else{
+        status.textContent='❌ Failed: '+(data.error||'Unknown');status.style.color='#ef4444';
+      }
+    }).catch(e=>{status.textContent='❌ Error: '+e.message;status.style.color='#ef4444';});
+    return;
+  }
+
+  // Fallback: plain text via Elena
   const body=document.getElementById('compBody').value.trim();
-  if(!to||!subject||!body){alert('Fill in all fields');return}
+  if(!body){alert('Write a message or select a template');return}
 
   const wantProposal = document.getElementById('attachPortfolio').checked;
-
-  // Extract company name from the To field or subject
   const companyGuess = subject.replace(/.*for\s*/i,'').replace(/['']s.*$/,'').replace(/\|.*$/,'').trim();
 
   let cmd;
@@ -1442,6 +1541,7 @@ function parseEmailsFromReply(text){
 // ═══ INIT ═══
 loadLeads();
 loadProposals();
+compLoadTemplateList();
 // Auto-fetch inbox on load
 setTimeout(refreshInbox,1000);
 </script>

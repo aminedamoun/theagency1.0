@@ -1086,6 +1086,46 @@ async def update_content_status(content_id: int, update: ContentStatusUpdate):
     return {"status": "updated", "content_id": content_id}
 
 
+# --- Save to Google Sheet (Content Library) ---
+
+class SheetSaveIn(BaseModel):
+    title: str = ""
+    script: str = ""
+    caption: str = ""
+    hashtags: str = ""
+    platform: str = "instagram"
+    content_type: str = "post"
+    sources: str = ""
+
+
+@router.post("/content/save-to-sheet")
+async def save_content_to_sheet(data: SheetSaveIn):
+    """Save content directly to the Google Sheet Content Library tab."""
+    try:
+        from agents.google_sync import append_to_content_library, is_configured
+        if not is_configured():
+            return {"error": "Google Sheets not configured. Run: python scripts/setup_google.py"}
+
+        sheet_url = append_to_content_library(
+            workflow_id=0,
+            title=data.title or "Quick Save",
+            task_type=data.content_type,
+            stage_outputs={
+                "copywriting": data.script or data.caption,
+                "publishing": f"Platform: {data.platform}\nCaption: {data.caption}\nHashtags: {data.hashtags}",
+                "research": data.sources,
+            },
+            drive_links={},
+            client_name="Dubai Prod",
+        )
+        if sheet_url:
+            return {"status": "saved", "sheet_url": sheet_url}
+        else:
+            return {"error": "Failed to save — check Google Sheet ID is set in .env"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 # --- Design Projects ---
 
 class DesignProjectIn(BaseModel):

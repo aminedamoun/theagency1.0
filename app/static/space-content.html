@@ -170,6 +170,15 @@
               </div>
               <div class="ps-body" id="out3"></div>
             </div>
+            <div class="pipe-step" id="step5" style="display:none">
+              <div class="ps-head" onclick="toggleStep(5)">
+                <div class="ps-num">4</div>
+                <img class="ps-av" src="/static/img/avatar_zara.png"/>
+                <div class="ps-info"><div class="ps-title">Visual Prompts — Images & Video</div><div class="ps-agent">Zara Okafor — Creative Director</div></div>
+                <div class="ps-status" id="st5">⏳ Waiting</div>
+              </div>
+              <div class="ps-body" id="out5"></div>
+            </div>
             <div class="pipe-step" id="step4" style="display:none">
               <div class="ps-head">
                 <div class="ps-num">✓</div>
@@ -336,7 +345,7 @@
 // ═══ STATE (persisted to localStorage) ═══
 const STORE_KEY='dp_content_state';
 let ws=null;
-let wf={step:0, idea:'', research:'', strategy:'', script:'', agent:null};
+let wf={step:0, idea:'', research:'', strategy:'', script:'', prompts:'', agent:null};
 let activeTab='pipeline';
 let chatHistory=[];
 
@@ -360,6 +369,7 @@ function restoreState(){
       wf.research=state.wf.research||'';
       wf.strategy=state.wf.strategy||'';
       wf.script=state.wf.script||'';
+      wf.prompts=state.wf.prompts||'';
       wf.agent=null; // don't restore pending agent — it's a transient state
     }
     if(state.activeTab) activeTab=state.activeTab;
@@ -368,8 +378,8 @@ function restoreState(){
 }
 
 function clearWorkflow(){
-  wf={step:0,idea:'',research:'',strategy:'',script:'',agent:null};
-  chatHistory=[];
+  wf={step:0,idea:'',research:'',strategy:'',script:'',prompts:'',agent:null};
+  // Keep chatHistory — only clear the pipeline, not the conversation
   saveState();
   location.reload();
 }
@@ -509,13 +519,35 @@ IMPORTANT: Your entire response must BE the caption. Nothing else.`);
     wf.script=content;saveState();
     document.getElementById('out3').innerHTML=`<div class="ps-output">${esc(content)}</div>`;
     setStepDone(3);
+    addMsg('Script done. Zara is now creating visual prompts for each scene...','ai');
+
+    // Step 5 — Visual Prompts
+    wf.step=5;wf.agent='zara';
+    document.getElementById('step5').style.display='block';
+    setStepActive(5,'🎨 Creating prompts...');
+    document.getElementById('out5').innerHTML='<div class="ps-output" style="color:rgba(155,89,182,0.4)">Zara is generating image & video prompts for each scene...</div>';
+    wsSend('zara',`Based on this script, create detailed image generation prompts and video scene prompts for EACH scene/section. These prompts will be used later to create visuals in AI image & video generators.
+
+SCRIPT:
+${wf.script.substring(0,800)}
+
+For EACH scene/section in the script, write:
+1. 🖼️ **IMAGE PROMPT**: A detailed prompt for AI image generation (Midjourney/DALL-E style). Include: subject, composition, lighting, mood, colors, style, camera angle.
+2. 🎬 **VIDEO PROMPT**: A detailed prompt for AI video generation (Runway/Kling style). Include: motion, camera movement, duration suggestion, transitions, mood.
+
+Format each scene clearly with a scene number and the relevant script line. Make the prompts copy-paste ready. Do NOT use any tools. Write the prompts directly.`);
+  }
+  else if(wf.step===5){
+    wf.prompts=content;saveState();
+    document.getElementById('out5').innerHTML=`<div class="ps-output">${esc(content)}</div><div style="margin-top:8px"><button class="ra-btn ra-edit" onclick="copyPrompts()" style="font-size:0.6rem">📋 Copy All Prompts</button></div>`;
+    setStepDone(5);
 
     // Show review
     wf.step=4;wf.agent=null;
     document.getElementById('step4').style.display='block';
     document.getElementById('step4').className='pipe-step done';
-    document.getElementById('finalScript').textContent=content;
-    addMsg('✅ Pipeline complete! Your final script is ready. Review it on the left and confirm.','ai');
+    document.getElementById('finalScript').textContent=wf.script;
+    addMsg('✅ Pipeline complete! Script + visual prompts ready. Review and confirm on the left.','ai');
   }
 }
 
@@ -557,6 +589,10 @@ function copyScript(){
   navigator.clipboard.writeText(wf.script).then(()=>addMsg('📋 Script copied to clipboard!','ai'));
 }
 
+function copyPrompts(){
+  navigator.clipboard.writeText(wf.prompts).then(()=>addMsg('📋 All visual prompts copied to clipboard!','ai'));
+}
+
 function generateVoiceover(){
   if(!wf.script){addMsg('❌ No script to voiceover','ai');return}
   addMsg('🎙️ Generating voiceover from script...','ai');
@@ -566,7 +602,14 @@ function generateVoiceover(){
 function saveToSheet(){
   if(!wf.script){addMsg('❌ No script to save','ai');return}
   addMsg('📊 Saving to Google Sheet...','ai');
-  wsSend('sarah',`Save this content to the Google Sheet content calendar. Platform: instagram. Caption: ${wf.script.substring(0,300)}. Status: scheduled. Use open_client_calendar or create_content tool.`);
+  // Extract hashtags from script
+  const hashtags=(wf.script.match(/#\w+/g)||[]).join(' ');
+  fetch('/api/content/save-to-sheet',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({title:wf.idea||'Content',script:wf.script,caption:wf.script.substring(0,500),hashtags:hashtags,platform:'instagram',content_type:'post',sources:wf.research||''})
+  }).then(r=>r.json()).then(d=>{
+    if(d.error){addMsg('❌ '+d.error,'ai');return}
+    addMsg(`✅ Saved to Google Sheet! <a href="${d.sheet_url}" target="_blank">Open Sheet</a>`,'ai');
+  }).catch(()=>addMsg('❌ Failed to save to sheet','ai'));
 }
 
 // ═══ TASKS ═══
@@ -657,7 +700,7 @@ function connectWS(){
       const agent=d.agent||'';
 
       // Route to pipeline if active
-      if(wf.step>0 && wf.step<4 && wf.agent && (agent===wf.agent||!agent)){
+      if(wf.step>0 && wf.step!==4 && wf.agent && (agent===wf.agent||!agent)){
         handlePipeReply(c);
         return;
       }
@@ -716,6 +759,14 @@ if(wf.step>0){
     document.getElementById('step3').className='pipe-step done';
     document.getElementById('st3').textContent='✅ Done';
     document.getElementById('out3').innerHTML=`<div class="ps-output">${esc(wf.script)}</div>`;
+  }
+  if(wf.prompts){
+    document.getElementById('step5').style.display='block';
+    document.getElementById('step5').className='pipe-step done';
+    document.getElementById('st5').textContent='✅ Done';
+    document.getElementById('out5').innerHTML=`<div class="ps-output">${esc(wf.prompts)}</div><div style="margin-top:8px"><button class="ra-btn ra-edit" onclick="copyPrompts()" style="font-size:0.6rem">📋 Copy All Prompts</button></div>`;
+  }
+  if(wf.script){
     // Show review
     document.getElementById('step4').style.display='block';
     document.getElementById('step4').className='pipe-step done';
@@ -723,7 +774,7 @@ if(wf.step>0){
   }
 
   // If a step was in progress (agent was working when we refreshed), mark it as waiting to re-run
-  if(wf.step<4 && !wf.script){
+  if(wf.step<4 && wf.step!==5 && !wf.script){
     const currentStep=wf.research?wf.strategy?3:2:1;
     wf.step=currentStep;
     document.getElementById('step'+currentStep).className='pipe-step';
